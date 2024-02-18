@@ -20,15 +20,17 @@ export default function RootLayout({
     <>
       <html lang="en" suppressHydrationWarning>
         <body className="min-h-screen bg-background font-sans antialiased">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <TopNav />
-            {children}
-          </ThemeProvider>
+          <div className="container">
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <TopNav />
+              {children}
+            </ThemeProvider>
+          </div>
         </body>
       </html>
     </>
