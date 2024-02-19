@@ -55,7 +55,7 @@ const components: { title: string; href: string; description: string }[] = [
 
 export const TopNav: React.FC = () => {
   return (
-    <header className="sticky top-0">
+    <header className="w-full text-center"> 
       <NavigationMenu>
         <NavigationMenuList>
 
