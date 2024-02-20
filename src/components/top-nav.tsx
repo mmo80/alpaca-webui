@@ -54,10 +54,20 @@ const components: { title: string; href: string; description: string }[] = [
 ]
 
 export const TopNav: React.FC = () => {
+  const newChat = () => {
+    window.location.href = "/";
+  };
+
   return (
-    <header className="w-full text-center"> 
+    <header className="w-full text-center">
       <NavigationMenu>
         <NavigationMenuList>
+
+          <NavigationMenuItem>
+            <NavigationMenuLink className={`${navigationMenuTriggerStyle()} hover:cursor-pointer`} onClick={newChat}>
+              New Chat
+            </NavigationMenuLink>
+          </NavigationMenuItem>
 
           <NavigationMenuItem>
             <NavigationMenuTrigger>Components</NavigationMenuTrigger>
@@ -87,7 +97,7 @@ export const TopNav: React.FC = () => {
           <NavigationMenuItem>
             <ModeToggle />
           </NavigationMenuItem>
-          
+
         </NavigationMenuList>
       </NavigationMenu>
     </header>
