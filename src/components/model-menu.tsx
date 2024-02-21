@@ -16,7 +16,7 @@ import { LayersIcon } from "@radix-ui/react-icons";
 import { useOllamaStore } from "../lib/store";
 
 export const ModelMenu: React.FC<OllamaTag> = ({ models }) => {
-  const { model, updateModel } = useOllamaStore();
+  const { updateModel } = useOllamaStore();
 
   const modelHandler = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -40,7 +40,7 @@ export const ModelMenu: React.FC<OllamaTag> = ({ models }) => {
         <DropdownMenuLabel>Models</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {models.map((model, index) => (
-          <DropdownMenuItem onClick={modelHandler} key={index}>
+          <DropdownMenuItem onClick={modelHandler} className="hover:cursor-pointer" key={index}>
             {model.name}
           </DropdownMenuItem>
         ))}
