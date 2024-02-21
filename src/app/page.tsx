@@ -8,29 +8,40 @@ import { useState, useRef, useEffect } from "react";
 import { ChatMessage, ChatRole, OllamaTag, OllamaTagSchema } from "@/lib/types";
 import { Spinner } from "@/components/spinner";
 import { useOllamaStore } from "../lib/store";
+import hljs from 'highlight.js';
 
 const systemMessage = "Hello i am a AI assistant, how can i help you?";
 const keepAlive = "10m";
 // Hello my name is Miguel! What can you help me with? answer in 2 sentences
 
 export default function Home() {
-  const { model, updateModel } = useOllamaStore();
+  const { model } = useOllamaStore();
   const [chat, setChat] = useState<string>("");
-  const [chats, setChats] = useState<ChatMessage[]>([
-    { content: systemMessage, role: ChatRole.SYSTEM },
-  ]);
+  const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
   const [tag, setTag] = useState<OllamaTag>({ models: [] });
-  const div = useRef<HTMLDivElement>(null);
-  let scrollTimout: NodeJS.Timeout | null = null;
+  const chatsListDiv = useRef<HTMLDivElement>(null);
   let scrollTimoutIsRunning = false;
 
   useEffect(() => {
     loadModels();
   }, []);
 
-  // TODO: implement set to store
+  useEffect(() => {
+    if (model != null) {
+      setChats((prevArray) => [
+        ...prevArray,
+        { content: `You are talking to ${model}`, role: ChatRole.ASSISTANT },
+      ]);
+
+      setChats((prevArray) => [
+        ...prevArray,
+        { content: systemMessage, role: ChatRole.SYSTEM },
+      ]);
+    }
+  }, [model]);
+
   const loadModels = async () => {
     const url = `http://localhost:11434/api/tags`;
     const response = await fetch(url, {
@@ -43,7 +54,6 @@ export default function Home() {
       console.error(validatedOllamaTag.error);
       return;
     }
-    //console.log(validatedOllamaTag.data);
     setTag(validatedOllamaTag.data);
   };
 
@@ -157,6 +167,22 @@ export default function Home() {
     }
   };
 
+  const delayHL = () => {
+    setTimeout(() => {
+      setHighlighter();
+    }, 300);
+  }
+
+  const setHighlighter = () => {
+    const elements = document.querySelectorAll(`[class^="language-"]`);
+    const codeBlocks = Array.from(elements) as HTMLElement[];
+    if (codeBlocks) {
+      codeBlocks.forEach((codeBlock) => {
+        hljs.highlightElement(codeBlock);
+      });
+    }
+  }
+
   const sendChat = async () => {
     setWorking(true);
     const chatMessage = { content: chat, role: ChatRole.USER };
@@ -164,6 +190,7 @@ export default function Home() {
     setChat("");
     await chatStream(chatMessage);
     setWorking(false);
+    delayHL();
   };
 
   const chatEnterPress = async (e: React.KeyboardEvent) => {
@@ -175,15 +202,15 @@ export default function Home() {
   const delayedScrollToBottom = () => {
     if (!scrollTimoutIsRunning) {
       scrollTimoutIsRunning = true;
-      scrollTimout = setTimeout(() => {
+      setTimeout(() => {
         scrollToBottom();
       }, 300);
     }
   };
 
   const scrollToBottom = () => {
-    if (div.current != null) {
-      div.current.scrollIntoView({
+    if (chatsListDiv.current != null) {
+      chatsListDiv.current.lastElementChild?.scrollIntoView({
         behavior: "smooth",
         block: "end",
         inline: "nearest",
@@ -196,14 +223,10 @@ export default function Home() {
     <>
       <main className="flex-1 overflow-y-auto">
         <div className="py-3">
-          {model === null ? (
-            <ModelMenu models={tag.models} />
-          ) : (
-            <p>You are talking to {model}</p>
-          )}
+          {model === null && <ModelMenu models={tag.models} />}
         </div>
         {model != null && (
-          <div className="space-y-4" ref={div}>
+          <div className="space-y-4 w-full" ref={chatsListDiv}>
             {chats.map((message, index) => (
               <ChatBubble
                 role={message.role}

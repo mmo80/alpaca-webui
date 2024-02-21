@@ -2,39 +2,29 @@
 
 import * as React from "react";
 import { ChatMessage, ChatRole } from "@/lib/types";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { coldarkDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import Markdown from "react-markdown";
 
 export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
   return (
     <pre
       className={`flex max-w-[100%] w-full flex-col gap-2 rounded-lg px-3 py-2 text-wrap text-sm font-sans ${
         role == ChatRole.USER
-          ? "whitespace-pre-wrap text-white-foreground bg-slate-800"
-          : "bg-zinc-950"
+          ? "whitespace-pre-wrap bg-emerald-900"
+          : "bg-gray-900"
       }`}
     >
-      <ReactMarkdown
+      <Markdown
+        className={`${role == ChatRole.USER ? "" : ""}`}
         components={{
-          code(props) {
-            const { children, className, node, ...rest } = props;
+          code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
-            return match ? (
-              <SyntaxHighlighter
-                {...rest}
-                PreTag="div"
-                language={match[1] == "" ? "plaintext" : match[1]}
-                style={coldarkDark}
-                ref={null}
-              >
-                {String(children).replace(/\n$/, "")}
-              </SyntaxHighlighter>
+            const code = children;
+            return !inline && match ? (
+              <code className={`${className} ${match[1]} p-3 flex border border-secondary bg-gray-950`} {...props}>
+                {code}
+              </code>
             ) : (
-              <code
-                {...rest}
-                className={`${className} bg-slate-900 language-html`}
-              >
+              <code className={className ? className : ""} {...props}>
                 {children}
               </code>
             );
@@ -42,7 +32,7 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
         }}
       >
         {content}
-      </ReactMarkdown>
+      </Markdown>
     </pre>
   );
 };
