@@ -1,5 +1,20 @@
-This is a web UI for ollama.
+# Alpaca WebUI for Ollama
+This is a web UI for ollama with markup formatting and code highlighting.
 
+**Has**
+- [x] Markup Formatting
+- [x] Code Highlighting
+- [x] Responsive Layout
+
+**Not implemented**
+- Modify System Prompt
+- Modify Parameters (like temperature, mirostat ...)
+- Attach ImageFile
+- Chat History
+- Attach PdfFile
+<br>
+
+**Env**
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
