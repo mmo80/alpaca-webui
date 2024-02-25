@@ -2,8 +2,12 @@
 This is a web UI for ollama with markup formatting and code highlighting.
 
 <a href="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml">
-<img src="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml/badge.svg" />
-</a>
+<img src="https://img.shields.io/github/actions/workflow/status/mmo80/alpaca-webui/integrations.yml" />
+</a> 
+<img src="https://img.shields.io/github/commit-activity/t/mmo80/alpaca-webui" />
+
+<img src="https://img.shields.io/github/languages/top/mmo80/alpaca-webui" />
+<br><br>
 
 **Has**
 - [x] Markup Formatting
