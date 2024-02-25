@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, RefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ChatBubble } from '@/components/chat-bubble';
@@ -17,7 +17,6 @@ import { delayHighlighter, parseJsonStream } from '@/lib/utils';
 import useLocalStorage from '@/lib/local-storage';
 
 const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
-// Hello my name is Miguel! What can you help me with? answer in 2 sentences
 
 export default function Home() {
   const { modelName, updateModel } = useModelStore();
@@ -27,7 +26,9 @@ export default function Home() {
   const [working, setWorking] = useState<boolean>(false);
   const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
   const [baseUrl, setBaseUrl] = useLocalStorage<string>('ollamaBaseUrl', 'http://localhost:11434');
+  const mainDiv = useRef<HTMLDivElement>(null);
   const chatsDiv = useRef<HTMLDivElement>(null);
+  const textareaPlaceholder = useRef<string>('Choose model...');
   let scrollTimoutIsRunning = false;
 
   const {
@@ -48,7 +49,7 @@ export default function Home() {
   useEffect(() => {
     checkScroll();
 
-    const div = chatsDiv.current;
+    const div = mainDiv.current;
     if (div) {
       div.addEventListener('scroll', checkScroll);
     }
@@ -58,6 +59,7 @@ export default function Home() {
         div.removeEventListener('scroll', checkScroll);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -78,13 +80,15 @@ export default function Home() {
           updateModel(model);
         }
       }
+
+      textareaPlaceholder.current = 'Type your message...';
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
   const chatStream = async (message: ChatMessage) => {
     setLoading(true);
-    delayedScrollToBottom();
+    delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
 
     if (modelName == null) {
       return;
@@ -143,7 +147,7 @@ export default function Home() {
             });
           });
 
-          delayedScrollToBottom();
+          delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
         }
       }
     }
@@ -165,8 +169,14 @@ export default function Home() {
     }
   };
 
-  const delayedScrollToBottom = () => {
-    if (!scrollTimoutIsRunning) {
+  const preventEnterPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !working && modelName != null) {
+      e.preventDefault();
+    }
+  };
+
+  const delayedScrollToBottom = (awayFromBottom:boolean) => {
+    if (!scrollTimoutIsRunning && !awayFromBottom) {
       scrollTimoutIsRunning = true;
       setTimeout(() => {
         scrollToBottom();
@@ -186,18 +196,21 @@ export default function Home() {
   };
 
   const checkScroll = () => {
-    if (!chatsDiv.current) return;
-    const bufferHeight = 100;
-
-    const { scrollTop, scrollHeight, clientHeight } = chatsDiv.current;
-    const awayFromBottom = Math.ceil(scrollTop + clientHeight) < (scrollHeight- bufferHeight);
-
+    const awayFromBottom = isDivAwayFromBottom(mainDiv);
     setIsAwayFromBottom(awayFromBottom);
   };
 
+  const isDivAwayFromBottom = (ref: RefObject<HTMLDivElement>):boolean => {
+    if (!ref.current) return false;
+    const bufferHeight = 100;
+
+    const { scrollTop, scrollHeight, clientHeight } = ref.current;
+    return Math.ceil(scrollTop + clientHeight) < (scrollHeight- bufferHeight);
+  }
+
   return (
     <>
-      <main className="flex-1 overflow-y-auto space-y-4" ref={chatsDiv}>
+      <main className="flex-1 overflow-y-auto space-y-4" ref={mainDiv}>
         {tagIsError && <AlertBox title="Error" description={tagError.message} />}
         {modelName == null && (
           <div className="flex">
@@ -211,7 +224,7 @@ export default function Home() {
         )}
 
         {modelName != null && (
-          <section className="space-y-4 w-full">
+          <section className="space-y-4 w-full" ref={chatsDiv}>
             {chats.map((message, index) => (
               <ChatBubble role={message.role} content={message.content} key={index} />
             ))}
@@ -219,16 +232,16 @@ export default function Home() {
           </section>
         )}
 
-        {isAwayFromBottom && <PageDownButton className="absolute bottom-24 left-1/2" />}
+        {isAwayFromBottom && <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />}
       </main>
 
       <section className="py-3 relative">
-        {/* <div>{isAwayFromBottom ? 'Scroll is away from bottom' : 'Scroll is at the bottom'}</div> */}
         <Textarea
           value={chat}
           onChange={(e) => setChat(e.target.value)}
           onKeyUp={chatEnterPress}
-          placeholder="Type your message..."
+          onKeyDown={preventEnterPress}
+          placeholder={textareaPlaceholder.current}
           className="overflow-hidden pr-20"
           disabled={modelName === null}
         />

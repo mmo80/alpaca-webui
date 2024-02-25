@@ -28,6 +28,8 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
 
 const Code = ({ node, className, children, ...rest }: React.ClassAttributes<HTMLElement> & React.HTMLAttributes<HTMLElement> & ExtraProps) => {
   const match = /language-(\w+)/.exec(className || '');
+  className = className?.replace('react', '');
+  className = className?.replace('+', '');
   return match ? (
     <code {...rest} className={`${className} p-3 flex border border-secondary bg-gray-950`}>
       {children}

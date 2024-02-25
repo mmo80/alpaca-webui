@@ -13,11 +13,13 @@ export const delayHighlighter = () => {
 };
 
 const setHighlighter = () => {
-  const elements = document.querySelectorAll(`[class^="language-"]`);
-  const codeBlocks = Array.from(elements) as HTMLElement[];
-  if (codeBlocks) {
-    codeBlocks.forEach((codeBlock) => {
-      hljs.highlightElement(codeBlock);
+  const elements = document.querySelectorAll(`code[class^="language-"]`);
+  const filteredElements = Array.from(elements).filter((element) => !element.hasAttribute('data-highlighted')) as HTMLElement[];
+  if (filteredElements) {
+    filteredElements.forEach((codeBlock) => {
+      if (codeBlock.dataset.highlighted !== 'yes') {
+        hljs.highlightElement(codeBlock);
+      }
     });
   }
 };
