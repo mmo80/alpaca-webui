@@ -1,5 +1,6 @@
 # Alpaca WebUI for Ollama
-This is a web UI for ollama with markup formatting and code highlighting.<br>
+This is a web UI for ollama with markup formatting and code highlighting.
+
 <a href="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml">
 <img src="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml/badge.svg" />
 </a>
@@ -13,9 +14,8 @@ This is a web UI for ollama with markup formatting and code highlighting.<br>
 - Modify System Prompt
 - Modify Parameters (like temperature, mirostat ...)
 - Attach ImageFile
-- Chat History
 - Attach PdfFile
-<br>
+- Chat History
 
 **Env**
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
