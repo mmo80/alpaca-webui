@@ -1,12 +1,16 @@
-import { get } from "http";
 import { create } from "zustand";
+import { OllamaModel } from "@/lib/types";
 
-interface OllamaState {
-  model: string | null;
-  updateModel: (m: string | null) => void;
+interface ModelStoreState {
+  modelName: string | null;
+  model: OllamaModel | null;
+  updateModelName: (m: string | null) => void;
+  updateModel: (m: OllamaModel | null) => void;
 }
 
-export const useOllamaStore = create<OllamaState>((set) => ({
+export const useModelStore = create<ModelStoreState>((set) => ({
+  modelName: null,
   model: null,
-  updateModel: (m: string | null) => set(() => ({ model: m })),
+  updateModelName: (m: string | null) => set(() => ({ modelName: m })),
+  updateModel: (m: OllamaModel | null) => set(() => ({ model: m })),
 }));
