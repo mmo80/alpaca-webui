@@ -1,112 +1,114 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ChatBubble } from "@/components/chat-bubble";
-import { ModelMenu } from "@/components/model-menu";
-import { useState, useRef, useEffect } from "react";
-import { ChatMessage, ChatRole, OllamaTag, OllamaTagSchema } from "@/lib/types";
-import { Spinner } from "@/components/spinner";
-import { useOllamaStore } from "../lib/store";
-import hljs from 'highlight.js';
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ChatBubble } from '@/components/chat-bubble';
+import { ModelMenu } from '@/components/model-menu';
+import { Spinner } from '@/components/spinner';
+import { PageDownButton } from '@/components/page-down-button';
 
-const systemMessage = "Hello i am a AI assistant, how can i help you?";
-const keepAlive = "10m";
+import { useQuery } from '@tanstack/react-query';
+import { ChatMessage, ChatRole } from '@/lib/types';
+import { useModelStore } from '../lib/store';
+import { api } from '../lib/api';
+import { AlertBox } from '@/components/alert-box';
+import { delayHighlighter, parseJsonStream } from '@/lib/utils';
+import useLocalStorage from '@/lib/local-storage';
+
+const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 // Hello my name is Miguel! What can you help me with? answer in 2 sentences
 
 export default function Home() {
-  const { model } = useOllamaStore();
-  const [chat, setChat] = useState<string>("");
+  const { modelName, updateModel } = useModelStore();
+  const [chat, setChat] = useState<string>('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
-  const [tag, setTag] = useState<OllamaTag>({ models: [] });
-  const chatsListDiv = useRef<HTMLDivElement>(null);
+  const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
+  const [baseUrl, setBaseUrl] = useLocalStorage<string>('ollamaBaseUrl', 'http://localhost:11434');
+  const chatsDiv = useRef<HTMLDivElement>(null);
   let scrollTimoutIsRunning = false;
 
+  const {
+    isLoading: tagIsLoading,
+    error: tagError,
+    data: tag,
+    isSuccess: tagIsSuccess,
+    isError: tagIsError,
+  } = useQuery({
+    queryKey: ['ollamaTag'],
+    queryFn: async () => await api.getTag(),
+  });
+
   useEffect(() => {
-    loadModels();
+    api.setOllamaBaseUrl(baseUrl.toString());
+  }, [baseUrl]);
+
+  useEffect(() => {
+    checkScroll();
+
+    const div = chatsDiv.current;
+    if (div) {
+      div.addEventListener('scroll', checkScroll);
+    }
+
+    return () => {
+      if (div) {
+        div.removeEventListener('scroll', checkScroll);
+      }
+    };
   }, []);
 
   useEffect(() => {
-    if (model != null) {
+    if (modelName != null) {
       setChats((prevArray) => [
         ...prevArray,
-        { content: `You are talking to ${model}`, role: ChatRole.ASSISTANT },
+        {
+          content: `You are talking to **${modelName}**`,
+          role: ChatRole.ASSISTANT,
+        },
       ]);
 
-      setChats((prevArray) => [
-        ...prevArray,
-        { content: systemMessage, role: ChatRole.SYSTEM },
-      ]);
-    }
-  }, [model]);
+      setChats((prevArray) => [...prevArray, { content: systemPromptMessage, role: ChatRole.SYSTEM }]);
 
-  const loadModels = async () => {
-    const url = `http://localhost:11434/api/tags`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data: unknown = await response.json();
-    const validatedOllamaTag = await OllamaTagSchema.safeParseAsync(data);
-    if (!validatedOllamaTag.success) {
-      console.error(validatedOllamaTag.error);
-      return;
+      if (tag != null) {
+        const model = tag.models.find((model) => model.name === modelName);
+        if (model != null) {
+          updateModel(model);
+        }
+      }
     }
-    setTag(validatedOllamaTag.data);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelName]);
 
   const chatStream = async (message: ChatMessage) => {
     setLoading(true);
     delayedScrollToBottom();
 
-    const payload = {
-      model: model,
-      messages: [...chats, message],
-      stream: true,
-    };
+    if (modelName == null) {
+      return;
+    }
 
-    const url = `http://localhost:11434/api/chat`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const streamReader = await api.getChatStream(modelName, [...chats, message]);
 
     setLoading(false);
 
-    if (response.status !== 200) {
-      console.error(
-        new Error(`API request failed with status code: ${response.status}:`)
-      );
-      return;
-    }
-
-    if (response.body == null) {
-      console.error(new Error(`API request failed with empty response body`));
-      return;
-    }
-
-    let assistantChatMessage = "";
+    let assistantChatMessage = '';
     const decoder = new TextDecoder();
-    const reader = response.body.getReader();
 
-    setChats((prevArray) => [
-      ...prevArray,
-      { content: assistantChatMessage, role: ChatRole.ASSISTANT },
-    ]);
+    setChats((prevArray) => [...prevArray, { content: assistantChatMessage, role: ChatRole.ASSISTANT }]);
 
     let checkFirstCharSpacing = true;
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await streamReader.read();
 
       if (done) {
         setChats((prevArray) => {
           return prevArray.map((chat, index) => {
             if (index === prevArray.length - 1) {
               // Remove eventual ending linebreaks and spaces
-              chat.content = chat.content.replace(/[\n\s]+$/, "");
+              chat.content = chat.content.replace(/[\n\s]+$/, '');
             }
             return chat;
           });
@@ -115,7 +117,7 @@ export default function Home() {
       }
 
       const decodedChunk = decoder.decode(value, { stream: true });
-      const chunkList = parseJson(decodedChunk);
+      const chunkList = parseJsonStream(decodedChunk);
       if (chunkList != null && chunkList.length > 0) {
         for (const chunkObj of chunkList) {
           if (chunkObj == null) {
@@ -125,7 +127,7 @@ export default function Home() {
           let chunkContent = chunkObj.message.content;
           if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
             // Remove eventual initial linebreaks and spaces
-            assistantChatMessage = "";
+            assistantChatMessage = '';
             chunkContent = chunkContent.trimStart();
             checkFirstCharSpacing = false;
           }
@@ -147,54 +149,18 @@ export default function Home() {
     }
   };
 
-  const parseJson = (json: string): any[] => {
-    try {
-      if (json.includes("}\n")) {
-        // Handle cases where stream returns two or more json object strings
-        const jsonStrings = json.split("}\n");
-        return jsonStrings.map((str) => {
-          if (str.length > 0) {
-            return JSON.parse(`${str}}`);
-          } else {
-            return null;
-          }
-        });
-      }
-      return [JSON.parse(json)];
-    } catch (error) {
-      console.error(`${error}. Failed to parse JSON: ${json}`);
-      return [];
-    }
-  };
-
-  const delayHL = () => {
-    setTimeout(() => {
-      setHighlighter();
-    }, 300);
-  }
-
-  const setHighlighter = () => {
-    const elements = document.querySelectorAll(`[class^="language-"]`);
-    const codeBlocks = Array.from(elements) as HTMLElement[];
-    if (codeBlocks) {
-      codeBlocks.forEach((codeBlock) => {
-        hljs.highlightElement(codeBlock);
-      });
-    }
-  }
-
   const sendChat = async () => {
     setWorking(true);
     const chatMessage = { content: chat, role: ChatRole.USER };
     setChats((prevArray) => [...prevArray, chatMessage]);
-    setChat("");
+    setChat('');
     await chatStream(chatMessage);
     setWorking(false);
-    delayHL();
+    delayHighlighter();
   };
 
   const chatEnterPress = async (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && !working && model != null) {
+    if (e.key === 'Enter' && !e.shiftKey && !working && modelName != null) {
       await sendChat();
     }
   };
@@ -209,59 +175,77 @@ export default function Home() {
   };
 
   const scrollToBottom = () => {
-    if (chatsListDiv.current != null) {
-      chatsListDiv.current.lastElementChild?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-        inline: "nearest",
+    if (chatsDiv.current != null) {
+      chatsDiv.current.lastElementChild?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest',
       });
       scrollTimoutIsRunning = false;
     }
   };
 
+  const checkScroll = () => {
+    if (!chatsDiv.current) return;
+    const bufferHeight = 100;
+
+    const { scrollTop, scrollHeight, clientHeight } = chatsDiv.current;
+    const awayFromBottom = Math.ceil(scrollTop + clientHeight) < (scrollHeight- bufferHeight);
+
+    setIsAwayFromBottom(awayFromBottom);
+  };
+
   return (
     <>
-      <main className="flex-1 overflow-y-auto">
-        <div className="py-3">
-          {model === null && <ModelMenu models={tag.models} />}
-        </div>
-        {model != null && (
-          <div className="space-y-4 w-full" ref={chatsListDiv}>
+      <main className="flex-1 overflow-y-auto space-y-4" ref={chatsDiv}>
+        {tagIsError && <AlertBox title="Error" description={tagError.message} />}
+        {modelName == null && (
+          <div className="flex">
+            <ModelMenu models={tag?.models || []} disabled={!tagIsSuccess} className="py-3" />
+            {tagIsLoading && (
+              <span className="ml-2">
+                <Spinner />
+              </span>
+            )}
+          </div>
+        )}
+
+        {modelName != null && (
+          <section className="space-y-4 w-full">
             {chats.map((message, index) => (
-              <ChatBubble
-                role={message.role}
-                content={message.content}
-                key={index}
-              />
+              <ChatBubble role={message.role} content={message.content} key={index} />
             ))}
-          </div>
+            {loading && <Spinner />}
+          </section>
         )}
-        {loading && (
-          <div className="mt-2">
-            <Spinner />
-          </div>
-        )}
+
+        {isAwayFromBottom && <PageDownButton className="absolute bottom-24 left-1/2" />}
       </main>
 
-      <footer className="w-full bg-background py-3">
-        <div className="w-full relative">
-          <Textarea
-            value={chat}
-            onChange={(e) => setChat(e.target.value)}
-            onKeyUp={chatEnterPress}
-            placeholder="Type your message..."
-            className="overflow-hidden pr-20"
-            disabled={model === null}
-          />
+      <section className="py-3 relative">
+        {/* <div>{isAwayFromBottom ? 'Scroll is away from bottom' : 'Scroll is at the bottom'}</div> */}
+        <Textarea
+          value={chat}
+          onChange={(e) => setChat(e.target.value)}
+          onKeyUp={chatEnterPress}
+          placeholder="Type your message..."
+          className="overflow-hidden pr-20"
+          disabled={modelName === null}
+        />
+        {working ? (
+          <Button onClick={api.cancelChatStream} className="absolute bottom-6 right-3" disabled={!working}>
+            Cancel
+          </Button>
+        ) : (
           <Button
             onClick={sendChat}
-            className="absolute bottom-3 right-3"
-            disabled={working || model === null}
+            className="absolute bottom-6 right-3"
+            disabled={working || modelName === null}
           >
             Send
           </Button>
-        </div>
-      </footer>
+        )}
+      </section>
     </>
   );
 }
