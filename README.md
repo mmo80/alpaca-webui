@@ -1,5 +1,6 @@
 # Alpaca WebUI for Ollama
 This is a web UI for ollama with markup formatting and code highlighting.
+![Build](https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml/badge.svg)
 
 **Has**
 - [x] Markup Formatting
