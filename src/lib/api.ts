@@ -29,9 +29,8 @@ const getTag = async (): Promise<OllamaTag> => {
 };
 
 const cancelChatStream = async () => {
-  if (chatStreamController != null) {
+  if (chatStreamController != null && !chatStreamController.signal.aborted) {
     chatStreamController.abort();
-    console.log('Download aborted');
   }
 };
 
@@ -56,13 +55,8 @@ const getChatStream = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: chatStreamSignal,
-    }).catch(function (error) {
-      throw new Error(
-        `catch() Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`
-      );
     });
   } catch (error) {
-    console.log('Error:', error);
     throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
   }
 

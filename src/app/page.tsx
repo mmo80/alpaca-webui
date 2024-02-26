@@ -43,10 +43,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-    api.setOllamaBaseUrl(baseUrl.toString());
-  }, [baseUrl]);
-
-  useEffect(() => {
     checkScroll();
 
     const div = mainDiv.current;
@@ -59,8 +55,12 @@ export default function Home() {
         div.removeEventListener('scroll', checkScroll);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    api.setOllamaBaseUrl(baseUrl.toString());
+  }, [baseUrl]);
 
   useEffect(() => {
     if (modelName != null) {
@@ -86,74 +86,85 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
-  const chatStream = async (message: ChatMessage) => {
-    setLoading(true);
-    delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
+  const updateLastChatsItem = (type: string, content: string = '') => {
+    setChats((prevArray) => {
+      return prevArray.map((chat, index) => {
+        if (index === prevArray.length - 1) {
+          if (type === 'replace') {
+            chat.content = chat.content.replace(/[\n\s]+$/, '');
+          } else if (type === 'update') {
+            chat.content = content;
+          }
+        }
+        return chat;
+      });
+    });
+  };
 
+  const chatStream = async (message: ChatMessage) => {
     if (modelName == null) {
       return;
     }
 
-    const streamReader = await api.getChatStream(modelName, [...chats, message]);
+    setLoading(true);
+    delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
 
-    setLoading(false);
+    try {
+      const streamReader = await api.getChatStream(modelName, [...chats, message]);
+      setLoading(false);
 
-    let assistantChatMessage = '';
-    const decoder = new TextDecoder();
+      let assistantChatMessage = '';
+      const decoder = new TextDecoder();
 
-    setChats((prevArray) => [...prevArray, { content: assistantChatMessage, role: ChatRole.ASSISTANT }]);
+      setChats((prevArray) => [...prevArray, { content: assistantChatMessage, role: ChatRole.ASSISTANT }]);
 
-    let checkFirstCharSpacing = true;
-    while (true) {
-      const { done, value } = await streamReader.read();
+      let checkFirstCharSpacing = true;
+      while (true) {
+        const { done, value } = await streamReader.read();
 
-      if (done) {
-        setChats((prevArray) => {
-          return prevArray.map((chat, index) => {
-            if (index === prevArray.length - 1) {
-              // Remove eventual ending linebreaks and spaces
-              chat.content = chat.content.replace(/[\n\s]+$/, '');
-            }
-            return chat;
-          });
-        });
-        break;
-      }
-
-      const decodedChunk = decoder.decode(value, { stream: true });
-      const chunkList = parseJsonStream(decodedChunk);
-      if (chunkList != null && chunkList.length > 0) {
-        for (const chunkObj of chunkList) {
-          if (chunkObj == null) {
-            continue;
-          }
-
-          let chunkContent = chunkObj.message.content;
-          if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
-            // Remove eventual initial linebreaks and spaces
-            assistantChatMessage = '';
-            chunkContent = chunkContent.trimStart();
-            checkFirstCharSpacing = false;
-          }
-
-          assistantChatMessage += chunkContent;
-
-          setChats((prevArray) => {
-            return prevArray.map((chat, index) => {
-              if (index === prevArray.length - 1) {
-                chat.content = assistantChatMessage;
-              }
-              return chat;
-            });
-          });
-
-          delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
+        if (done) {
+          updateLastChatsItem('replace');
+          break;
         }
+
+        const decodedChunk = decoder.decode(value, { stream: true });
+        const chunkList = parseJsonStream(decodedChunk);
+        if (chunkList != null && chunkList.length > 0) {
+          for (const chunkObj of chunkList) {
+            if (chunkObj == null) {
+              continue;
+            }
+
+            let chunkContent = chunkObj.message.content;
+            if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
+              // Remove eventual initial linebreaks and spaces
+              assistantChatMessage = '';
+              chunkContent = chunkContent.trimStart();
+              checkFirstCharSpacing = false;
+            }
+
+            assistantChatMessage += chunkContent;
+
+            updateLastChatsItem('update', assistantChatMessage);
+            delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
+          }
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          setChats((prevArray) => [...prevArray, { content: 'Cancel', role: ChatRole.USER }]);
+        }
+      } else {
+        console.error(error);
       }
     }
   };
 
   const sendChat = async () => {
+    if (chat === '') {
+      return;
+    }
     setWorking(true);
     const chatMessage = { content: chat, role: ChatRole.USER };
     setChats((prevArray) => [...prevArray, chatMessage]);
@@ -175,12 +186,12 @@ export default function Home() {
     }
   };
 
-  const delayedScrollToBottom = (awayFromBottom:boolean) => {
+  const delayedScrollToBottom = (awayFromBottom: boolean) => {
     if (!scrollTimoutIsRunning && !awayFromBottom) {
       scrollTimoutIsRunning = true;
       setTimeout(() => {
         scrollToBottom();
-      }, 300);
+      }, 200);
     }
   };
 
@@ -200,13 +211,13 @@ export default function Home() {
     setIsAwayFromBottom(awayFromBottom);
   };
 
-  const isDivAwayFromBottom = (ref: RefObject<HTMLDivElement>):boolean => {
+  const isDivAwayFromBottom = (ref: RefObject<HTMLDivElement>): boolean => {
     if (!ref.current) return false;
-    const bufferHeight = 100;
+    const bufferHeight = 80;
 
     const { scrollTop, scrollHeight, clientHeight } = ref.current;
-    return Math.ceil(scrollTop + clientHeight) < (scrollHeight- bufferHeight);
-  }
+    return Math.ceil(scrollTop + clientHeight) < scrollHeight - bufferHeight;
+  };
 
   return (
     <>
@@ -232,7 +243,9 @@ export default function Home() {
           </section>
         )}
 
-        {isAwayFromBottom && <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />}
+        {isAwayFromBottom && (
+          <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />
+        )}
       </main>
 
       <section className="py-3 relative">
