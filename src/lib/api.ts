@@ -1,4 +1,4 @@
-import { ChatMessage, OllamaTag, OllamaTagSchema } from '@/lib/types';
+import { ChatCompletionnRequest, ChatMessage, OllamaTag, OllamaTagSchema } from '@/lib/types';
 
 const keepAlive = '10m';
 let ollamaBaseUrl = 'http://localhost:11434';
@@ -38,8 +38,10 @@ const getChatStream = async (
   model: string,
   messages: ChatMessage[]
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  const url = `${ollamaBaseUrl}/api/chat`;
-  const payload = {
+  //const url = `${ollamaBaseUrl}/api/chat`;
+  const url = `${ollamaBaseUrl}/v1/chat/completions`;
+
+  const payload: ChatCompletionnRequest = {
     model: model,
     messages: messages,
     stream: true,

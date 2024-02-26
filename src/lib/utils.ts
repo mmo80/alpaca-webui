@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import hljs from 'highlight.js';
+import { ChatCompletionResponse } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,22 +25,27 @@ const setHighlighter = () => {
   }
 };
 
-export const parseJsonStream = (json: string): any[] => {
+const removeDataString = (data: string) => {
+  data = data.replace('data: [DONE]', '');
+  return data.replace(/^data:\s*/, '').trimEnd();
+};
+
+export const parseJsonStream = (json: string): ChatCompletionResponse[] => {
   try {
-    if (json.includes('}\n')) {
-      // Handle cases where stream returns two or more json object strings
-      const jsonStrings = json.split('}\n');
-      return jsonStrings.map((str) => {
-        if (str.length > 0) {
-          return JSON.parse(`${str}}`);
-        } else {
-          return null;
-        }
-      });
-    }
-    return [JSON.parse(json)];
+    json = json.replace(/^data:\s*/, '');
+    return [JSON.parse(removeDataString(json)) as ChatCompletionResponse];
   } catch (error) {
-    console.error(`${error}. Failed to parse JSON: ${json}`);
+    console.error(`${error}. Failed to parse JSON: ${removeDataString(json)}`);
     return [];
   }
 };
+
+// url: https://stackoverflow.com/a/18650828
+export const formatBytes = (a: number, b:number = 2) => {
+  if (!+a) return "0 Bytes";
+  const c = 0 > b ? 0 : b,
+    d = Math.floor(Math.log(a) / Math.log(1024));
+  return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${
+    ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"][d]
+  }`;
+}

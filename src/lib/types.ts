@@ -1,27 +1,13 @@
-import { z } from "zod";
+import { z } from 'zod';
+import { formatBytes } from './utils';
 
 export enum ChatRole {
-  USER = "user",
-  SYSTEM = "system",
-  ASSISTANT = "assistant",
+  USER = 'user',
+  SYSTEM = 'system',
+  ASSISTANT = 'assistant',
 }
 
 const ChatRoleSchema = z.nativeEnum(ChatRole);
-
-const ChatMessageSchema = z.object({
-  role: ChatRoleSchema,
-  content: z.string(),
-});
-
-// url: https://stackoverflow.com/a/18650828
-function formatBytes(a: number, b:number = 2) {
-  if (!+a) return "0 Bytes";
-  const c = 0 > b ? 0 : b,
-    d = Math.floor(Math.log(a) / Math.log(1024));
-  return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${
-    ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"][d]
-  }`;
-}
 
 const OllamaModelSchema = z
   .object({
@@ -50,22 +36,44 @@ export const OllamaTagSchema = z.object({
   models: z.array(OllamaModelSchema),
 });
 
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 export type OllamaModel = z.infer<typeof OllamaModelSchema>;
 export type OllamaTag = z.infer<typeof OllamaTagSchema>;
 
-export type OllamaChat = {
-  model: string;
-  created_at: string;
-  message: {
-    role: string;
-    content: string;
-  };
-  done: boolean;
-  total_duration?: number;
-  load_duration?: number;
-  prompt_eval_count?: number;
-  prompt_eval_duration?: number;
-  eval_count?: number;
-  eval_duration?: number;
-};
+// OpenAI API Models
+const UsageSchema = z.object({
+  prompt_tokens: z.number(),
+  completion_tokens: z.number(),
+  total_tokens: z.number(),
+});
+
+const MessageSchema = z.object({
+  role: ChatRoleSchema.default(ChatRole.ASSISTANT),
+  content: z.string(),
+});
+
+const ChoiceSchema = z.object({
+  index: z.number(),
+  delta: MessageSchema,
+  finish_reason: z.string().or(z.nullable(z.string())),
+});
+
+const ChatCompletionSchema = z.object({
+  id: z.string(),
+  object: z.string(),
+  created: z.number(),
+  model: z.string(),
+  system_fingerprint: z.string(),
+  choices: z.array(ChoiceSchema),
+  usage: UsageSchema.or(z.nullable(UsageSchema)),
+});
+
+export type ChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
+export type ChatMessage = z.infer<typeof MessageSchema>;
+
+const ChatCompletionRequestSchema = z.object({
+  model: z.string(),
+  messages: z.array(MessageSchema),
+  stream: z.boolean(),
+});
+
+export type ChatCompletionnRequest = z.infer<typeof ChatCompletionRequestSchema>;

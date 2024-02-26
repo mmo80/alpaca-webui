@@ -131,11 +131,12 @@ export default function Home() {
         const chunkList = parseJsonStream(decodedChunk);
         if (chunkList != null && chunkList.length > 0) {
           for (const chunkObj of chunkList) {
-            if (chunkObj == null) {
+            if (chunkObj?.id == null) {
               continue;
             }
 
-            let chunkContent = chunkObj.message.content;
+            //let chunkContent = chunkObj.message.content;
+            let chunkContent = chunkObj.choices[0].delta.content;
             if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
               // Remove eventual initial linebreaks and spaces
               assistantChatMessage = '';
