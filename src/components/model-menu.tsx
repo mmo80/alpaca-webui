@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { ChevronDownIcon, LayersIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OllamaModel } from "@/lib/types";
-import { LayersIcon } from "@radix-ui/react-icons";
 import { useModelStore } from "../lib/store";
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,6 +25,7 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
     const modelHandler = (
       e: React.MouseEvent<HTMLDivElement, MouseEvent>
     ): void => {
+      //updateModelName('codellama/CodeLlama-70b-Instruct-hf');
       updateModelName(e.currentTarget.textContent);
     };
 

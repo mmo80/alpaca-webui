@@ -26,6 +26,7 @@ export default function Home() {
   const [working, setWorking] = useState<boolean>(false);
   const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
   const [baseUrl, setBaseUrl] = useLocalStorage<string>('ollamaBaseUrl', 'http://localhost:11434');
+  const [apiToken, setApiToken] = useState<string>('');
   const mainDiv = useRef<HTMLDivElement>(null);
   const chatsDiv = useRef<HTMLDivElement>(null);
   const textareaPlaceholder = useRef<string>('Choose model...');
@@ -110,7 +111,7 @@ export default function Home() {
     delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
 
     try {
-      const streamReader = await api.getChatStream(modelName, [...chats, message]);
+      const streamReader = await api.getChatStream(modelName, [...chats, message], apiToken);
       setLoading(false);
 
       let assistantChatMessage = '';

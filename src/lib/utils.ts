@@ -15,7 +15,9 @@ export const delayHighlighter = () => {
 
 const setHighlighter = () => {
   const elements = document.querySelectorAll(`code[class^="language-"]`);
-  const filteredElements = Array.from(elements).filter((element) => !element.hasAttribute('data-highlighted')) as HTMLElement[];
+  const filteredElements = Array.from(elements).filter(
+    (element) => !element.hasAttribute('data-highlighted')
+  ) as HTMLElement[];
   if (filteredElements) {
     filteredElements.forEach((codeBlock) => {
       if (codeBlock.dataset.highlighted !== 'yes') {
@@ -27,12 +29,36 @@ const setHighlighter = () => {
 
 const removeDataString = (data: string) => {
   data = data.replace('data: [DONE]', '');
-  return data.replace(/^data:\s*/, '').trimEnd();
+  return data
+    .replace(/^data:\s*/, '')
+    .trimEnd()
+    .trimStart();
 };
+
+function containsTwoOrMoreDataBlocks(str: string): boolean {
+  const matches = str.match(/data:\s*{/g) || [];
+  return matches.length >= 2;
+}
+
+function isNullOrWhitespace(input: string | null | undefined): boolean {
+  return !input?.trim();
+}
 
 export const parseJsonStream = (json: string): ChatCompletionResponse[] => {
   try {
-    json = json.replace(/^data:\s*/, '');
+    if (isNullOrWhitespace(removeDataString(json))) {
+      return [];
+    }
+    if (containsTwoOrMoreDataBlocks(json)) {
+      const jsonStrings = json.split('data: {');
+      return jsonStrings.map((str) => {
+        if (str.length > 0) {
+          return JSON.parse(removeDataString(`{${str}`));
+        } else {
+          return null;
+        }
+      });
+    }
     return [JSON.parse(removeDataString(json)) as ChatCompletionResponse];
   } catch (error) {
     console.error(`${error}. Failed to parse JSON: ${removeDataString(json)}`);
@@ -41,11 +67,11 @@ export const parseJsonStream = (json: string): ChatCompletionResponse[] => {
 };
 
 // url: https://stackoverflow.com/a/18650828
-export const formatBytes = (a: number, b:number = 2) => {
-  if (!+a) return "0 Bytes";
+export const formatBytes = (a: number, b: number = 2) => {
+  if (!+a) return '0 Bytes';
   const c = 0 > b ? 0 : b,
     d = Math.floor(Math.log(a) / Math.log(1024));
   return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${
-    ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"][d]
+    ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][d]
   }`;
-}
+};

@@ -6,6 +6,7 @@ let chatStreamController: AbortController | null = null;
 
 const getTag = async (): Promise<OllamaTag> => {
   const url = `${ollamaBaseUrl}/api/tags`;
+  //const url = `http://localhost:11434/api/tags`;
   let response;
   try {
     response = await fetch(url, {
@@ -36,7 +37,8 @@ const cancelChatStream = async () => {
 
 const getChatStream = async (
   model: string,
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  apiKey: string,
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   //const url = `${ollamaBaseUrl}/api/chat`;
   const url = `${ollamaBaseUrl}/v1/chat/completions`;
@@ -47,6 +49,14 @@ const getChatStream = async (
     stream: true,
   };
 
+  let headers = new Headers({
+    'Content-Type': 'application/json',
+  });
+
+  if (apiKey != null && apiKey.length > 0) {
+    headers.append('Authorization', `Bearer ${apiKey}`);
+  }
+
   let response;
   try {
     chatStreamController = new AbortController();
@@ -54,7 +64,7 @@ const getChatStream = async (
 
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify(payload),
       signal: chatStreamSignal,
     });
