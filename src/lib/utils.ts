@@ -36,7 +36,7 @@ const removeDataString = (data: string) => {
 };
 
 function containsTwoOrMoreDataBlocks(str: string): boolean {
-  const matches = str.match(/data:\s*{/g) || [];
+  const matches = str.match(/data:\s*{/g) ?? [];
   return matches.length >= 2;
 }
 

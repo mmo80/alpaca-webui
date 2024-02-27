@@ -9,38 +9,49 @@ import { Spinner } from '@/components/spinner';
 import { PageDownButton } from '@/components/page-down-button';
 
 import { useQuery } from '@tanstack/react-query';
-import { ChatMessage, ChatRole } from '@/lib/types';
-import { useModelStore } from '../lib/store';
+import { ChatMessage, ChatRole, TModelsResponseSchema } from '@/lib/types';
+import { useModelStore, useSettingsStore } from '../lib/store';
 import { api } from '../lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter, parseJsonStream } from '@/lib/utils';
-import useLocalStorage from '@/lib/local-storage';
+import { EditSettings } from '@/components/edit-settings';
 
 const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 
 export default function Home() {
-  const { modelName, updateModel } = useModelStore();
+  const { modelName } = useModelStore();
+  const { modelListVariant, hostname, token } = useSettingsStore();
   const [chat, setChat] = useState<string>('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
   const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
-  const [baseUrl, setBaseUrl] = useLocalStorage<string>('ollamaBaseUrl', 'http://localhost:11434');
-  const [apiToken, setApiToken] = useState<string>('');
   const mainDiv = useRef<HTMLDivElement>(null);
   const chatsDiv = useRef<HTMLDivElement>(null);
   const textareaPlaceholder = useRef<string>('Choose model...');
   let scrollTimoutIsRunning = false;
 
   const {
-    isLoading: tagIsLoading,
-    error: tagError,
-    data: tag,
-    isSuccess: tagIsSuccess,
-    isError: tagIsError,
-  } = useQuery({
-    queryKey: ['ollamaTag'],
-    queryFn: async () => await api.getTag(),
+    isLoading: modelsIsLoading,
+    error: modelsError,
+    data: models,
+    isSuccess: modelsIsSuccess,
+    isError: modelsIsError,
+  } = useQuery<TModelsResponseSchema>({
+    queryKey: ['models', modelListVariant, token, hostname],
+    queryFn: async () => {
+      switch (modelListVariant) {
+        case 'ollama': {
+          const tags = await api.getTag(hostname);
+          return tags.models.map((model) => ({ id: model.name, object: 'model', created: 0 }));
+        }
+        case 'openai':
+          return await api.getModelList(hostname, token);
+        case 'manual':
+          return [] as TModelsResponseSchema;
+      }
+      return [] as TModelsResponseSchema;
+    },
   });
 
   useEffect(() => {
@@ -60,10 +71,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    api.setOllamaBaseUrl(baseUrl.toString());
-  }, [baseUrl]);
-
-  useEffect(() => {
     if (modelName != null) {
       setChats((prevArray) => [
         ...prevArray,
@@ -72,19 +79,9 @@ export default function Home() {
           role: ChatRole.ASSISTANT,
         },
       ]);
-
       setChats((prevArray) => [...prevArray, { content: systemPromptMessage, role: ChatRole.SYSTEM }]);
-
-      if (tag != null) {
-        const model = tag.models.find((model) => model.name === modelName);
-        if (model != null) {
-          updateModel(model);
-        }
-      }
-
       textareaPlaceholder.current = 'Type your message...';
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
   const updateLastChatsItem = (type: string, content: string = '') => {
@@ -111,7 +108,7 @@ export default function Home() {
     delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
 
     try {
-      const streamReader = await api.getChatStream(modelName, [...chats, message], apiToken);
+      const streamReader = await api.getChatStream(modelName, [...chats, message], token, hostname);
       setLoading(false);
 
       let assistantChatMessage = '';
@@ -136,7 +133,6 @@ export default function Home() {
               continue;
             }
 
-            //let chunkContent = chunkObj.message.content;
             let chunkContent = chunkObj.choices[0].delta.content;
             if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
               // Remove eventual initial linebreaks and spaces
@@ -221,20 +217,38 @@ export default function Home() {
     return Math.ceil(scrollTop + clientHeight) < scrollHeight - bufferHeight;
   };
 
+  const renderModelListVariant = () => {
+    if (modelName == null) {
+      switch (modelListVariant) {
+        case 'manual':
+          return <div>INPUT</div>;
+        case 'ollama':
+        case 'openai':
+          return (
+            <div className="flex">
+              <ModelMenu models={models ?? []} disabled={!modelsIsSuccess} className="py-3" />
+              {modelsIsLoading && (
+                <span className="ml-2">
+                  <Spinner />
+                </span>
+              )}
+            </div>
+          );
+        default:
+          return <p className="text-sm">Edit settings to start chat.</p>;
+      }
+    }
+    return <></>;
+  };
+
   return (
     <>
       <main className="flex-1 overflow-y-auto space-y-4" ref={mainDiv}>
-        {tagIsError && <AlertBox title="Error" description={tagError.message} />}
-        {modelName == null && (
-          <div className="flex">
-            <ModelMenu models={tag?.models || []} disabled={!tagIsSuccess} className="py-3" />
-            {tagIsLoading && (
-              <span className="ml-2">
-                <Spinner />
-              </span>
-            )}
-          </div>
-        )}
+        {modelsIsError && <AlertBox title="Error" description={modelsError.message} />}
+
+        <EditSettings />
+
+        {renderModelListVariant()}
 
         {modelName != null && (
           <section className="space-y-4 w-full" ref={chatsDiv}>
@@ -245,9 +259,7 @@ export default function Home() {
           </section>
         )}
 
-        {isAwayFromBottom && (
-          <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />
-        )}
+        {isAwayFromBottom && <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />}
       </main>
 
       <section className="py-3 relative">
@@ -265,11 +277,7 @@ export default function Home() {
             Cancel
           </Button>
         ) : (
-          <Button
-            onClick={sendChat}
-            className="absolute bottom-6 right-3"
-            disabled={working || modelName === null}
-          >
+          <Button onClick={sendChat} className="absolute bottom-6 right-3" disabled={working || modelName === null}>
             Send
           </Button>
         )}

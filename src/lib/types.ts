@@ -77,3 +77,14 @@ const ChatCompletionRequestSchema = z.object({
 });
 
 export type ChatCompletionnRequest = z.infer<typeof ChatCompletionRequestSchema>;
+
+const ModelResponseSchema = z.object({
+  id: z.string(),
+  object: z.string(),
+  created: z.number(),
+});
+
+export const ModelsResponseSchema = z.array(ModelResponseSchema);
+
+export type TModelsResponseSchema = z.infer<typeof ModelsResponseSchema>;
+export type TModelResponseSchema = z.infer<typeof ModelResponseSchema>;

@@ -1,12 +1,24 @@
-import { ChatCompletionnRequest, ChatMessage, OllamaTag, OllamaTagSchema } from '@/lib/types';
+import {
+  ChatCompletionnRequest,
+  ChatMessage,
+  ModelsResponseSchema,
+  OllamaTag,
+  OllamaTagSchema,
+  TModelResponseSchema,
+} from '@/lib/types';
 
 const keepAlive = '10m';
-let ollamaBaseUrl = 'http://localhost:11434';
 let chatStreamController: AbortController | null = null;
 
-const getTag = async (): Promise<OllamaTag> => {
-  const url = `${ollamaBaseUrl}/api/tags`;
-  //const url = `http://localhost:11434/api/tags`;
+const validUrl = (url: string | null): string => {
+  if (url == null) {
+    throw new Error('Invalid URL');
+  }
+  return url;
+}
+
+const getTag = async (baseUrl: string | null): Promise<OllamaTag> => {
+  const url = `${validUrl(baseUrl)}/api/tags`;
   let response;
   try {
     response = await fetch(url, {
@@ -29,6 +41,39 @@ const getTag = async (): Promise<OllamaTag> => {
   return validatedOllamaTag.data;
 };
 
+const getModelList = async (baseUrl: string | null, apiKey: string | null): Promise<TModelResponseSchema[]> => {
+  const url = `${validUrl(baseUrl)}/v1/models`;
+
+  let headers = new Headers({
+    'Content-Type': 'application/json',
+  });
+
+  if (apiKey != null && apiKey.length > 0) {
+    headers.append('Authorization', `Bearer ${apiKey}`);
+  }
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: 'GET',
+      headers: headers,
+    });
+  } catch (error) {
+    throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
+  }
+
+  if (response.status !== 200) {
+    throw new Error(`API request failed with status code: ${response.status}:`);
+  }
+
+  const data: unknown = await response.json();
+  const validatedModelList = await ModelsResponseSchema.safeParseAsync(data);
+  if (!validatedModelList.success) {
+    throw validatedModelList.error;
+  }
+  return validatedModelList.data;
+};
+
 const cancelChatStream = async () => {
   if (chatStreamController != null && !chatStreamController.signal.aborted) {
     chatStreamController.abort();
@@ -38,10 +83,10 @@ const cancelChatStream = async () => {
 const getChatStream = async (
   model: string,
   messages: ChatMessage[],
-  apiKey: string,
+  apiKey: string | null,
+  baseUrl: string | null
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
-  //const url = `${ollamaBaseUrl}/api/chat`;
-  const url = `${ollamaBaseUrl}/v1/chat/completions`;
+  const url = `${validUrl(baseUrl)}/v1/chat/completions`;
 
   const payload: ChatCompletionnRequest = {
     model: model,
@@ -85,12 +130,7 @@ const getChatStream = async (
 
 export const api = {
   getTag,
+  getModelList,
   getChatStream,
   cancelChatStream,
-  setOllamaBaseUrl: (url: string) => {
-    if (url.indexOf('http') === -1) {
-      throw new Error('Invalid URL');
-    }
-    ollamaBaseUrl = url;
-  },
 };
