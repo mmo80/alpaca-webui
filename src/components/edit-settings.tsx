@@ -142,11 +142,11 @@ export const EditSettings: React.FC = () => {
               name="apiKey"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>API Key</FormLabel>
+                  <FormLabel>API Key / Bearer Token</FormLabel>
                   <FormControl>
                     <Input placeholder="" {...field} />
                   </FormControl>
-                  <FormDescription>API Key / Bearer Token</FormDescription>
+                  <FormDescription><strong>Caution:</strong> Your information is stored unencrypted in your browser&apos;s local storage.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

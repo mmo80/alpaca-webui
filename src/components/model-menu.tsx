@@ -1,16 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { ChevronDownIcon, LayersIcon } from '@radix-ui/react-icons';
+import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TModelResponseSchema } from '@/lib/types';
 import { useModelStore } from '../lib/store';
 
@@ -20,30 +16,43 @@ interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(({ models, ...props }, ref) => {
   const { updateModelName } = useModelStore();
-
-  const modelHandler = (e: React.MouseEvent<HTMLDivElement, MouseEvent>): void => {
-    updateModelName(e.currentTarget.textContent);
-  };
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" ref={ref} {...props}>
-          <LayersIcon className="mr-2" />
-          <span>Choose Model</span>
-          <ChevronDownIcon className="ml-2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
+          {value ? models.find((model) => model.id === value)?.id : 'Select model...'}
+          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Models</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {models.map((model, index) => (
-          <DropdownMenuItem onClick={modelHandler} className="hover:cursor-pointer" key={index}>
-            {model.id}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent className="w-[300px] p-0">
+        <Command>
+          <CommandInput placeholder="Search model..." className="h-9" />
+          <CommandEmpty>No model found.</CommandEmpty>
+          <CommandGroup>
+            <ScrollArea className="h-72">
+              {models.map((model) => (
+                <CommandItem
+                  key={model.id}
+                  value={model.id}
+                  onSelect={(currentValue) => {
+                    const selectedModel = currentValue === value ? '' : currentValue;
+                    setValue(selectedModel);
+                    updateModelName(selectedModel);
+                    setOpen(false);
+                  }}
+                >
+                  {model.id}
+                  <CheckIcon className={cn('ml-auto h-4 w-4', value === model.id ? 'opacity-100' : 'opacity-0')} />
+                </CommandItem>
+              ))}
+            </ScrollArea>
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 });
 
