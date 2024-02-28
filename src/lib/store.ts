@@ -29,7 +29,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
     }),
     {
       name: 'settings-storage',
-      storage: createJSONStorage(() => sessionStorage)
+      storage: createJSONStorage(() => localStorage)
     }
   )
 );
