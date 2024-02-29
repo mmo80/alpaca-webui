@@ -8,14 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
-
-import { cn } from '@/lib/utils';
-
 import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
-
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/lib/store';
+import { useEffect } from 'react';
 
 const modelListVariant = [
   { label: 'Ollama', value: 'ollama' },
@@ -40,15 +38,18 @@ type TSettingsSchema = z.infer<typeof SettingsSchema>;
 
 export const EditSettings: React.FC = () => {
   const [open, setOpen] = React.useState(false);
-  const { setValues } = useSettingsStore();
+  const { setValues, token, hostname, modelVariant } = useSettingsStore();
 
   const form = useForm<TSettingsSchema>({
     resolver: zodResolver(SettingsSchema),
-    defaultValues: {
-      url: '',
-      apiKey: '',
-    },
+    defaultValues: {},
   });
+
+  useEffect(() => {
+    form.setValue('url', hostname ?? '');
+    form.setValue('apiKey', token ?? '');
+    form.setValue('modelListVariant', modelVariant ?? '');
+  }, [form, hostname, token, modelVariant]);
 
   function onSubmit(data: TSettingsSchema) {
     console.log('form: ', data);
@@ -146,7 +147,10 @@ export const EditSettings: React.FC = () => {
                   <FormControl>
                     <Input placeholder="" {...field} />
                   </FormControl>
-                  <FormDescription><strong>Caution:</strong> Your information is stored unencrypted in your browser&apos;s local storage.</FormDescription>
+                  <FormDescription>
+                    <strong>Caution:</strong> Your information is stored unencrypted in your browser&apos;s local
+                    storage.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

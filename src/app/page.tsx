@@ -20,7 +20,7 @@ const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 
 export default function Home() {
   const { modelName } = useModelStore();
-  const { modelListVariant, hostname, token } = useSettingsStore();
+  const { modelVariant, hostname, token } = useSettingsStore();
   const [chat, setChat] = useState<string>('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -38,9 +38,9 @@ export default function Home() {
     isSuccess: modelsIsSuccess,
     isError: modelsIsError,
   } = useQuery<TModelsResponseSchema>({
-    queryKey: ['models', modelListVariant, token, hostname],
+    queryKey: ['models', modelVariant, token, hostname],
     queryFn: async () => {
-      switch (modelListVariant) {
+      switch (modelVariant) {
         case 'ollama': {
           const tags = await api.getTag(hostname);
           return tags.models.map((model) => ({ id: model.name, object: 'model', created: 0 }));
@@ -80,7 +80,7 @@ export default function Home() {
         },
       ]);
       setChats((prevArray) => [...prevArray, { content: systemPromptMessage, role: ChatRole.SYSTEM }]);
-      textareaPlaceholder.current = 'Type your message...';
+      textareaPlaceholder.current = 'Ask me anything...';
     }
   }, [modelName]);
 
@@ -152,10 +152,14 @@ export default function Home() {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           setChats((prevArray) => [...prevArray, { content: 'Cancel', role: ChatRole.USER }]);
+        } else {
+          setChats((prevArray) => [...prevArray, { content: (error as Error).message, role: ChatRole.SYSTEM }]);
         }
       } else {
         console.error(error);
       }
+      setLoading(false);
+      setWorking(false);
     }
   };
 
@@ -219,7 +223,7 @@ export default function Home() {
 
   const renderModelListVariant = () => {
     if (modelName == null) {
-      switch (modelListVariant) {
+      switch (modelVariant) {
         case 'manual':
           return <div>INPUT</div>;
         case 'ollama':

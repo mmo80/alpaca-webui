@@ -12,7 +12,7 @@ export const useModelStore = create<ModelStoreState>((set) => ({
 }));
 
 interface SettingsStoreState {
-  modelListVariant: string | null;
+  modelVariant: string | null;
   hostname: string | null;
   token: string | null;
   setValues: (modelListVariant: string | null, hostname: string | null, token: string | null) => void;
@@ -21,11 +21,11 @@ interface SettingsStoreState {
 export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
-      modelListVariant: null,
+      modelVariant: null,
       hostname: null,
       token: null,
-      setValues: (modelListVariant, hostname, token) =>
-        set(() => ({ modelListVariant: modelListVariant, hostname: hostname, token: token })),
+      setValues: (modelVariant, hostname, token) =>
+        set(() => ({ modelVariant: modelVariant, hostname: hostname, token: token })),
     }),
     {
       name: 'settings-storage',

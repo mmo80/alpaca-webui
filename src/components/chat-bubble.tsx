@@ -18,29 +18,69 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
           role == ChatRole.USER ? 'whitespace-pre-wrap bg-emerald-900' : 'bg-gray-900'
         }`}
       >
-        <Markdown components={components}>
-          {content}
-        </Markdown>
+        <Markdown components={components}>{content}</Markdown>
       </div>
     </section>
   );
 };
 
-const Code = ({ node, className, children, ...rest }: React.ClassAttributes<HTMLElement> & React.HTMLAttributes<HTMLElement> & ExtraProps) => {
-  const match = /language-(\w+)/.exec(className || '');
+const Code = ({
+  node,
+  className,
+  children,
+  ...rest
+}: React.ClassAttributes<HTMLElement> & React.HTMLAttributes<HTMLElement> & ExtraProps) => {
+  const match = /language-(\w+)/.exec(className ?? '');
   className = className?.replace('react', '');
   className = className?.replace('+', '');
+  const codeId = generateGUID();
   return match ? (
-    <code {...rest} className={`${className} p-3 flex border border-secondary bg-gray-950`}>
-      {children}
-    </code>
+    <>
+      <div className="flex justify-between items-center p-1 rounded-t-lg bg-slate-800">
+        <span className="text-gray-400 ml-2">{match[1]}</span>
+        <button
+          className="code bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-md"
+          onClick={() => copyToClipboard(codeId)}
+        >
+          Copy
+        </button>
+      </div>
+      <code id={codeId} {...rest} className={`${className} p-3 flex border border-secondary rounded-b-lg bg-gray-950`}>
+        {children}
+      </code>
+    </>
   ) : (
     <code {...rest} className={`language-js p-1 border border-secondary bg-gray-950`}>
       {children}
     </code>
   );
-}
+};
 
 const components = {
-  code: Code
-}
+  code: Code,
+};
+
+const copyToClipboard = async (elementId: string) => {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    console.warn('Element not found');
+    return;
+  }
+
+  const text = element.innerText;
+
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Text copied to clipboard');
+  } catch (err) {
+    console.error('Failed to copy text to clipboard', err);
+  }
+};
+
+const generateGUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c == 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
