@@ -7,20 +7,20 @@ import { PersonIcon, LayersIcon } from '@radix-ui/react-icons';
 
 export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
   return (
-    <section className="flex">
-      {role == ChatRole.USER ? (
-        <PersonIcon className="mr-2 mt-2 w-6 h-6" />
-      ) : (
-        <LayersIcon className="mr-2 mt-2 w-6 h-6" />
+    <>
+      {role != ChatRole.SYSTEM && (
+        <section className="flex">
+          {role == ChatRole.USER ? <PersonIcon className="mr-2 mt-2 w-6 h-6" /> : <LayersIcon className="mr-2 mt-2 w-6 h-6" />}
+          <div
+            className={`flex max-w-[100%] w-full flex-col gap-2 rounded-lg px-3 py-2 text-wrap text-sm font-sans overflow-x-hidden ${
+              role == ChatRole.USER ? 'whitespace-pre-wrap bg-emerald-900' : 'bg-gray-900'
+            }`}
+          >
+            <Markdown components={components}>{content}</Markdown>
+          </div>
+        </section>
       )}
-      <div
-        className={`flex max-w-[100%] w-full flex-col gap-2 rounded-lg px-3 py-2 text-wrap text-sm font-sans overflow-x-hidden ${
-          role == ChatRole.USER ? 'whitespace-pre-wrap bg-emerald-900' : 'bg-gray-900'
-        }`}
-      >
-        <Markdown components={components}>{content}</Markdown>
-      </div>
-    </section>
+    </>
   );
 };
 

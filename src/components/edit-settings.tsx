@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
@@ -26,10 +26,7 @@ const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?$/; // ?(\
 const SettingsSchema = z.object({
   url: z
     .string()
-    .regex(
-      urlPattern,
-      "URL must start with 'http://' or 'https://' followed by a domain name, without any trailing path."
-    ),
+    .regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name, without any trailing path."),
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]),
   modelListVariant: z.string({ required_error: 'Please select a model api.' }),
 });
@@ -37,6 +34,7 @@ const SettingsSchema = z.object({
 type TSettingsSchema = z.infer<typeof SettingsSchema>;
 
 export const EditSettings: React.FC = () => {
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const { setValues, token, hostname, modelVariant } = useSettingsStore();
 
@@ -52,12 +50,12 @@ export const EditSettings: React.FC = () => {
   }, [form, hostname, token, modelVariant]);
 
   function onSubmit(data: TSettingsSchema) {
-    console.log('form: ', data);
     setValues(data.modelListVariant, data.url, data.apiKey);
+    setDialogOpen(false);
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Edit Settings</Button>
       </DialogTrigger>
@@ -82,9 +80,7 @@ export const EditSettings: React.FC = () => {
                           role="combobox"
                           className={cn('w-[200px] justify-between', !field.value && 'text-muted-foreground')}
                         >
-                          {field.value
-                            ? modelListVariant.find((model) => model.value === field.value)?.label
-                            : 'Select'}
+                          {field.value ? modelListVariant.find((model) => model.value === field.value)?.label : 'Select'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
@@ -103,10 +99,7 @@ export const EditSettings: React.FC = () => {
                             >
                               {model.label}
                               <CheckIcon
-                                className={cn(
-                                  'ml-auto h-4 w-4',
-                                  model.value === field.value ? 'opacity-100' : 'opacity-0'
-                                )}
+                                className={cn('ml-auto h-4 w-4', model.value === field.value ? 'opacity-100' : 'opacity-0')}
                               />
                             </CommandItem>
                           ))}
@@ -114,7 +107,7 @@ export const EditSettings: React.FC = () => {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  <FormDescription>Choose how to populate model list or to enter model name manually.</FormDescription>
+                  <FormDescription>Choose how to populate model list or to enter manually.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -130,8 +123,7 @@ export const EditSettings: React.FC = () => {
                     <Input placeholder="http://..." {...field} />
                   </FormControl>
                   <FormDescription>
-                    This is your base domain url (http://localhost:11434, https://api.together.xyz,
-                    https://api.openai.com)
+                    This is your base domain url (http://localhost:11434, https://api.together.xyz, https://api.openai.com)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -148,15 +140,16 @@ export const EditSettings: React.FC = () => {
                     <Input placeholder="" {...field} />
                   </FormControl>
                   <FormDescription>
-                    <strong>Caution:</strong> Your information is stored unencrypted in your browser&apos;s local
-                    storage.
+                    <strong>Caution:</strong> Your information is stored unencrypted in your browser&apos;s local storage.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit">Save changes</Button>
+            <DialogFooter className="sm:justify-start">
+              <Button type="submit">Save changes</Button>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>

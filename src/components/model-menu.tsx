@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TModelResponseSchema } from '@/lib/types';
 import { useModelStore } from '../lib/store';
+import { useState } from 'react';
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   models: TModelResponseSchema[];
@@ -16,18 +17,18 @@ interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(({ models, ...props }, ref) => {
   const { updateModelName } = useModelStore();
-  const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState('');
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-[300px] justify-between">
           {value ? models.find((model) => model.id === value)?.id : 'Select model...'}
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0">
+      <PopoverContent side="bottom" className="w-[300px] p-0">
         <Command>
           <CommandInput placeholder="Search model..." className="h-9" />
           <CommandEmpty>No model found.</CommandEmpty>

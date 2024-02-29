@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect, RefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { StopIcon, DoubleArrowUpIcon } from '@radix-ui/react-icons';
 import { ChatBubble } from '@/components/chat-bubble';
 import { ModelMenu } from '@/components/model-menu';
 import { Spinner } from '@/components/spinner';
 import { PageDownButton } from '@/components/page-down-button';
-
 import { useQuery } from '@tanstack/react-query';
 import { ChatMessage, ChatRole, TModelsResponseSchema } from '@/lib/types';
 import { useModelStore, useSettingsStore } from '../lib/store';
@@ -15,11 +16,12 @@ import { api } from '../lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter, parseJsonStream } from '@/lib/utils';
 import { EditSettings } from '@/components/edit-settings';
+// import { Input } from 'postcss';
 
 const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 
 export default function Home() {
-  const { modelName } = useModelStore();
+  const { modelName, updateModelName } = useModelStore();
   const { modelVariant, hostname, token } = useSettingsStore();
   const [chat, setChat] = useState<string>('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
@@ -72,13 +74,6 @@ export default function Home() {
 
   useEffect(() => {
     if (modelName != null) {
-      setChats((prevArray) => [
-        ...prevArray,
-        {
-          content: `You are talking to **${modelName}**`,
-          role: ChatRole.ASSISTANT,
-        },
-      ]);
       setChats((prevArray) => [...prevArray, { content: systemPromptMessage, role: ChatRole.SYSTEM }]);
       textareaPlaceholder.current = 'Ask me anything...';
     }
@@ -225,7 +220,15 @@ export default function Home() {
     if (modelName == null) {
       switch (modelVariant) {
         case 'manual':
-          return <div>INPUT</div>;
+          return (
+            <Input
+              placeholder="Modelname"
+              onChange={(e) => {
+                console.log(e.target.value);
+                updateModelName(e.target.value);
+              }}
+            />
+          );
         case 'ollama':
         case 'openai':
           return (
@@ -256,10 +259,18 @@ export default function Home() {
 
         {modelName != null && (
           <section className="space-y-4 w-full" ref={chatsDiv}>
-            {chats.map((message, index) => (
-              <ChatBubble role={message.role} content={message.content} key={index} />
-            ))}
-            {loading && <Spinner />}
+            {ChatBubble.length === 1 ? (
+              <h2 className="mt-10 scroll-m-20 text-center pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+                How can I help you today?
+              </h2>
+            ) : (
+              <>
+                {chats.map((message, index) => (
+                  <ChatBubble role={message.role} content={message.content} key={index} />
+                ))}
+                {loading && <Spinner />}
+              </>
+            )}
           </section>
         )}
 
@@ -277,12 +288,18 @@ export default function Home() {
           disabled={modelName === null}
         />
         {working ? (
-          <Button onClick={api.cancelChatStream} className="absolute bottom-6 right-3" disabled={!working}>
-            Cancel
+          <Button onClick={api.cancelChatStream} variant="secondary" className="absolute bottom-6 right-3" disabled={!working}>
+            <StopIcon className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={sendChat} className="absolute bottom-6 right-3" disabled={working || modelName === null}>
-            Send
+          <Button
+            onClick={sendChat}
+            variant="secondary"
+            size="icon"
+            className="absolute bottom-6 right-3"
+            disabled={working || modelName === null}
+          >
+            <DoubleArrowUpIcon className="w-4 h-4" />
           </Button>
         )}
       </section>
