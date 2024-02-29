@@ -15,25 +15,13 @@ const validUrl = (url: string | null): string => {
     throw new Error('Invalid URL');
   }
   return url;
-}
+};
 
 const getTag = async (baseUrl: string | null): Promise<OllamaTag> => {
   const url = `${validUrl(baseUrl)}/api/tags`;
-  let response;
-  try {
-    response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-  } catch (error) {
-    throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
-  }
+  const response = await fetchData(url, HttpMethod.GET);
+  const data = await response.json();
 
-  if (response.status !== 200) {
-    throw new Error(`API request failed with status code: ${response.status}:`);
-  }
-
-  const data: unknown = await response.json();
   const validatedOllamaTag = await OllamaTagSchema.safeParseAsync(data);
   if (!validatedOllamaTag.success) {
     throw validatedOllamaTag.error;
@@ -43,30 +31,9 @@ const getTag = async (baseUrl: string | null): Promise<OllamaTag> => {
 
 const getModelList = async (baseUrl: string | null, apiKey: string | null): Promise<TModelResponseSchema[]> => {
   const url = `${validUrl(baseUrl)}/v1/models`;
+  const response = await fetchData(url, HttpMethod.GET, apiKey);
+  const data = await response.json();
 
-  let headers = new Headers({
-    'Content-Type': 'application/json',
-  });
-
-  if (apiKey != null && apiKey.length > 0) {
-    headers.append('Authorization', `Bearer ${apiKey}`);
-  }
-
-  let response;
-  try {
-    response = await fetch(url, {
-      method: 'GET',
-      headers: headers,
-    });
-  } catch (error) {
-    throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
-  }
-
-  if (response.status !== 200) {
-    throw new Error(`API request failed with status code: ${response.status}:`);
-  }
-
-  const data: unknown = await response.json();
   const validatedModelList = await ModelsResponseSchema.safeParseAsync(data);
   if (!validatedModelList.success) {
     throw validatedModelList.error;
@@ -88,38 +55,16 @@ const getChatStream = async (
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   const url = `${validUrl(baseUrl)}/v1/chat/completions`;
 
+  chatStreamController = new AbortController();
+  const chatStreamSignal = chatStreamController.signal;
+
   const payload: ChatCompletionnRequest = {
     model: model,
     messages: messages,
     stream: true,
   };
 
-  let headers = new Headers({
-    'Content-Type': 'application/json',
-  });
-
-  if (apiKey != null && apiKey.length > 0) {
-    headers.append('Authorization', `Bearer ${apiKey}`);
-  }
-
-  let response;
-  try {
-    chatStreamController = new AbortController();
-    const chatStreamSignal = chatStreamController.signal;
-
-    response = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(payload),
-      signal: chatStreamSignal,
-    });
-  } catch (error) {
-    throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
-  }
-
-  if (response.status !== 200) {
-    throw new Error(`API request failed with status code: ${response.status}:`);
-  }
+  const response = await fetchData(url, HttpMethod.POST, apiKey, payload, chatStreamSignal);
 
   if (response.body == null) {
     throw new Error(`API request failed with empty response body`);
@@ -134,3 +79,42 @@ export const api = {
   getChatStream,
   cancelChatStream,
 };
+
+const fetchData = async <T>(
+  url: string,
+  method: HttpMethod,
+  apiKey: string | null = null,
+  payload: T | null = null,
+  abortSignal: AbortSignal | null = null
+): Promise<Response> => {
+  let headers = new Headers({
+    'Content-Type': 'application/json',
+  });
+
+  if (apiKey != null && apiKey.length > 0) {
+    headers.append('Authorization', `Bearer ${apiKey}`);
+  }
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: method,
+      headers: headers,
+      body: payload != null ? JSON.stringify(payload) : null,
+      signal: abortSignal,
+    });
+  } catch (error) {
+    throw new Error(`Failed to fetch data from ${url}. Check that server is online and reachable. ${error}`);
+  }
+
+  if (response.status !== 200) {
+    throw new Error(`API request failed with status code: ${response.status}:`);
+  }
+
+  return response;
+};
+
+enum HttpMethod {
+  GET = 'GET',
+  POST = 'POST',
+}
