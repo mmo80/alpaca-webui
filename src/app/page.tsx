@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect, RefObject } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { StopIcon, DoubleArrowUpIcon } from '@radix-ui/react-icons';
+import { ArrowUpIcon } from '@radix-ui/react-icons';
 import { ChatBubble } from '@/components/chat-bubble';
 import { ModelMenu } from '@/components/model-menu';
 import { Spinner } from '@/components/spinner';
@@ -15,15 +13,13 @@ import { useModelStore, useSettingsStore } from '../lib/store';
 import { api } from '../lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter, parseJsonStream } from '@/lib/utils';
-import { EditSettings } from '@/components/edit-settings';
-// import { Input } from 'postcss';
+import ChatInput from '@/components/chat-input';
 
 const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 
 export default function Home() {
   const { modelName, updateModelName } = useModelStore();
   const { modelVariant, hostname, token } = useSettingsStore();
-  const [chat, setChat] = useState<string>('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
@@ -158,29 +154,17 @@ export default function Home() {
     }
   };
 
-  const sendChat = async () => {
-    if (chat === '') {
+  const sendChat = async (chatInput: string) => {
+    if (chatInput === '') {
       return;
     }
     setWorking(true);
-    const chatMessage = { content: chat, role: ChatRole.USER };
+    const chatMessage = { content: chatInput, role: ChatRole.USER };
     setChats((prevArray) => [...prevArray, chatMessage]);
-    setChat('');
+    //setChat('');
     await chatStream(chatMessage);
     setWorking(false);
     delayHighlighter();
-  };
-
-  const chatEnterPress = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !working && modelName != null) {
-      await sendChat();
-    }
-  };
-
-  const preventEnterPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !working && modelName != null) {
-      e.preventDefault();
-    }
   };
 
   const delayedScrollToBottom = (awayFromBottom: boolean) => {
@@ -242,7 +226,12 @@ export default function Home() {
             </div>
           );
         default:
-          return <p className="text-sm">Edit settings to start chat.</p>;
+          return (
+            <span className="flex items-center pt-2">
+              <h4 className="text-xl font-semibold">Configure settings to begin chat</h4>
+              <ArrowUpIcon className="ml-2" />
+            </span>
+          );
       }
     }
     return <></>;
@@ -253,13 +242,11 @@ export default function Home() {
       <main className="flex-1 overflow-y-auto space-y-4" ref={mainDiv}>
         {modelsIsError && <AlertBox title="Error" description={modelsError.message} />}
 
-        <EditSettings />
-
         {renderModelListVariant()}
 
         {modelName != null && (
-          <section className="space-y-4 w-full" ref={chatsDiv}>
-            {ChatBubble.length === 1 ? (
+          <section className="space-y-4 w-full mt-3" ref={chatsDiv}>
+            {chats.length === 1 ? (
               <h2 className="mt-10 scroll-m-20 text-center pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                 How can I help you today?
               </h2>
@@ -278,30 +265,12 @@ export default function Home() {
       </main>
 
       <section className="py-3 relative">
-        <Textarea
-          value={chat}
-          onChange={(e) => setChat(e.target.value)}
-          onKeyUp={chatEnterPress}
-          onKeyDown={preventEnterPress}
+        <ChatInput
+          onSendInputAsync={sendChat}
+          onCancelStream={api.cancelChatStream}
           placeholder={textareaPlaceholder.current}
-          className="overflow-hidden pr-20"
-          disabled={modelName === null}
+          workingStream={working}
         />
-        {working ? (
-          <Button onClick={api.cancelChatStream} variant="secondary" className="absolute bottom-6 right-3" disabled={!working}>
-            <StopIcon className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            onClick={sendChat}
-            variant="secondary"
-            size="icon"
-            className="absolute bottom-6 right-3"
-            disabled={working || modelName === null}
-          >
-            <DoubleArrowUpIcon className="w-4 h-4" />
-          </Button>
-        )}
       </section>
     </>
   );

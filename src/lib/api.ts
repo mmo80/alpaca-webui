@@ -41,7 +41,7 @@ const getModelList = async (baseUrl: string | null, apiKey: string | null): Prom
   return validatedModelList.data;
 };
 
-const cancelChatStream = async () => {
+const cancelChatStream = () => {
   if (chatStreamController != null && !chatStreamController.signal.aborted) {
     chatStreamController.abort();
   }
