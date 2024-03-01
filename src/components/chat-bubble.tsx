@@ -9,11 +9,11 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
   return (
     <>
       {role != ChatRole.SYSTEM && (
-        <section className="flex">
-          {role == ChatRole.USER ? <PersonIcon className="mr-2 mt-2 w-6 h-6" /> : <LayersIcon className="mr-2 mt-2 w-6 h-6" />}
+        <section className="flex items-end">
+          {role == ChatRole.USER ? <PersonIcon className="mr-2 self-start w-6 h-6" /> : <LayersIcon className="mr-2 self-start w-6 h-6" />}
           <div
-            className={`flex max-w-[100%] w-full flex-col gap-2 rounded-lg px-3 py-2 text-wrap text-sm font-sans overflow-x-hidden ${
-              role == ChatRole.USER ? 'whitespace-pre-wrap bg-emerald-900' : 'bg-gray-900'
+            className={`flex max-w-[100%] w-full flex-col gap-2 text-wrap text-sm leading-7 font-sans overflow-x-hidden rounded-md py-1 px-3 ${
+              role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
             }`}
           >
             <Markdown components={components}>{content}</Markdown>
@@ -36,16 +36,16 @@ const Code = ({
   const codeId = generateGUID();
   return match ? (
     <>
-      <div className="flex justify-between items-center p-1 rounded-t-lg bg-slate-800">
-        <span className="text-gray-400 ml-2">{match[1]}</span>
+      <div className="flex justify-between items-center p-1 rounded-t-lg bg-stone-800">
+        <span className="text-stone-400 ml-2">{match[1]}</span>
         <button
-          className="code bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-md"
+          className="code bg-stone-700 hover:bg-stone-600 text-gray-300 px-3 py-0 rounded-md"
           onClick={() => copyToClipboard(codeId)}
         >
           Copy
         </button>
       </div>
-      <code id={codeId} {...rest} className={`${className} p-3 flex border border-secondary rounded-b-lg bg-gray-950`}>
+      <code id={codeId} {...rest} className={`${className} p-3 flex border border-secondary rounded-b-lg bg-stone-950`}>
         {children}
       </code>
     </>

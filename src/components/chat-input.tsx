@@ -16,8 +16,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream,
   const [chatInput, setChatInput] = useState<string>('');
 
   const sendChat = async () => {
-    await onSendInputAsync(chatInput);
+    const chatInputTrimmed = chatInput.trim();
     setChatInput('');
+    await onSendInputAsync(chatInputTrimmed);
   };
 
   const chatEnterPress = async (e: React.KeyboardEvent) => {
