@@ -207,8 +207,8 @@ export default function Home() {
           return (
             <Input
               placeholder="Modelname"
+              className='w-80 mt-2'
               onChange={(e) => {
-                console.log(e.target.value);
                 updateModelName(e.target.value);
               }}
             />
@@ -216,7 +216,7 @@ export default function Home() {
         case 'ollama':
         case 'openai':
           return (
-            <div className="flex">
+            <div className="flex pt-2">
               <ModelMenu models={models ?? []} disabled={!modelsIsSuccess} className="py-3" />
               {modelsIsLoading && (
                 <span className="ml-2">

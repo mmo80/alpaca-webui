@@ -58,7 +58,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
 
   return (
     <section>
-      <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+      <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-5">
         <h2 className="text-lg font-semibold leading-none tracking-tight">Edit Settings</h2>
       </div>
 

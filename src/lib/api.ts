@@ -32,7 +32,12 @@ const getTag = async (baseUrl: string | null): Promise<OllamaTag> => {
 const getModelList = async (baseUrl: string | null, apiKey: string | null): Promise<TModelResponseSchema[]> => {
   const url = `${validUrl(baseUrl)}/v1/models`;
   const response = await fetchData(url, HttpMethod.GET, apiKey);
-  const data = await response.json();
+  let data = await response.json();
+
+  // ugly fix for mistral model list as they don't respect the OpenAI API model contract
+  if (baseUrl?.indexOf('mistral.ai') !== -1) {
+    data = data.data;
+  }
 
   const validatedModelList = await ModelsResponseSchema.safeParseAsync(data);
   if (!validatedModelList.success) {

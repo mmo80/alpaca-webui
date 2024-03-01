@@ -7,10 +7,14 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 **Has**
 - [x] Support for your local or remote [Ollama](https://ollama.com/) server
 - [x] Compatible with OpenAI Chat Completions API
-- [x] Tested with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference) and [Mistral.ai](https://mistral.ai/).
+- [x] Tested with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference) and [Mistral.ai](https://mistral.ai/)
 - [x] Markup Formatting
 - [x] Code Highlighting
+- [x] List available models for services supporting OpenAI API model endpoint
 - [x] Responsive Layout
+
+![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
+
 
 **Pending Implementation**
 - Modify System Prompt
