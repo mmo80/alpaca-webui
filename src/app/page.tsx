@@ -161,7 +161,6 @@ export default function Home() {
     setWorking(true);
     const chatMessage = { content: chatInput, role: ChatRole.USER };
     setChats((prevArray) => [...prevArray, chatMessage]);
-    //setChat('');
     await chatStream(chatMessage);
     setWorking(false);
     delayHighlighter();
