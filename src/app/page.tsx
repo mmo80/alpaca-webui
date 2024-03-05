@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, RefObject } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { ArrowUpIcon } from '@radix-ui/react-icons';
 import { ChatBubble } from '@/components/chat-bubble';
@@ -14,6 +14,7 @@ import { api } from '../lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter, parseJsonStream } from '@/lib/utils';
 import ChatInput from '@/components/chat-input';
+import useScrollBottom from '@/hooks/use-scroll-bottom';
 
 const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
 
@@ -23,9 +24,11 @@ export default function Home() {
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
-  const [isAwayFromBottom, setIsAwayFromBottom] = useState(false);
+
   const mainDiv = useRef<HTMLDivElement>(null);
   const chatsDiv = useRef<HTMLDivElement>(null);
+  const { isScrollBottom } = useScrollBottom(mainDiv);
+
   const textareaPlaceholder = useRef<string>('Choose model...');
   let scrollTimoutIsRunning = false;
 
@@ -53,20 +56,9 @@ export default function Home() {
   });
 
   useEffect(() => {
-    checkScroll();
-
-    const div = mainDiv.current;
-    if (div) {
-      div.addEventListener('scroll', checkScroll);
-    }
-
-    return () => {
-      if (div) {
-        div.removeEventListener('scroll', checkScroll);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    delayedScrollToBottom();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats]);
 
   useEffect(() => {
     if (modelName != null) {
@@ -74,6 +66,40 @@ export default function Home() {
       textareaPlaceholder.current = 'Ask me anything...';
     }
   }, [modelName]);
+
+  const delayedScrollToBottom = () => {
+    console.log(`isScrollBottom: ${isScrollBottom}`);
+    if (!scrollTimoutIsRunning && isScrollBottom) {
+      scrollTimoutIsRunning = true;
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  };
+
+  let lastHeight = 0;
+
+  const scrollToBottom = () => {
+    if (mainDiv.current != null) {
+      const height = mainDiv.current.scrollHeight;
+      if (lastHeight != height) {
+        mainDiv.current.scrollTop = height;
+        lastHeight = height;
+      }
+      scrollTimoutIsRunning = false;
+    }
+  };
+
+  const directScrollToBottom = () => {
+    if (mainDiv.current != null) {
+      mainDiv.current.scrollTop = mainDiv.current.scrollHeight;
+      // chatsDiv.current.lastElementChild?.scrollIntoView({
+      //   behavior: 'smooth',
+      //   block: 'end',
+      //   inline: 'nearest',
+      // });
+    }
+  };
 
   const updateLastChatsItem = (type: string, content: string = '') => {
     setChats((prevArray) => {
@@ -96,7 +122,6 @@ export default function Home() {
     }
 
     setLoading(true);
-    delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
 
     try {
       const streamReader = await api.getChatStream(modelName, [...chats, message], token, hostname);
@@ -135,7 +160,6 @@ export default function Home() {
             assistantChatMessage += chunkContent;
 
             updateLastChatsItem('update', assistantChatMessage);
-            delayedScrollToBottom(isDivAwayFromBottom(mainDiv));
           }
         }
       }
@@ -166,38 +190,7 @@ export default function Home() {
     delayHighlighter();
   };
 
-  const delayedScrollToBottom = (awayFromBottom: boolean) => {
-    if (!scrollTimoutIsRunning && !awayFromBottom) {
-      scrollTimoutIsRunning = true;
-      setTimeout(() => {
-        scrollToBottom();
-      }, 200);
-    }
-  };
 
-  const scrollToBottom = () => {
-    if (chatsDiv.current != null) {
-      chatsDiv.current.lastElementChild?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest',
-      });
-      scrollTimoutIsRunning = false;
-    }
-  };
-
-  const checkScroll = () => {
-    const awayFromBottom = isDivAwayFromBottom(mainDiv);
-    setIsAwayFromBottom(awayFromBottom);
-  };
-
-  const isDivAwayFromBottom = (ref: RefObject<HTMLDivElement>): boolean => {
-    if (!ref.current) return false;
-    const bufferHeight = 80;
-
-    const { scrollTop, scrollHeight, clientHeight } = ref.current;
-    return Math.ceil(scrollTop + clientHeight) < scrollHeight - bufferHeight;
-  };
 
   const renderModelListVariant = () => {
     if (modelName == null) {
@@ -206,7 +199,7 @@ export default function Home() {
           return (
             <Input
               placeholder="Modelname"
-              className='w-80 mt-2'
+              className="mt-2 w-80"
               onChange={(e) => {
                 updateModelName(e.target.value);
               }}
@@ -238,15 +231,15 @@ export default function Home() {
 
   return (
     <>
-      <main className="flex-1 overflow-y-auto space-y-4" ref={mainDiv}>
+      <main className="flex-1 space-y-4 overflow-y-auto" ref={mainDiv}>
         {modelsIsError && <AlertBox title="Error" description={modelsError.message} />}
 
         {renderModelListVariant()}
 
         {modelName != null && (
-          <section className="space-y-4 w-full mt-3" ref={chatsDiv}>
+          <section className="mt-3 w-full space-y-4" ref={chatsDiv}>
             {chats.length === 1 ? (
-              <h2 className="mt-10 scroll-m-20 text-center pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+              <h2 className="mt-10 scroll-m-20 pb-2 text-center text-3xl font-semibold tracking-tight transition-colors first:mt-0">
                 How can I help you today?
               </h2>
             ) : (
@@ -260,10 +253,10 @@ export default function Home() {
           </section>
         )}
 
-        {isAwayFromBottom && <PageDownButton onClick={scrollToBottom} className="absolute bottom-24 left-1/2" />}
+        {!isScrollBottom && <PageDownButton onClick={directScrollToBottom} className="absolute bottom-24 left-1/2 rounded-full" />}
       </main>
 
-      <section className="py-3 relative">
+      <section className="relative py-3">
         <ChatInput
           onSendInputAsync={sendChat}
           onCancelStream={api.cancelChatStream}

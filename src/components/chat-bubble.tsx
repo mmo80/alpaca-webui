@@ -10,9 +10,13 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
     <>
       {role != ChatRole.SYSTEM && (
         <section className="flex items-end">
-          {role == ChatRole.USER ? <PersonIcon className="mr-2 self-start w-6 h-6" /> : <LayersIcon className="mr-2 self-start w-6 h-6" />}
+          {role == ChatRole.USER ? (
+            <PersonIcon className="mr-2 h-6 w-6 self-start" />
+          ) : (
+            <LayersIcon className="mr-2 h-6 w-6 self-start" />
+          )}
           <div
-            className={`flex max-w-[100%] w-full flex-col gap-2 text-wrap text-sm leading-7 font-sans overflow-x-hidden rounded-md py-1 px-3 ${
+            className={`flex w-full max-w-[100%] flex-col gap-2 overflow-x-hidden text-wrap rounded-md px-3 py-1 font-sans text-sm leading-7 ${
               role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
             }`}
           >
@@ -36,21 +40,21 @@ const Code = ({
   const codeId = generateGUID();
   return match ? (
     <>
-      <div className="flex justify-between items-center p-1 rounded-t-lg bg-stone-800">
-        <span className="text-stone-400 ml-2">{match[1]}</span>
+      <div className="flex items-center justify-between rounded-t-lg bg-stone-800 p-1">
+        <span className="ml-2 text-stone-400">{match[1]}</span>
         <button
-          className="code bg-stone-700 hover:bg-stone-600 text-gray-300 px-3 py-0 rounded-md"
+          className="code rounded-md bg-stone-700 px-3 py-0 text-gray-300 hover:bg-stone-600"
           onClick={() => copyToClipboard(codeId)}
         >
           Copy
         </button>
       </div>
-      <code id={codeId} {...rest} className={`${className} p-3 flex border border-secondary rounded-b-lg bg-stone-950`}>
+      <code id={codeId} {...rest} className={`${className} flex rounded-b-lg border border-secondary bg-stone-950 p-3`}>
         {children}
       </code>
     </>
   ) : (
-    <code {...rest} className={`language-js p-1 border border-secondary bg-gray-950`}>
+    <code {...rest} className={`language-js border border-secondary bg-gray-950 p-1`}>
       {children}
     </code>
   );
