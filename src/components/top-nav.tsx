@@ -13,7 +13,6 @@ import { LayersIcon, ChatBubbleIcon, GearIcon } from '@radix-ui/react-icons';
 import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
-import { Button } from './ui/button';
 import SettingsForm from './settings-form';
 
 export const TopNav: React.FC = () => {
@@ -30,14 +29,14 @@ export const TopNav: React.FC = () => {
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationMenuLink className={`${navigationMenuTriggerStyle()} hover:cursor-pointer`} onClick={newChat}>
-              <ChatBubbleIcon className="mr-2 w-4 h-4" /> New Chat
+              <ChatBubbleIcon className="mr-2 h-4 w-4" /> New Chat
             </NavigationMenuLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <NavigationMenuLink className={`${navigationMenuTriggerStyle()} hover:cursor-pointer`}>
-                  <GearIcon className="mr-2 w-4 h-4" /> Settings
+                  <GearIcon className="mr-2 h-4 w-4" /> Settings
                 </NavigationMenuLink>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
@@ -48,7 +47,7 @@ export const TopNav: React.FC = () => {
           <NavigationMenuItem>
             {modelName != null && (
               <div className="flex gap-1">
-                <LayersIcon className="mt-1 w-4 h-4" />
+                <LayersIcon className="mt-1 h-4 w-4" />
                 <span className="hidden md:block">You are talking to</span>
                 <Badge variant="outline">{modelName}</Badge>
               </div>

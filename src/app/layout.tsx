@@ -12,7 +12,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="dark min-h-screen bg-background font-sans antialiased">
-        <div className="container mx-auto px-4 sm:px-8 flex flex-col h-screen overflow-hidden">
+        <div className="container mx-auto flex h-screen flex-col overflow-hidden px-4 sm:px-8">
           <TopNav />
           <Provider>{children}</Provider>
         </div>

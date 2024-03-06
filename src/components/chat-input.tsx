@@ -46,7 +46,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream,
       />
       {workingStream ? (
         <Button onClick={onCancelStream} variant="secondary" size="icon" className="absolute bottom-6 right-3">
-          <StopIcon className="w-4 h-4" />
+          <StopIcon className="h-4 w-4" />
         </Button>
       ) : (
         <Button
@@ -56,7 +56,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream,
           className="absolute bottom-6 right-3"
           disabled={workingStream || modelName === null}
         >
-          <DoubleArrowUpIcon className="w-4 h-4" />
+          <DoubleArrowUpIcon className="h-4 w-4" />
         </Button>
       )}
     </>

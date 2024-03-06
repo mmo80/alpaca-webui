@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ChatMessage, ChatRole } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
 import { PersonIcon, LayersIcon } from '@radix-ui/react-icons';
+import { useState } from 'react';
 
 export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
   return (
@@ -75,7 +76,7 @@ const copyToClipboard = async (elementId: string) => {
 
   try {
     await navigator.clipboard.writeText(text);
-    console.log('Text copied to clipboard');
+    // TODO: Add alert/toast that code copied to clipboard successfully
   } catch (err) {
     console.error('Failed to copy text to clipboard', err);
   }

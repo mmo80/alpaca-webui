@@ -24,13 +24,12 @@ export default function Home() {
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
-
   const mainDiv = useRef<HTMLDivElement>(null);
   const chatsDiv = useRef<HTMLDivElement>(null);
   const { isScrollBottom } = useScrollBottom(mainDiv);
-
   const textareaPlaceholder = useRef<string>('Choose model...');
-  let scrollTimoutIsRunning = false;
+  const [timerRunning, setTimerRunning] = useState<boolean>(false);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const {
     isLoading: modelsIsLoading,
@@ -56,8 +55,30 @@ export default function Home() {
   });
 
   useEffect(() => {
-    delayedScrollToBottom();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const scrollToBottom = () => {
+      if (mainDiv.current != null) {
+        mainDiv.current.scrollTop = mainDiv.current.scrollHeight;
+        setTimerRunning(false);
+      }
+    };
+
+    const delayedScrollToBottom = () => {
+      const id = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      setTimeoutId(id);
+      setTimerRunning(true);
+    };
+
+    if (!isScrollBottom && timeoutId != null) {
+      clearTimeout(timeoutId);
+      setTimerRunning(false);
+    }
+
+    if (isScrollBottom && !timerRunning) {
+      delayedScrollToBottom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
   useEffect(() => {
@@ -67,37 +88,9 @@ export default function Home() {
     }
   }, [modelName]);
 
-  const delayedScrollToBottom = () => {
-    console.log(`isScrollBottom: ${isScrollBottom}`);
-    if (!scrollTimoutIsRunning && isScrollBottom) {
-      scrollTimoutIsRunning = true;
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  };
-
-  let lastHeight = 0;
-
-  const scrollToBottom = () => {
-    if (mainDiv.current != null) {
-      const height = mainDiv.current.scrollHeight;
-      if (lastHeight != height) {
-        mainDiv.current.scrollTop = height;
-        lastHeight = height;
-      }
-      scrollTimoutIsRunning = false;
-    }
-  };
-
   const directScrollToBottom = () => {
     if (mainDiv.current != null) {
       mainDiv.current.scrollTop = mainDiv.current.scrollHeight;
-      // chatsDiv.current.lastElementChild?.scrollIntoView({
-      //   behavior: 'smooth',
-      //   block: 'end',
-      //   inline: 'nearest',
-      // });
     }
   };
 
@@ -190,8 +183,6 @@ export default function Home() {
     delayHighlighter();
   };
 
-
-
   const renderModelListVariant = () => {
     if (modelName == null) {
       switch (modelVariant) {
@@ -253,7 +244,12 @@ export default function Home() {
           </section>
         )}
 
-        {!isScrollBottom && <PageDownButton onClick={directScrollToBottom} className="absolute bottom-24 left-1/2 rounded-full" />}
+        {!isScrollBottom && (
+          <PageDownButton
+            onClick={directScrollToBottom}
+            className="animate-bounce-short absolute bottom-24 left-1/2 animate-bounce rounded-full hover:animate-none"
+          />
+        )}
       </main>
 
       <section className="relative py-3">

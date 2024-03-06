@@ -59,6 +59,11 @@
   }
 }
 
+.animate-bounce-short {
+  -webkit-animation-iteration-count: 2;
+  animation-iteration-count: 2;
+}
+
 /* SCROLL STYLING */
 /* width */
 ::-webkit-scrollbar {

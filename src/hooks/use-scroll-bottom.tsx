@@ -4,10 +4,17 @@ const useScrollBottom = (elementRef: RefObject<HTMLDivElement>) => {
   const [isScrollBottom, setIsScrollBottom] = useState(true);
 
   useEffect(() => {
+    const isRefAwayFromBottom = (): boolean => {
+      if (!elementRef.current) return true;
+      const bufferHeight = 50;
+  
+      const { scrollTop, scrollHeight, clientHeight } = elementRef.current;
+      return Math.ceil(scrollTop + clientHeight) < scrollHeight - bufferHeight;
+    };
+
     const checkScroll = () => {
-      const awayFromBottom = isRefAwayFromBottom(elementRef);
+      const awayFromBottom = isRefAwayFromBottom();
       setIsScrollBottom(!awayFromBottom);
-      console.log(`isScrollBottom: ${!awayFromBottom}`);
     };
 
     checkScroll();
@@ -24,13 +31,7 @@ const useScrollBottom = (elementRef: RefObject<HTMLDivElement>) => {
     };
   }, [elementRef]);
 
-  const isRefAwayFromBottom = (ref: RefObject<HTMLDivElement>): boolean => {
-    if (!ref.current) return true;
-    const bufferHeight = 50;
 
-    const { scrollTop, scrollHeight, clientHeight } = ref.current;
-    return Math.ceil(scrollTop + clientHeight) < scrollHeight - bufferHeight;
-  };
 
   return { isScrollBottom };
 };
