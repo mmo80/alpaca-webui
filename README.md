@@ -28,7 +28,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-run the development server:
+##### run the development server:
 
 ```bash
 npm run dev
@@ -41,3 +41,9 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+#### Docker
+```shell
+docker run --name alpaca-webui -p 3033:3000 -d forloopse/alpaca-webui
+```
+The official [Alpaca webUI Docker image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.
