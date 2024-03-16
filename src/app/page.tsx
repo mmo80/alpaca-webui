@@ -84,6 +84,7 @@ export default function Home() {
       setChats((prevArray) => [...prevArray, { content: systemPrompt || '', role: ChatRole.SYSTEM }]);
       textareaPlaceholder.current = 'Ask me anything...';
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
   const directScrollToBottom = () => {

@@ -12,12 +12,12 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 - [x] Code Highlighting
 - [x] List available models for services supporting OpenAI API model endpoint
 - [x] Responsive Layout
+- [x] Modify System Prompt
 
 ![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
 
 
 **Pending Implementation**
-- Modify System Prompt
 - Modify Parameters (like temperature, mirostat ...)
 - Attach ImageFile
 - Attach PdfFile
@@ -28,19 +28,11 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-##### run the development server:
+#### Run the development server:
+1. `git clone https://github.com/mmo80/alpaca-webui.git`
+2. `npm run dev`
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see start chatting.
 
 #### Docker
 ```shell

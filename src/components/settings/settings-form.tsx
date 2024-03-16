@@ -1,9 +1,9 @@
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
-import { Button } from './ui/button';
-import { Command, CommandGroup, CommandItem } from './ui/command';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
-import { Input } from './ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Button } from '../ui/button';
+import { Command, CommandGroup, CommandItem } from '../ui/command';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
+import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { cn } from '@/lib/utils';

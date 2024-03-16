@@ -1,5 +1,5 @@
-import { Button } from './ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
+import { Button } from '../ui/button';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -48,9 +48,11 @@ const SystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
               <FormItem>
                 <FormLabel>System Prompt</FormLabel>
                 <FormControl>
-                  <Textarea {...field} />
+                  <Textarea rows={8} {...field} />
                 </FormControl>
-                <FormDescription>Craft a detailed prompt to guide the AI model on the intended objective of the conversation.</FormDescription>
+                <FormDescription>
+                  Craft a detailed prompt to guide the AI model on the intended objective of the conversation.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

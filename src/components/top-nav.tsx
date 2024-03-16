@@ -14,8 +14,8 @@ import { LayersIcon, ChatBubbleIcon, GearIcon } from '@radix-ui/react-icons';
 import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
-import SettingsForm from './settings-form';
-import SystemPromptForm from './system-prompt-form';
+import SettingsForm from './settings/settings-form';
+import SystemPromptForm from './settings/system-prompt-form';
 
 export const TopNav: React.FC = () => {
   const { modelName } = useModelStore();
