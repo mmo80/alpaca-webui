@@ -35,7 +35,7 @@ type TSettingsSchema = z.infer<typeof SettingsSchema>;
 
 const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const [open, setOpen] = useState(false);
-  const { setValues, token, hostname, modelVariant } = useSettingsStore();
+  const { setSettings, token, hostname, modelVariant } = useSettingsStore();
 
   const form = useForm<TSettingsSchema>({
     resolver: zodResolver(SettingsSchema),
@@ -52,15 +52,15 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   }, [form, hostname, token, modelVariant]);
 
   const onSubmit = (data: TSettingsSchema) => {
-    setValues(data.modelListVariant, data.url, data.apiKey);
+    setSettings(data.modelListVariant, data.url, data.apiKey);
     setDialogOpen(false);
   };
 
   return (
     <section>
-      <div className="mb-5 flex flex-col space-y-1.5 text-center sm:text-left">
-        <h2 className="text-lg font-semibold leading-none tracking-tight">Edit Settings</h2>
-      </div>
+      {/* <div className="mb-5 flex flex-col space-y-1.5 text-center sm:text-left">
+        <h1 className="text-xl font-semibold leading-none tracking-tight">Api Settings</h1>
+      </div> */}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

@@ -15,7 +15,9 @@ interface SettingsStoreState {
   modelVariant: string | null;
   hostname: string | null;
   token: string | null;
-  setValues: (modelListVariant: string | null, hostname: string | null, token: string | null) => void;
+  systemPrompt: string | null;
+  setSettings: (modelListVariant: string | null, hostname: string | null, token: string | null) => void;
+  setSystemPrompt: (systemPrompt: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsStoreState>()(
@@ -24,8 +26,11 @@ export const useSettingsStore = create<SettingsStoreState>()(
       modelVariant: null,
       hostname: null,
       token: null,
-      setValues: (modelVariant, hostname, token) =>
+      systemPrompt: 'Hello i am a AI assistant, how can i help you?',
+      setSettings: (modelVariant, hostname, token) =>
         set(() => ({ modelVariant: modelVariant, hostname: hostname, token: token })),
+      setSystemPrompt: (systemPrompt) => 
+        set(() => ({ systemPrompt: systemPrompt })),
     }),
     {
       name: 'settings-storage',

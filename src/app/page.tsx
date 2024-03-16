@@ -16,11 +16,9 @@ import { delayHighlighter, parseJsonStream } from '@/lib/utils';
 import ChatInput from '@/components/chat-input';
 import useScrollBottom from '@/hooks/use-scroll-bottom';
 
-const systemPromptMessage = 'Hello i am a AI assistant, how can i help you?';
-
 export default function Home() {
   const { modelName, updateModelName } = useModelStore();
-  const { modelVariant, hostname, token } = useSettingsStore();
+  const { modelVariant, hostname, token, systemPrompt } = useSettingsStore();
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
@@ -83,7 +81,7 @@ export default function Home() {
 
   useEffect(() => {
     if (modelName != null) {
-      setChats((prevArray) => [...prevArray, { content: systemPromptMessage, role: ChatRole.SYSTEM }]);
+      setChats((prevArray) => [...prevArray, { content: systemPrompt || '', role: ChatRole.SYSTEM }]);
       textareaPlaceholder.current = 'Ask me anything...';
     }
   }, [modelName]);

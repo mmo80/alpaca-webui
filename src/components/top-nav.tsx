@@ -9,11 +9,13 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayersIcon, ChatBubbleIcon, GearIcon } from '@radix-ui/react-icons';
 import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import SettingsForm from './settings-form';
+import SystemPromptForm from './system-prompt-form';
 
 export const TopNav: React.FC = () => {
   const { modelName } = useModelStore();
@@ -39,8 +41,29 @@ export const TopNav: React.FC = () => {
                   <GearIcon className="mr-2 h-4 w-4" /> Settings
                 </NavigationMenuLink>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <SettingsForm setDialogOpen={setDialogOpen} />
+              <DialogContent className="p-3 sm:max-w-[625px] min-h-96 top-5 translate-y-0">
+                <Tabs defaultValue="manage" className="flex">
+                  <TabsList className="flex w-2/6 flex-col items-start justify-start gap-1 bg-inherit me-3">
+                    <TabsTrigger
+                      value="manage"
+                      className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:shadow-none data-[state=active]:bg-stone-900"
+                    >
+                      Api
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="password"
+                      className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:shadow-none data-[state=active]:bg-stone-900"
+                    >
+                      System Prompt
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="manage" className="w-4/6">
+                    <SettingsForm setDialogOpen={setDialogOpen} />
+                  </TabsContent>
+                  <TabsContent value="password" className="w-4/6">
+                    <SystemPromptForm setDialogOpen={setDialogOpen} />
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </NavigationMenuItem>
