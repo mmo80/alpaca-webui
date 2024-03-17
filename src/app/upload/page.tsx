@@ -15,7 +15,7 @@ import { UploadIcon } from '@radix-ui/react-icons';
 
 const maxFileSizeMb = 20;
 
-export const formSchema = z.object({
+const formSchema = z.object({
   file: z
     .custom<FileList>()
     .transform((val) => {
