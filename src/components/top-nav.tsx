@@ -50,13 +50,13 @@ export const TopNav: React.FC = () => {
                   </div>
                   Start a new conversation with new or existing model
                 </ListItem>
-                <ListItem href={'/upload'}>
+                {/* <ListItem href={'/upload'}>
                   <div className="flex text-sm font-medium">
                     <FileIcon className="mr-2 h-4 w-4" />
                     Upload document
                   </div>
                   Upload a document to question with choosen model (RAG)
-                </ListItem>
+                </ListItem> */}
                 {/* <ListItem href={'/webscrape'}>
                   <div className="flex text-sm font-medium">
                     <FileIcon className="mr-2 h-4 w-4" />
@@ -97,7 +97,7 @@ export const TopNav: React.FC = () => {
               </div>
             )}
           </NavigationMenuItem>
-          
+
         </NavigationMenuList>
       </NavigationMenu>
     </header>
