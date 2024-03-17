@@ -16,9 +16,11 @@
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-navigation-menu": "^1.1.4",
     "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-progress": "^1.0.3",
     "@radix-ui/react-scroll-area": "^1.0.5",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
+    "@radix-ui/react-toast": "^1.1.5",
     "@tanstack/react-query": "^5.22.2",
     "@tanstack/react-query-devtools": "^5.24.0",
     "@tanstack/react-query-next-experimental": "^5.22.2",
@@ -26,6 +28,7 @@
     "clsx": "^2.1.0",
     "cmdk": "^0.2.1",
     "highlight.js": "^11.9.0",
+    "lodash.throttle": "^4.1.1",
     "next": "14.1.0",
     "next-themes": "^0.2.1",
     "react": "^18",
@@ -38,6 +41,7 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
+    "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
