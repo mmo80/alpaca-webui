@@ -3,37 +3,78 @@
 import * as React from 'react';
 import {
   NavigationMenu,
+  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayersIcon, ChatBubbleIcon, GearIcon } from '@radix-ui/react-icons';
+import { LayersIcon, ChatBubbleIcon, GearIcon, FileIcon, HamburgerMenuIcon } from '@radix-ui/react-icons';
 import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
-import SettingsForm from './settings/settings-form';
-import SystemPromptForm from './settings/system-prompt-form';
+import SettingsMenu from './settings/settings-menu';
+import { cn } from '@/lib/utils';
 
 export const TopNav: React.FC = () => {
   const { modelName } = useModelStore();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const newChat = () => {
-    window.location.href = '/';
-  };
+  // const newChat = () => {
+  //   window.location.href = '/';
+  // };
 
   return (
     <header className="w-full text-center">
       <NavigationMenu>
         <NavigationMenuList>
-          <NavigationMenuItem>
+          {/* <NavigationMenuItem>
             <NavigationMenuLink className={`${navigationMenuTriggerStyle()} hover:cursor-pointer`} onClick={newChat}>
               <ChatBubbleIcon className="mr-2 h-4 w-4" /> New Chat
             </NavigationMenuLink>
+          </NavigationMenuItem> */}
+
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>
+              <HamburgerMenuIcon className="mr-2" />
+              Start
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                <ListItem href={'/'}>
+                  <div className="flex text-sm font-medium">
+                    <ChatBubbleIcon className="mr-2" />
+                    New Chat
+                  </div>
+                  Start a new conversation with new or existing model
+                </ListItem>
+                <ListItem href={'/upload'}>
+                  <div className="flex text-sm font-medium">
+                    <FileIcon className="mr-2 h-4 w-4" />
+                    Upload document
+                  </div>
+                  Upload a document to question with choosen model (RAG)
+                </ListItem>
+                {/* <ListItem href={'/webscrape'}>
+                  <div className="flex text-sm font-medium">
+                    <FileIcon className="mr-2 h-4 w-4" />
+                    Webscrape
+                  </div>
+                  Upload a document to question with choosen model (RAG)
+                </ListItem>
+                <ListItem href={'/funccalls'}>
+                  <div className="flex text-sm font-medium">
+                    <FileIcon className="mr-2 h-4 w-4" />
+                    Test Functions Calls
+                  </div>
+                  Upload a document to question with choosen model (RAG)
+                </ListItem> */}
+              </ul>
+            </NavigationMenuContent>
           </NavigationMenuItem>
+
           <NavigationMenuItem>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -41,32 +82,12 @@ export const TopNav: React.FC = () => {
                   <GearIcon className="mr-2 h-4 w-4" /> Settings
                 </NavigationMenuLink>
               </DialogTrigger>
-              <DialogContent className="p-3 sm:max-w-[625px] min-h-96 top-5 translate-y-0">
-                <Tabs defaultValue="manage" className="flex">
-                  <TabsList className="flex w-2/6 flex-col items-start justify-start gap-1 bg-inherit me-3">
-                    <TabsTrigger
-                      value="manage"
-                      className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:shadow-none data-[state=active]:bg-stone-900"
-                    >
-                      Api
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="password"
-                      className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:shadow-none data-[state=active]:bg-stone-900"
-                    >
-                      System Prompt
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="manage" className="w-4/6">
-                    <SettingsForm setDialogOpen={setDialogOpen} />
-                  </TabsContent>
-                  <TabsContent value="password" className="w-4/6">
-                    <SystemPromptForm setDialogOpen={setDialogOpen} />
-                  </TabsContent>
-                </Tabs>
+              <DialogContent className="top-5 min-h-96 translate-y-0 p-3 sm:max-w-[625px]">
+                <SettingsMenu setDialogOpen={setDialogOpen} />
               </DialogContent>
             </Dialog>
           </NavigationMenuItem>
+
           <NavigationMenuItem>
             {modelName != null && (
               <div className="flex gap-1">
@@ -76,6 +97,7 @@ export const TopNav: React.FC = () => {
               </div>
             )}
           </NavigationMenuItem>
+          
         </NavigationMenuList>
       </NavigationMenu>
     </header>
@@ -83,3 +105,25 @@ export const TopNav: React.FC = () => {
 };
 
 export default TopNav;
+
+const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWithoutRef<'a'>>(
+  ({ className, children, ...props }, ref) => {
+    return (
+      <li>
+        <NavigationMenuLink asChild>
+          <a
+            ref={ref}
+            className={cn(
+              'block select-none space-y-1 rounded-md p-3 text-left leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
+              className
+            )}
+            {...props}
+          >
+            <div className="line-clamp-2 text-sm leading-snug text-muted-foreground">{children}</div>
+          </a>
+        </NavigationMenuLink>
+      </li>
+    );
+  }
+);
+ListItem.displayName = 'ListItem';
