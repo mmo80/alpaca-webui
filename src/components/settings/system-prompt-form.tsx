@@ -58,8 +58,8 @@ const SystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
             )}
           />
 
-          <div className="sm:justify-start">
-            <Button type="submit">Save</Button>
+          <div className="text-right">
+            <Button type="submit" className='px-7'>Save</Button>
           </div>
         </form>
       </Form>

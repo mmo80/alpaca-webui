@@ -18,7 +18,7 @@ import useScrollBottom from '@/hooks/use-scroll-bottom';
 
 export default function Home() {
   const { modelName, updateModelName } = useModelStore();
-  const { modelVariant, hostname, token, systemPrompt } = useSettingsStore();
+  const { modelVariant, hostname, token, systemPrompt, hasHydrated } = useSettingsStore();
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean>(false);
@@ -209,9 +209,15 @@ export default function Home() {
           );
         default:
           return (
-            <span className="flex items-center pt-2">
-              <h4 className="text-xl font-semibold">Configure settings to begin chat</h4>
-              <ArrowUpIcon className="ml-2" />
+            <span className="flex items-center px-4 pt-2">
+              {hasHydrated ? (
+                <>
+                  <h4 className="text-xl font-semibold">Configure settings to begin chat</h4>
+                  <ArrowUpIcon className="ml-2" />
+                </>
+              ) : (
+                <Spinner />
+              )}
             </span>
           );
       }

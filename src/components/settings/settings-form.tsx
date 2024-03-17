@@ -58,10 +58,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
 
   return (
     <section>
-      {/* <div className="mb-5 flex flex-col space-y-1.5 text-center sm:text-left">
-        <h1 className="text-xl font-semibold leading-none tracking-tight">Api Settings</h1>
-      </div> */}
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
@@ -145,8 +141,8 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
             )}
           />
 
-          <div className="sm:justify-start">
-            <Button type="submit">Save changes</Button>
+          <div className="text-right">
+            <Button type="submit" className='px-7'>Save</Button>
           </div>
         </form>
       </Form>
