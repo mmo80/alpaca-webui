@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate": "drizzle-kit generate:sqlite",
+    "push": "drizzle-kit push:sqlite"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -24,9 +26,12 @@
     "@tanstack/react-query": "^5.22.2",
     "@tanstack/react-query-devtools": "^5.24.0",
     "@tanstack/react-query-next-experimental": "^5.22.2",
+    "better-sqlite3": "^9.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^0.2.1",
+    "drizzle-orm": "^0.30.2",
+    "drizzle-zod": "^0.5.1",
     "highlight.js": "^11.9.0",
     "lodash.throttle": "^4.1.1",
     "next": "14.1.0",
@@ -41,11 +46,13 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.9",
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "drizzle-kit": "^0.20.14",
     "eslint": "^8",
     "eslint-config-next": "14.1.0",
     "postcss": "^8",

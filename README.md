@@ -13,6 +13,7 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 - [x] List available models for services supporting OpenAI API model endpoint
 - [x] Responsive Layout
 - [x] Modify System Prompt
+- [x] Upload document (pdf, txt) for RAG usage
 
 ![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
 
@@ -20,7 +21,6 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 **Pending Implementation**
 - Modify Parameters (like temperature, mirostat ...)
 - Attach ImageFile
-- Attach PdfFile
 - Chat History
 
 **Env**

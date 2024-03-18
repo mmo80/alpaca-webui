@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UploadIcon } from '@radix-ui/react-icons';
+import { getFiles } from '@/actions/get-files';
+import { TFileSchema } from '@/db/schema';
 
 const maxFileSizeMb = 20;
 
@@ -53,23 +55,26 @@ const formSchema = z.object({
 
 type TFormSchema = z.infer<typeof formSchema>;
 
-const files = [
-  {
-    filename: 'test.pdf',
-    size: '10MB',
-    date: '2024-03-01',
-  },
-  {
-    filename: 'document.pdf',
-    size: '13MB',
-    date: '2024-03-02',
-  },
-];
-
 export default function Page() {
   const [progress, setProgress] = useState(0);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
   const [filename, setFilename] = useState<string>('');
+  const [isPending, startTransition] = useTransition();
+  const [files, setFiles] = useState<TFileSchema[]>([]);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+  });
+  const fileRef = form.register('file');
+
+  useEffect(() => {
+    loadFiles().catch(console.error);
+  }, [fileLoading]);
+
+  const loadFiles = async () => {
+    startTransition(async () => {
+      setFiles(await getFiles());
+    });
+  }
 
   const updateProgress = throttle(
     (percent: number) => {
@@ -98,7 +103,6 @@ export default function Page() {
       const data = await response.body;
 
       const fileSize = formFileData.file.size;
-      console.log('fileSize:', fileSize);
 
       const reader = data?.getReader();
       if (reader == null) return;
@@ -126,11 +130,7 @@ export default function Page() {
     }
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-  });
 
-  const fileRef = form.register('file');
 
   return (
     <section className="ps-4">
@@ -154,7 +154,7 @@ export default function Page() {
             render={() => {
               return (
                 <FormItem>
-                  <FormLabel>Upload Document (NOT COMPLETE!)</FormLabel>
+                  <FormLabel>Upload Document</FormLabel>
                   <FormControl>
                     <label className="block">
                       <span className="sr-only">Choose document</span>
@@ -171,15 +171,19 @@ export default function Page() {
               );
             }}
           />
-          <Button type="submit" className="mt-3 px-6">
-            <UploadIcon className="mr-2" />
-            <span className="pe-3">Upload</span>
-          </Button>
+
+            <Button type="submit" className="mt-3 px-6" disabled={!form.formState.isValid}>
+              <UploadIcon className="mr-2" />
+              <span className="pe-3">Upload</span>
+            </Button>
+
         </form>
       </Form>
 
-      <Table className="w-[60%] mt-4">
-        <TableCaption>A list uploaded documents.</TableCaption>
+      {/* <div>isPending; {isPending.toString()}</div> */}
+
+      <Table className="mt-4 w-[60%]">
+        <TableCaption>A list of uploaded documents.</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px]">Filename</TableHead>
@@ -192,8 +196,8 @@ export default function Page() {
           {files.map((file) => (
             <TableRow key={file.filename}>
               <TableCell className="font-medium">{file.filename}</TableCell>
-              <TableCell className="text-right">{file.size}</TableCell>
-              <TableCell>{file.date}</TableCell>
+              <TableCell className="text-right">{file.fileSize}</TableCell>
+              <TableCell>{file.timestamp}</TableCell>
               <TableCell className="text-right">-</TableCell>
             </TableRow>
           ))}

@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
+import { db } from '@/db/db';
+import { files } from '@/db/schema';
 
-export async function GET() {
-  return NextResponse.json({ message: 'Hello, World!' });
-}
+// export async function GET() {
+//   return NextResponse.json({ message: 'Hello, World!' });
+// }
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -18,6 +20,8 @@ export async function POST(request: Request) {
 
   await fs.writeFile(filePath, Buffer.from(fileBuffer));
 
+  await db.insert(files).values({ filename: file.name, fileSize: file.size });
+
   const readableStream = new ReadableStream({
     start(controller) {
       controller.enqueue(new Uint8Array(fileBuffer));
@@ -27,3 +31,4 @@ export async function POST(request: Request) {
 
   return new Response(readableStream);
 }
+
