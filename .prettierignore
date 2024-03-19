@@ -1,0 +1,22 @@
+dist
+node_modules
+package.json
+
+/.github/
+/migrations/
+/dev/
+/db/
+/uploads/
+/public/
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+/src/components/ui/*.*
