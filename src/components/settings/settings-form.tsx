@@ -142,7 +142,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
           />
 
           <div className="text-right">
-            <Button type="submit" className='px-7'>Save</Button>
+            <Button type="submit" className="px-7">
+              Save
+            </Button>
           </div>
         </form>
       </Form>

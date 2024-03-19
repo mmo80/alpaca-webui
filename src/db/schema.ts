@@ -12,12 +12,4 @@ export const files = sqliteTable('files', {
 
 const ZFileSchema = createSelectSchema(files);
 
-// const ZFileSchema = createSelectSchema(files, {
-//   id: (schema) => schema.id.nullable().default(null),
-//   //timestamp: (schema) => schema.timestamp.nullable().default(null),
-//   timestamp: z.date().nullable().default(null),
-// });
-
 export type TFileSchema = z.infer<typeof ZFileSchema>;
-
-// url: https://orm.drizzle.team/docs/zod

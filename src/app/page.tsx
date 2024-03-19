@@ -13,8 +13,8 @@ import { useModelStore, useSettingsStore } from '../lib/store';
 import { api } from '../lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter, parseJsonStream } from '@/lib/utils';
-import ChatInput from '@/components/chat-input';
-import useScrollBottom from '@/hooks/use-scroll-bottom';
+import { ChatInput } from '@/components/chat-input';
+import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 
 export default function Home() {
   const { modelName, updateModelName } = useModelStore();

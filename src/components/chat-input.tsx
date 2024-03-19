@@ -11,7 +11,7 @@ interface ChatInputProps {
   workingStream: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream, placeholder, workingStream }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream, placeholder, workingStream }) => {
   const { modelName } = useModelStore();
   const [chatInput, setChatInput] = useState<string>('');
 
@@ -62,5 +62,3 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream,
     </>
   );
 };
-
-export default ChatInput;

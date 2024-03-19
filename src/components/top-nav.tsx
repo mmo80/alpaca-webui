@@ -15,27 +15,17 @@ import { LayersIcon, ChatBubbleIcon, GearIcon, FileIcon, HamburgerMenuIcon } fro
 import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
-import SettingsMenu from './settings/settings-menu';
+import { SettingsMenu } from './settings/settings-menu';
 import { cn } from '@/lib/utils';
 
 export const TopNav: React.FC = () => {
   const { modelName } = useModelStore();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // const newChat = () => {
-  //   window.location.href = '/';
-  // };
-
   return (
     <header className="w-full text-center">
       <NavigationMenu>
         <NavigationMenuList>
-          {/* <NavigationMenuItem>
-            <NavigationMenuLink className={`${navigationMenuTriggerStyle()} hover:cursor-pointer`} onClick={newChat}>
-              <ChatBubbleIcon className="mr-2 h-4 w-4" /> New Chat
-            </NavigationMenuLink>
-          </NavigationMenuItem> */}
-
           <NavigationMenuItem>
             <NavigationMenuTrigger>
               <HamburgerMenuIcon className="mr-2" />
@@ -50,27 +40,13 @@ export const TopNav: React.FC = () => {
                   </div>
                   Start a new conversation with new or existing model
                 </ListItem>
-                {/* <ListItem href={'/upload'}>
+                <ListItem href={'/upload'}>
                   <div className="flex text-sm font-medium">
                     <FileIcon className="mr-2 h-4 w-4" />
                     Upload document
                   </div>
                   Upload a document to question with choosen model (RAG)
-                </ListItem> */}
-                {/* <ListItem href={'/webscrape'}>
-                  <div className="flex text-sm font-medium">
-                    <FileIcon className="mr-2 h-4 w-4" />
-                    Webscrape
-                  </div>
-                  Upload a document to question with choosen model (RAG)
                 </ListItem>
-                <ListItem href={'/funccalls'}>
-                  <div className="flex text-sm font-medium">
-                    <FileIcon className="mr-2 h-4 w-4" />
-                    Test Functions Calls
-                  </div>
-                  Upload a document to question with choosen model (RAG)
-                </ListItem> */}
               </ul>
             </NavigationMenuContent>
           </NavigationMenuItem>
@@ -97,7 +73,6 @@ export const TopNav: React.FC = () => {
               </div>
             )}
           </NavigationMenuItem>
-
         </NavigationMenuList>
       </NavigationMenu>
     </header>
