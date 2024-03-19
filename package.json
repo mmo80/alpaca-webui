@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "drizzle-kit generate:sqlite",
-    "push": "drizzle-kit push:sqlite"
+    "push": "drizzle-kit push:sqlite",
+    "prettier": "prettier --write ."
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
@@ -60,5 +61,9 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "tailwindcss": "^3.4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": "21.x",
+    "npm": "please-use-npm"
   }
 }
