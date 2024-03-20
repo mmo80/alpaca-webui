@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "cdac55f0-4e76-40d3-ad78-f2c6639a123e",
+  "id": "fda29b6a-1b56-4595-98bf-f15b6ec15dde",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "files": {
@@ -34,7 +34,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {},

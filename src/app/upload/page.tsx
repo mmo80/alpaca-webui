@@ -5,11 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import throttle from 'lodash.throttle';
-import { Toaster } from '@/components/ui/toaster';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/components/ui/use-toast';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Toaster } from '@/components/ui/sonner';
+import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FileTextIcon } from '@radix-ui/react-icons';
 import { getFiles } from '@/actions/get-files';
 import { TFileSchema } from '@/db/schema';
@@ -59,6 +60,7 @@ type TFormSchema = z.infer<typeof formSchema>;
 export default function Page() {
   const [progress, setProgress] = useState(0);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
+  const [filesLoading, setFilesLoading] = useState<boolean>(true);
   const [filename, setFilename] = useState<string>('');
   const [filesize, setFilesize] = useState<number>(0);
   const [, startTransition] = useTransition();
@@ -77,9 +79,11 @@ export default function Page() {
   }, [fileLoading]);
 
   const loadFiles = async () => {
+    setFilesLoading(true);
     startTransition(async () => {
       const fileList = await getFiles();
       setFiles(fileList);
+      setFilesLoading(false);
     });
   };
 
@@ -126,8 +130,8 @@ export default function Page() {
     } catch (error) {
       console.error('Error uploading file:', error);
     } finally {
-      toast({
-        title: `File uploaded successfully!`,
+      toast.success(`Document uploaded successfully!`, {
+        description: `File: ${formFileData.file.name}`,
       });
 
       setTimeout(() => {
@@ -143,13 +147,9 @@ export default function Page() {
   };
 
   const onFileSelected = async (file: File) => {
-    console.log('File dropped:', file.name);
-
     form.setValue('file', file);
     const isValid = await form.trigger();
     if (isValid) {
-      console.log('File is valid');
-
       form.handleSubmit(onSubmit)();
 
       setFilename(file.name);
@@ -197,13 +197,12 @@ export default function Page() {
           />
 
           <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
-
         </form>
       </Form>
 
       {fileLoading && (
         <div
-          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex w-[60%] items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
+          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex w-[70%] items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
         >
           <div className="flex-1 space-y-1">
             <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
@@ -218,13 +217,13 @@ export default function Page() {
         </div>
       )}
 
-      <Table className="mt-4 w-[60%]">
+      <Table className="mt-4 w-[70%]">
         <TableHeader>
           <TableRow>
-            <TableHead>Document</TableHead>
-            <TableHead className="text-right">Size</TableHead>
-            <TableHead>Upload Date</TableHead>
-            <TableHead className="text-right">-</TableHead>
+            <TableHead className="w-[60%]">Document</TableHead>
+            <TableHead className="w-[10%] text-right">Size</TableHead>
+            <TableHead className="w-[20%]">Upload Date</TableHead>
+            <TableHead className="w-[10%] text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -239,10 +238,24 @@ export default function Page() {
               <TableCell className="text-right">-</TableCell>
             </TableRow>
           ))}
+          {filesLoading && (
+            <TableRow key="loading">
+              <TableCell>
+                <Skeleton className="h-3 w-full rounded-full" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-3 w-full rounded-full" />
+              </TableCell>
+              <TableCell colSpan={2}>
+                <Skeleton className="h-3 w-full rounded-full" />
+              </TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
 
-      <Toaster />
+      <Toaster position="bottom-center" richColors closeButton />
     </section>
   );
 }

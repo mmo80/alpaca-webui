@@ -41,6 +41,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.50.1",
     "react-markdown": "^9.0.1",
+    "sonner": "^1.4.32",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
@@ -63,7 +64,7 @@
     "typescript": "^5"
   },
   "engines": {
-    "node": "21.x",
-    "npm": "please-use-npm"
+    "node": ">=21.0.0",
+    "npm": ">=10.0.0"
   }
 }

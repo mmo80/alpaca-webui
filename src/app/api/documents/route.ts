@@ -3,10 +3,6 @@ import { promises as fs } from 'fs';
 import { db } from '@/db/db';
 import { files } from '@/db/schema';
 
-// export async function GET() {
-//   return NextResponse.json({ message: 'Hello, World!' });
-// }
-
 export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get('file');

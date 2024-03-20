@@ -45,7 +45,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
     <div
       role="button"
       tabIndex={0}
-      className={`my-3 flex h-28 w-[60%] items-center justify-center rounded-lg border p-3 text-2xl ${dragging ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-700 bg-zinc-800'} hover:border-zinc-800 hover:bg-zinc-900`}
+      className={`my-3 flex h-28 w-[70%] items-center justify-center rounded-lg border p-3 text-2xl ${dragging ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-700 bg-zinc-800'} hover:border-zinc-800 hover:bg-zinc-900`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
