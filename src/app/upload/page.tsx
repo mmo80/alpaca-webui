@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useEffect, useState } from 'react';
+import { useTransition, useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,12 +8,13 @@ import throttle from 'lodash.throttle';
 import { Toaster } from '@/components/ui/toaster';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UploadIcon } from '@radix-ui/react-icons';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { FileTextIcon } from '@radix-ui/react-icons';
 import { getFiles } from '@/actions/get-files';
 import { TFileSchema } from '@/db/schema';
+import { formatBytes } from '@/lib/utils';
+import { DropZone } from '@/components/drop-zone';
 
 const maxFileSizeMb = 20;
 
@@ -59,12 +60,17 @@ export default function Page() {
   const [progress, setProgress] = useState(0);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
   const [filename, setFilename] = useState<string>('');
-  const [isPending, startTransition] = useTransition();
+  const [filesize, setFilesize] = useState<number>(0);
+  const [, startTransition] = useTransition();
   const [files, setFiles] = useState<TFileSchema[]>([]);
-  const form = useForm<z.infer<typeof formSchema>>({
+  const [fadeOut, setFadeOut] = useState<boolean>(false);
+
+  const form = useForm<TFormSchema>({
     resolver: zodResolver(formSchema),
   });
-  const fileRef = form.register('file');
+
+  const { ref: fileRef, ...fileRest } = form.register('file');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     loadFiles().catch(console.error);
@@ -72,9 +78,10 @@ export default function Page() {
 
   const loadFiles = async () => {
     startTransition(async () => {
-      setFiles(await getFiles());
+      const fileList = await getFiles();
+      setFiles(fileList);
     });
-  }
+  };
 
   const updateProgress = throttle(
     (percent: number) => {
@@ -91,6 +98,7 @@ export default function Page() {
     formData.append('file', formFileData.file, formFileData.file.name);
 
     setFilename(formFileData.file.name);
+    setFilesize(formFileData.file.size);
 
     const requestOptions: RequestInit = {
       method: 'POST',
@@ -102,8 +110,6 @@ export default function Page() {
       if (!response.ok) throw new Error('Failed to upload');
       const data = await response.body;
 
-      const fileSize = formFileData.file.size;
-
       const reader = data?.getReader();
       if (reader == null) return;
 
@@ -114,7 +120,7 @@ export default function Page() {
         if (done) break;
 
         receivedLength += value.length;
-        const step = parseFloat((receivedLength / fileSize).toFixed(2)) * 100;
+        const step = parseFloat((receivedLength / formFileData.file.size).toFixed(2)) * 100;
         updateProgress(step);
       }
     } catch (error) {
@@ -123,29 +129,46 @@ export default function Page() {
       toast({
         title: `File uploaded successfully!`,
       });
+
+      setTimeout(() => {
+        setFadeOut(true);
+      }, 2000);
       setTimeout(() => {
         setFileLoading(false);
         setFilename('');
+        setFilesize(0);
+        updateProgress(0);
       }, 3000);
     }
   };
 
+  const onFileSelected = async (file: File) => {
+    console.log('File dropped:', file.name);
 
+    form.setValue('file', file);
+    const isValid = await form.trigger();
+    if (isValid) {
+      console.log('File is valid');
+
+      form.handleSubmit(onSubmit)();
+
+      setFilename(file.name);
+      setFilesize(file.size);
+      setFileLoading(true);
+      setFadeOut(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files) {
+      const file = e.target.files[0];
+      onFileSelected(file);
+    }
+  };
 
   return (
     <section className="ps-4">
-      {fileLoading && (
-        <div className="flex w-[60%] items-center space-x-4 rounded-md border p-4">
-          <div className="flex-1 space-y-1">
-            <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
-            <div className="text-sm text-muted-foreground">
-              <Progress value={progress} className="w-full" />
-              <p className="mt-1">{progress?.toFixed()}% Complete</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
           <FormField
@@ -154,39 +177,51 @@ export default function Page() {
             render={() => {
               return (
                 <FormItem>
-                  <FormLabel>Upload Document</FormLabel>
                   <FormControl>
-                    <label className="block">
-                      <span className="sr-only">Choose document</span>
-                      <input
-                        type="file"
-                        className="block w-full text-sm text-white file:mr-4 file:rounded file:border-0 file:px-5 file:py-1 file:text-sm file:font-semibold"
-                        {...fileRef}
-                      />
-                    </label>
+                    <input
+                      type="file"
+                      multiple={false}
+                      className="hidden"
+                      {...fileRest}
+                      ref={(e) => {
+                        fileRef(e);
+                        fileInputRef.current = e;
+                      }}
+                      onChange={handleChange}
+                    />
                   </FormControl>
-                  <FormDescription>Pdf or Text document only. Max size {maxFileSizeMb}MB</FormDescription>
                   <FormMessage />
                 </FormItem>
               );
             }}
           />
 
-            <Button type="submit" className="mt-3 px-6" disabled={!form.formState.isValid}>
-              <UploadIcon className="mr-2" />
-              <span className="pe-3">Upload</span>
-            </Button>
+          <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
 
         </form>
       </Form>
 
-      {/* <div>isPending; {isPending.toString()}</div> */}
+      {fileLoading && (
+        <div
+          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex w-[60%] items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
+        >
+          <div className="flex-1 space-y-1">
+            <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
+            <div className="text-sm text-muted-foreground">
+              <Progress value={progress} className="w-full" />
+              <div className="flex justify-between">
+                <p className="mt-1">{formatBytes(filesize)}</p>
+                <p className="mt-1">{progress?.toFixed()}% Complete</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Table className="mt-4 w-[60%]">
-        <TableCaption>A list of uploaded documents.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Filename</TableHead>
+            <TableHead>Document</TableHead>
             <TableHead className="text-right">Size</TableHead>
             <TableHead>Upload Date</TableHead>
             <TableHead className="text-right">-</TableHead>
@@ -195,8 +230,11 @@ export default function Page() {
         <TableBody>
           {files.map((file) => (
             <TableRow key={file.filename}>
-              <TableCell className="font-medium">{file.filename}</TableCell>
-              <TableCell className="text-right">{file.fileSize}</TableCell>
+              <TableCell className="flex items-center font-medium">
+                <FileTextIcon className="me-2" />
+                <span>{file.filename}</span>
+              </TableCell>
+              <TableCell className="text-right">{formatBytes(file.fileSize ?? 0)}</TableCell>
               <TableCell>{file.timestamp}</TableCell>
               <TableCell className="text-right">-</TableCell>
             </TableRow>
