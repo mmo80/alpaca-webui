@@ -1,6 +1,8 @@
 import {
   ChatCompletionnRequest,
   ChatMessage,
+  EmbedDocumentResponse,
+  EmbedDocumentResponseSchema,
   ModelsResponseSchema,
   OllamaTag,
   OllamaTagSchema,
@@ -78,11 +80,32 @@ const getChatStream = async (
   return response.body.getReader();
 };
 
+const postEmbedDocument = async (documentId: number, model: string): Promise<EmbedDocumentResponse> => {
+  const url = `/api/documents/embed`;
+
+  const payload = {
+    embedModel: model,
+    documentId: documentId
+  };
+
+  const response = await fetchData(url, HttpMethod.POST, null, payload);
+  const data = await response.json();
+
+  const validator = await EmbedDocumentResponseSchema.safeParseAsync(data);
+  if (!validator.success) {
+    throw validator.error;
+  }
+  return validator.data;
+
+  // return await fetchData(url, HttpMethod.POST, null, payload);
+}
+
 export const api = {
   getTag,
   getModelList,
   getChatStream,
   cancelChatStream,
+  postEmbedDocument
 };
 
 const fetchData = async <T>(

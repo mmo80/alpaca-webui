@@ -11,14 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileTextIcon } from '@radix-ui/react-icons';
-import { getFiles } from '@/actions/get-files';
+import { FileTextIcon, ArrowRightIcon } from '@radix-ui/react-icons';
 import { TFileSchema } from '@/db/schema';
 import { formatBytes } from '@/lib/utils';
 import { DropZone } from '@/components/drop-zone';
+import { Button } from '@/components/ui/button';
+import { getFiles } from '@/actions/get-files';
+import { api } from '@/lib/api';
+import { Spinner } from '@/components/spinner';
 
-const maxFileSizeMb = 20;
-
+const maxFileSizeMb = 30;
 const formSchema = z.object({
   file: z
     .custom<FileList>()
@@ -66,6 +68,7 @@ export default function Page() {
   const [, startTransition] = useTransition();
   const [files, setFiles] = useState<TFileSchema[]>([]);
   const [fadeOut, setFadeOut] = useState<boolean>(false);
+  const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
 
   const form = useForm<TFormSchema>({
     resolver: zodResolver(formSchema),
@@ -167,94 +170,147 @@ export default function Page() {
     }
   };
 
+  const embedDocumentPost = async (documentId: number) => {
+    setIsEmbedding(true);
+    const response = await api.postEmbedDocument(documentId, 'nomic-embed-text');
+
+    if (response.success) {
+      toast.success('Document embedded successfully');
+    } else {
+      toast.error('Failed to embed document', {
+        description: response.errorMessage,
+      });
+    }
+    loadFiles().catch(console.error);
+    setIsEmbedding(false);
+  };
+
   return (
-    <section className="ps-4">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
-          <FormField
-            control={form.control}
-            name="file"
-            render={() => {
-              return (
-                <FormItem>
-                  <FormControl>
-                    <input
-                      type="file"
-                      multiple={false}
-                      className="hidden"
-                      {...fileRest}
-                      ref={(e) => {
-                        fileRef(e);
-                        fileInputRef.current = e;
-                      }}
-                      onChange={handleChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
+    <section className="flex ps-4">
+      <div className="basis-3/4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+            <FormField
+              control={form.control}
+              name="file"
+              render={() => {
+                return (
+                  <FormItem>
+                    <FormControl>
+                      <input
+                        type="file"
+                        multiple={false}
+                        className="hidden"
+                        {...fileRest}
+                        ref={(e) => {
+                          fileRef(e);
+                          fileInputRef.current = e;
+                        }}
+                        onChange={handleChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
 
-          <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
-        </form>
-      </Form>
+            <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
+          </form>
+        </Form>
 
-      {fileLoading && (
-        <div
-          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex w-[70%] items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
-        >
-          <div className="flex-1 space-y-1">
-            <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
-            <div className="text-sm text-muted-foreground">
-              <Progress value={progress} className="w-full" />
-              <div className="flex justify-between">
-                <p className="mt-1">{formatBytes(filesize)}</p>
-                <p className="mt-1">{progress?.toFixed()}% Complete</p>
+        {fileLoading && (
+          <div
+            className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
+          >
+            <div className="flex-1 space-y-1">
+              <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
+              <div className="text-sm text-muted-foreground">
+                <Progress value={progress} className="w-full" />
+                <div className="flex justify-between">
+                  <p className="mt-1">{formatBytes(filesize)}</p>
+                  <p className="mt-1">{progress?.toFixed()}% Complete</p>
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+        <Table className="mt-4">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40%]">Document</TableHead>
+              <TableHead className="w-[10%] text-right">Size</TableHead>
+              <TableHead className="w-[18%]">Upload Date</TableHead>
+              <TableHead className="w-[32%] text-right"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {files.map((file) => (
+              <TableRow key={file.filename}>
+                <TableCell className="flex items-center font-medium">
+                  <FileTextIcon className="me-2" />
+                  <span>
+                    #{file.id} {file.filename}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">{formatBytes(file.fileSize ?? 0)}</TableCell>
+                <TableCell>{file.timestamp}</TableCell>
+                <TableCell className="flex justify-end gap-2 text-right text-xs">
+                  {!file.isEmbedded ? (
+                    <>
+                      <p>
+                        with Ollama: <br />
+                        <strong>nomic-embed-text</strong>
+                      </p>
+                      <Button size={'sm'} onClick={() => embedDocumentPost(file.id)} disabled={isEmbedding}>
+                        {isEmbedding && <Spinner color="" />}
+                        Embedd
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        Embedded with ollama: <br />
+                        <strong>{file.embedModel}</strong>
+                      </p>
+                      <Button size={'sm'}>
+                        Question with AI <ArrowRightIcon className="ms-2" />{' '}
+                      </Button>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+            {filesLoading && (
+              <TableRow key="loading">
+                <TableCell>
+                  <Skeleton className="h-3 w-full rounded-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-3 w-full rounded-full" />
+                </TableCell>
+                <TableCell colSpan={2}>
+                  <Skeleton className="h-3 w-full rounded-full" />
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <div className="basis-1/4 pt-3 ps-3">
+        <div>
+          <Button
+            className='w-full'
+            onClick={() => {
+              toast.success('Document embedded successfully');
+            }}
+          >
+            Toast
+          </Button>
         </div>
-      )}
-
-      <Table className="mt-4 w-[70%]">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[60%]">Document</TableHead>
-            <TableHead className="w-[10%] text-right">Size</TableHead>
-            <TableHead className="w-[20%]">Upload Date</TableHead>
-            <TableHead className="w-[10%] text-right"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {files.map((file) => (
-            <TableRow key={file.filename}>
-              <TableCell className="flex items-center font-medium">
-                <FileTextIcon className="me-2" />
-                <span>{file.filename}</span>
-              </TableCell>
-              <TableCell className="text-right">{formatBytes(file.fileSize ?? 0)}</TableCell>
-              <TableCell>{file.timestamp}</TableCell>
-              <TableCell className="text-right">-</TableCell>
-            </TableRow>
-          ))}
-          {filesLoading && (
-            <TableRow key="loading">
-              <TableCell>
-                <Skeleton className="h-3 w-full rounded-full" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-3 w-full rounded-full" />
-              </TableCell>
-              <TableCell colSpan={2}>
-                <Skeleton className="h-3 w-full rounded-full" />
-              </TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
+      </div>
       <Toaster position="bottom-center" richColors closeButton />
     </section>
   );

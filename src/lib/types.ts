@@ -88,3 +88,10 @@ export const ModelsResponseSchema = z.array(ModelResponseSchema);
 
 export type TModelsResponseSchema = z.infer<typeof ModelsResponseSchema>;
 export type TModelResponseSchema = z.infer<typeof ModelResponseSchema>;
+
+export const EmbedDocumentResponseSchema = z.object({
+  success: z.boolean(),
+  errorMessage: z.string().nullable(),
+});
+
+export type EmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>;

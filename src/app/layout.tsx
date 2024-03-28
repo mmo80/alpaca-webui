@@ -4,7 +4,7 @@ import { TopNav } from '@/components/top-nav';
 import { Provider } from '@/app/provider';
 
 export const metadata: Metadata = {
-  title: 'Alpaca for Ollama',
+  title: 'Alpaca WebUI',
   description: 'Simple chat UI for Ollama',
 };
 

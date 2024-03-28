@@ -4,7 +4,6 @@ import * as React from 'react';
 import { ChatMessage, ChatRole } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
 import { PersonIcon, LayersIcon } from '@radix-ui/react-icons';
-import { useState } from 'react';
 
 export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
   return (
