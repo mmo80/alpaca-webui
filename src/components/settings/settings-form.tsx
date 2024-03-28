@@ -10,14 +10,15 @@ import { cn } from '@/lib/utils';
 import { z } from 'zod';
 import { useSettingsStore } from '@/lib/store';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Badge } from '../ui/badge';
 
 interface SettingsFormProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const modelListVariant = [
-  { label: 'Ollama', value: 'ollama' },
-  { label: 'OpenAI', value: 'openai' },
+  { label: 'Ollama - /api/tags', value: 'ollama' },
+  { label: 'OpenAI - /v1/models', value: 'openai' },
   { label: 'Manual', value: 'manual' },
 ] as const;
 
@@ -32,6 +33,13 @@ const SettingsSchema = z.object({
 });
 
 type TSettingsSchema = z.infer<typeof SettingsSchema>;
+
+const urls = [
+  'http://localhost:11434',
+  'https://api.openai.com',
+  'https://api.together.xyz',
+  'https://api.mistral.ai'
+]
 
 const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const [open, setOpen] = useState(false);
@@ -117,7 +125,12 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
                   <Input {...field} />
                 </FormControl>
                 <FormDescription>
-                  This is your base domain url (http://localhost:11434, https://api.together.xyz, https://api.openai.com)
+                  <p>This is your base domain url. ex. <i>&#123;Base Url&#125;/v1/chat/completions</i></p>
+                  <div className='flex items-start flex-wrap gap-2 mt-2'>
+                    {urls.map((url) => (
+                      <Badge key={url} className='cursor-pointer' onClick={() => form.setValue('url', url)}>{url}</Badge>
+                    ))}
+                  </div>
                 </FormDescription>
                 <FormMessage />
               </FormItem>

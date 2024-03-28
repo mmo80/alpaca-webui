@@ -34,7 +34,6 @@ const SystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const onSubmit = (data: TSystemPromptSchema) => {
     setSystemPrompt(data.systemPrompt);
     window.location.href = '/';
-    //setDialogOpen(false);
   };
 
   return (
