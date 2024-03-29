@@ -22,6 +22,13 @@ const modelListVariant = [
   { label: 'Manual', value: 'manual' },
 ] as const;
 
+const urls = [
+  { url: 'http://localhost:11434', modelType: 'ollama' },
+  { url: 'https://api.openai.com', modelType: 'openai' },
+  { url: 'https://api.together.xyz', modelType: 'openai' },
+  { url: 'https://api.mistral.ai', modelType: 'openai' },
+] as const;
+
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?$/;
 
 const SettingsSchema = z.object({
@@ -33,13 +40,6 @@ const SettingsSchema = z.object({
 });
 
 type TSettingsSchema = z.infer<typeof SettingsSchema>;
-
-const urls = [
-  'http://localhost:11434',
-  'https://api.openai.com',
-  'https://api.together.xyz',
-  'https://api.mistral.ai'
-]
 
 const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const [open, setOpen] = useState(false);
@@ -62,6 +62,18 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const onSubmit = (data: TSettingsSchema) => {
     setSettings(data.modelListVariant, data.url, data.apiKey);
     setDialogOpen(false);
+  };
+
+  const setFormValues = (url: string, modelType: string) => {
+    form.setValue('url', url);
+
+    if (modelType === 'ollama') {
+      form.setValue('modelListVariant', 'ollama');
+    } else if (modelType === 'openai') {
+      form.setValue('modelListVariant', 'openai');
+    } else {
+      form.setValue('modelListVariant', 'manual');
+    }
   };
 
   return (
@@ -125,10 +137,18 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
                   <Input {...field} />
                 </FormControl>
                 <FormDescription>
-                  <p>This is your base domain url. ex. <i>&#123;Base Url&#125;/v1/chat/completions</i></p>
-                  <div className='flex items-start flex-wrap gap-2 mt-2'>
+                  <p>
+                    This is your base domain url. ex. <i>&#123;Base Url&#125;/v1/chat/completions</i>
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-start gap-2">
                     {urls.map((url) => (
-                      <Badge key={url} className='cursor-pointer' onClick={() => form.setValue('url', url)}>{url}</Badge>
+                      <Badge
+                        key={url.url}
+                        className="cursor-pointer"
+                        onClick={() => setFormValues(url.url, url.modelType)}
+                      >
+                        {url.url}
+                      </Badge>
                     ))}
                   </div>
                 </FormDescription>

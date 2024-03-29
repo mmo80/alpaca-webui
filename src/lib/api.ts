@@ -9,8 +9,12 @@ import {
   TModelResponseSchema,
 } from '@/lib/types';
 
+// eslint-disable-next-line no-unused-vars
 const keepAlive = '10m';
 let chatStreamController: AbortController | null = null;
+
+// eslint-disable-next-line no-unused-vars
+enum HttpMethod { GET = 'GET', POST = 'POST' }
 
 const validUrl = (url: string | null): string => {
   if (url == null) {
@@ -85,7 +89,7 @@ const postEmbedDocument = async (documentId: number, model: string): Promise<Emb
 
   const payload = {
     embedModel: model,
-    documentId: documentId
+    documentId: documentId,
   };
 
   const response = await fetchData(url, HttpMethod.POST, null, payload);
@@ -96,16 +100,14 @@ const postEmbedDocument = async (documentId: number, model: string): Promise<Emb
     throw validator.error;
   }
   return validator.data;
-
-  // return await fetchData(url, HttpMethod.POST, null, payload);
-}
+};
 
 export const api = {
   getTag,
   getModelList,
   getChatStream,
   cancelChatStream,
-  postEmbedDocument
+  postEmbedDocument,
 };
 
 const fetchData = async <T>(
@@ -141,8 +143,3 @@ const fetchData = async <T>(
 
   return response;
 };
-
-enum HttpMethod {
-  GET = 'GET',
-  POST = 'POST',
-}
