@@ -16,7 +16,7 @@ export const ChatBubble: React.FC<ChatMessage> = ({ role, content }) => {
             <LayersIcon className="mr-2 h-6 w-6 self-start" />
           )}
           <div
-            className={`flex w-full max-w-[100%] flex-col gap-2 overflow-x-hidden text-wrap rounded-md px-3 py-1 font-sans text-sm leading-7 ${
+            className={`flex w-full max-w-[100%] flex-col gap-2 overflow-x-hidden text-wrap rounded-md px-3 py-1 font-sans text-sm leading-6 ${
               role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
             }`}
           >

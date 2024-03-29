@@ -5,30 +5,31 @@ import { useModelStore } from '@/lib/store';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
 
 interface ChatInputProps {
-  onSendInputAsync: (input: string) => Promise<void>;
+  onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
-  placeholder: string;
-  workingStream: boolean;
+  chatInputPlaceholder: string;
+  isStreamProcessing: boolean;
+  isFetchLoading: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancelStream, placeholder, workingStream }) => {
-  const { modelName } = useModelStore();
+export const ChatInput: React.FC<ChatInputProps> = ({ onSendInput, onCancelStream, chatInputPlaceholder, isStreamProcessing, isFetchLoading }) => {
+  const { modelName } = useModelStore(); // TODO: replace with isModelChoosen os something similiar
   const [chatInput, setChatInput] = useState<string>('');
 
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
     setChatInput('');
-    await onSendInputAsync(chatInputTrimmed);
+    await onSendInput(chatInputTrimmed);
   };
 
   const chatEnterPress = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !workingStream && modelName != null) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && modelName != null) {
       await sendChat();
     }
   };
 
   const preventEnterPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !workingStream && modelName != null) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && modelName != null) {
       e.preventDefault();
     }
   };
@@ -40,12 +41,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancel
         onChange={(e) => setChatInput(e.target.value)}
         onKeyUp={chatEnterPress}
         onKeyDown={preventEnterPress}
-        placeholder={placeholder}
+        placeholder={chatInputPlaceholder}
         className="overflow-hidden pr-20"
         disabled={modelName === null}
       />
-      {workingStream ? (
-        <Button onClick={onCancelStream} variant="secondary" size="icon" className="absolute bottom-6 right-3">
+      {isStreamProcessing ? (
+        <Button onClick={onCancelStream} variant="secondary" size="icon" className="absolute bottom-6 right-3" disabled={isFetchLoading}>
           <StopIcon className="h-4 w-4" />
         </Button>
       ) : (
@@ -54,7 +55,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendInputAsync, onCancel
           variant="secondary"
           size="icon"
           className="absolute bottom-6 right-3"
-          disabled={workingStream || modelName === null}
+          disabled={isStreamProcessing || isFetchLoading || modelName === null}
         >
           <DoubleArrowUpIcon className="h-4 w-4" />
         </Button>

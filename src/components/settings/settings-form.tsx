@@ -11,23 +11,11 @@ import { z } from 'zod';
 import { useSettingsStore } from '@/lib/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Badge } from '../ui/badge';
+import { apiServiceModelTypes, apiServices } from '@/lib/data';
 
 interface SettingsFormProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
-
-const modelListVariant = [
-  { label: 'Ollama - /api/tags', value: 'ollama' },
-  { label: 'OpenAI - /v1/models', value: 'openai' },
-  { label: 'Manual', value: 'manual' },
-] as const;
-
-const urls = [
-  { url: 'http://localhost:11434', modelType: 'ollama' },
-  { url: 'https://api.openai.com', modelType: 'openai' },
-  { url: 'https://api.together.xyz', modelType: 'openai' },
-  { url: 'https://api.mistral.ai', modelType: 'openai' },
-] as const;
 
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?$/;
 
@@ -79,7 +67,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   return (
     <section>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="modelListVariant"
@@ -94,7 +82,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
                         role="combobox"
                         className={cn('w-[200px] justify-between', !field.value && 'text-muted-foreground')}
                       >
-                        {field.value ? modelListVariant.find((model) => model.value === field.value)?.label : 'Select'}
+                        {field.value ? apiServiceModelTypes.find((model) => model.value === field.value)?.label : 'Select'}
                         <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </FormControl>
@@ -102,7 +90,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
                   <PopoverContent className="w-[200px] p-0">
                     <Command>
                       <CommandGroup>
-                        {modelListVariant.map((model) => (
+                        {apiServiceModelTypes.map((model) => (
                           <CommandItem
                             value={model.label}
                             key={model.value}
@@ -137,25 +125,19 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
                   <Input {...field} />
                 </FormControl>
                 <FormDescription>
-                  <p>
-                    This is your base domain url. ex. <i>&#123;Base Url&#125;/v1/chat/completions</i>
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-start gap-2">
-                    {urls.map((url) => (
-                      <Badge
-                        key={url.url}
-                        className="cursor-pointer"
-                        onClick={() => setFormValues(url.url, url.modelType)}
-                      >
-                        {url.url}
-                      </Badge>
-                    ))}
-                  </div>
+                  This is your base domain url. ex. <i>&#123;Base Url&#125;/v1/chat/completions</i>
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <div className="flex flex-wrap items-start gap-2">
+            {apiServices.map((as) => (
+              <Badge key={as.url} className="cursor-pointer" onClick={() => setFormValues(as.url, as.modelType)}>
+                {as.url}
+              </Badge>
+            ))}
+          </div>
 
           <FormField
             control={form.control}
