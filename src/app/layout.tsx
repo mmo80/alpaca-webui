@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { TopNav } from '@/components/top-nav';
 import { Provider } from '@/app/provider';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'Alpaca WebUI',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <TopNav />
           <Provider>{children}</Provider>
         </div>
+        <Toaster position="bottom-center" richColors closeButton />
       </body>
     </html>
   );
