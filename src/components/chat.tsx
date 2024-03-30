@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessage } from '@/lib/types';
-import { ChatBubble } from './chat-bubble';
+import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
 
@@ -59,7 +59,7 @@ export const Chat: React.FC<ChatProps> = ({
     <>
       <div className="w-full space-y-4" ref={chatsDiv}>
         {chats.map((message, index) => (
-          <ChatBubble role={message.role} content={message.content} key={index} />
+          <ChatMessages role={message.role} content={message.content} key={index} />
         ))}
         {isFetchLoading && <Spinner />}
       </div>

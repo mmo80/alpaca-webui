@@ -130,11 +130,7 @@ export default function Home() {
           </h2>
         )}
 
-        <Chat
-          isFetchLoading={isFetchLoading}
-          chats={chats}
-          mainDiv={mainDiv}
-        />
+        <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
       </main>
       <section className="sticky top-[100vh] py-3">
         <ChatInput
@@ -143,6 +139,7 @@ export default function Home() {
           chatInputPlaceholder={textareaPlaceholder.current}
           isStreamProcessing={isStreamProcessing}
           isFetchLoading={isFetchLoading}
+          isLlmModelActive={modelName != null}
         />
       </section>
     </>

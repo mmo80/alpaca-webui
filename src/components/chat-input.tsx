@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { useModelStore } from '@/lib/store';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
 
 interface ChatInputProps {
@@ -10,10 +9,17 @@ interface ChatInputProps {
   chatInputPlaceholder: string;
   isStreamProcessing: boolean;
   isFetchLoading: boolean;
+  isLlmModelActive: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendInput, onCancelStream, chatInputPlaceholder, isStreamProcessing, isFetchLoading }) => {
-  const { modelName } = useModelStore(); // TODO: replace with isModelChoosen os something similiar
+export const ChatInput: React.FC<ChatInputProps> = ({
+  onSendInput,
+  onCancelStream,
+  chatInputPlaceholder,
+  isStreamProcessing,
+  isFetchLoading,
+  isLlmModelActive,
+}) => {
   const [chatInput, setChatInput] = useState<string>('');
 
   const sendChat = async () => {
@@ -23,13 +29,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendInput, onCancelStrea
   };
 
   const chatEnterPress = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && modelName != null) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && isLlmModelActive) {
       await sendChat();
     }
   };
 
   const preventEnterPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && modelName != null) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && isLlmModelActive) {
       e.preventDefault();
     }
   };
@@ -43,10 +49,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendInput, onCancelStrea
         onKeyDown={preventEnterPress}
         placeholder={chatInputPlaceholder}
         className="overflow-hidden pr-20"
-        disabled={modelName === null}
+        disabled={!isLlmModelActive}
       />
       {isStreamProcessing ? (
-        <Button onClick={onCancelStream} variant="secondary" size="icon" className="absolute bottom-6 right-3" disabled={isFetchLoading}>
+        <Button
+          onClick={onCancelStream}
+          variant="secondary"
+          size="icon"
+          className="absolute bottom-6 right-3"
+          disabled={isFetchLoading}
+        >
           <StopIcon className="h-4 w-4" />
         </Button>
       ) : (
@@ -55,7 +67,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendInput, onCancelStrea
           variant="secondary"
           size="icon"
           className="absolute bottom-6 right-3"
-          disabled={isStreamProcessing || isFetchLoading || modelName === null}
+          disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
         >
           <DoubleArrowUpIcon className="h-4 w-4" />
         </Button>

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FileTextIcon, ArrowRightIcon } from '@radix-ui/react-icons';
+import { FileTextIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { TFileSchema } from '@/db/schema';
 import { formatBytes } from '@/lib/utils';
 import { DropZone } from '@/components/drop-zone';
@@ -19,6 +19,13 @@ import { Button } from '@/components/ui/button';
 import { getFiles } from '@/actions/get-files';
 import { api } from '@/lib/api';
 import { Spinner } from '@/components/spinner';
+import { useChatStream } from '@/hooks/use-chat-stream';
+import { ChatInput } from '@/components/chat-input';
+import { Input } from '@/components/ui/input';
+import { Chat } from '@/components/chat';
+import { useModelStore, useSettingsStore } from '@/lib/store';
+import { GetChunksRequest, getChunks } from '@/actions/get-chunks';
+import { ChatRole } from '@/lib/types';
 
 const maxFileSizeMb = 30;
 const formSchema = z.object({
@@ -60,6 +67,8 @@ const formSchema = z.object({
 type TFormSchema = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const { modelName, updateModelName } = useModelStore();
+  const { hostname, token } = useSettingsStore();
   const [progress, setProgress] = useState(0);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
   const [filesLoading, setFilesLoading] = useState<boolean>(true);
@@ -69,6 +78,14 @@ export default function Page() {
   const [files, setFiles] = useState<TFileSchema[]>([]);
   const [fadeOut, setFadeOut] = useState<boolean>(false);
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number>(0);
+
+  // Chats : START
+  const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
+  const mainDiv = useRef<HTMLDivElement>(null);
+  const textareaPlaceholder = useRef<string>('Choose document...');
+  const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+  // Chats : END
 
   const form = useForm<TFormSchema>({
     resolver: zodResolver(formSchema),
@@ -185,8 +202,68 @@ export default function Page() {
     setIsEmbedding(false);
   };
 
+  const sendChat = async (chatInput: string) => {
+    if (chatInput === '') {
+      return;
+    }
+
+    const request: GetChunksRequest = {
+      question: chatInput,
+      documentId: selectedDocumentId,
+      embedModel: 'nomic-embed-text'
+    };
+
+    const documents = await getChunks(request);
+    const context = documents.map(d => d.text).join(' ');
+
+    // System Prompt
+    const systemPrompt2 = `User's Question:
+    ${chatInput}
+    
+    Relevant Document Information:
+    ### Begin Document ###
+    ${context}
+    ### End Document ###
+    
+    Answer:`;
+    const msg2 = { content: systemPrompt2, role: ChatRole.SYSTEM };
+    setChats((prevArray) => [...prevArray, msg2]);
+
+    // User Prompt
+    const chatMessage = { content: chatInput, role: ChatRole.USER };
+    setChats((prevArray) => [...prevArray, chatMessage]);
+
+    setIsFetchLoading(true);
+    const streamReader = await api.getChatStream('mistral:latest', [...chats, msg2, chatMessage], token, hostname);
+    setIsFetchLoading(false);
+    await handleStream(streamReader);
+    // delayHighlighter();
+  };
+
+  const chatWithDocument = async (documentId: number) => {
+    setSelectedDocumentId(documentId);
+    updateModelName('nomic-embed-text');
+
+    // System Prompt #1
+    const systemPrompt1 = `Instructions: Provide a detailed answer to the user's question below, using the information provided from the document. 
+    The answer should be concise, accurate, and directly related to the question.
+  
+    User's Question:
+    [Insert User's Question Here]
+    
+    Relevant Document Information:
+    ### Begin Document ###
+    [Insert Relevant Document Content Here]
+    ### End Document ###
+    
+    Answer:`;
+    const msg1 = { content: systemPrompt1, role: ChatRole.SYSTEM };
+    setChats((prevArray) => [...prevArray, msg1]);
+    //setChats((prevArray) => [...prevArray, { content: systemPrompt1, role: ChatRole.SYSTEM }]);
+  }
+
   return (
-    <section className="flex ps-4">
+    <section className="flex h-full ps-4">
       <div className="basis-3/4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
@@ -239,10 +316,10 @@ export default function Page() {
         <Table className="mt-4">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40%]">Document</TableHead>
+              <TableHead className="w-[35%]">Document</TableHead>
               <TableHead className="w-[10%] text-right">Size</TableHead>
               <TableHead className="w-[18%]">Upload Date</TableHead>
-              <TableHead className="w-[32%] text-right"></TableHead>
+              <TableHead className="w-[37%] text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -274,8 +351,8 @@ export default function Page() {
                         Embedded with ollama: <br />
                         <strong>{file.embedModel}</strong>
                       </p>
-                      <Button size={'sm'}>
-                        Question with AI <ArrowRightIcon className="ms-2" />{' '}
+                      <Button size={'sm'} onClick={() => { chatWithDocument(file.id) }}>
+                        <ChatBubbleIcon className="me-1" />Question with AI
                       </Button>
                     </>
                   )}
@@ -298,9 +375,27 @@ export default function Page() {
             )}
           </TableBody>
         </Table>
+
+        <div className='p-3 border border-1 rounded-lg border-stone-500'>Selected DocumentId: {selectedDocumentId}</div>
+
+        <div className="h-auto mt-3">
+          <main className="flex-1 space-y-4 overflow-y-auto" ref={mainDiv}>
+            <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
+          </main>
+          <section className="sticky top-[100vh] py-3">
+            <ChatInput
+              onSendInput={sendChat}
+              onCancelStream={api.cancelChatStream}
+              chatInputPlaceholder={textareaPlaceholder.current}
+              isStreamProcessing={isStreamProcessing}
+              isFetchLoading={isFetchLoading}
+              isLlmModelActive={modelName != null}
+            />
+          </section>
+        </div>
       </div>
-      <div className="basis-1/4 pt-3 ps-3">
-        <div>
+      <div className="basis-1/4 ps-3 pt-3">
+        {/* <div>
           <Button
             className='w-full'
             onClick={() => {
@@ -309,7 +404,7 @@ export default function Page() {
           >
             Toast
           </Button>
-        </div>
+        </div> */}
       </div>
       <Toaster position="bottom-center" richColors closeButton />
     </section>
