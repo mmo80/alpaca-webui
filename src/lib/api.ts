@@ -125,6 +125,8 @@ const fetchData = async <T>(
     headers.append('Authorization', `Bearer ${apiKey}`);
   }
 
+  //console.debug(console.log(JSON.stringify(payload, null, 2)));
+
   let response;
   try {
     response = await fetch(url, {

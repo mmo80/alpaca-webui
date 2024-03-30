@@ -46,7 +46,7 @@ export class DocumentReader {
       });
     }
 
-    return fileContent.join(' ');
+    return fileContent.join('');
   };
 
   private getDocFileContent = async (path: string): Promise<string> => {

@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { chunkTextBySentences } from 'matts-llm-tools';
 import { Ollama } from 'ollama';
-import weaviate, { WeaviateClient } from 'weaviate-ts-client';
 import { DocumentReader } from './document-reader';
+import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
@@ -23,7 +23,6 @@ export class DocumentEmbedding {
   private filename: string;
   private basePath = './uploads/';
   private ollama: Ollama;
-  private weaviateClient: WeaviateClient;
 
   constructor(filename: string) {
     if (!filename) {
@@ -39,23 +38,17 @@ export class DocumentEmbedding {
     this.filePath = filePath;
 
     this.ollama = new Ollama({ host: 'http://localhost:11434' });
-    this.weaviateClient = weaviate.client({
-      scheme: 'http',
-      host: 'localhost:8080',
-    });
   }
 
   private async batchVectorsToDatabase(list: DocumentVectorSchema[]): Promise<boolean> {
     try {
-      const className = 'Documents';
-
-      let batcher = this.weaviateClient.batch.objectsBatcher();
+      let batcher = weaviateClient.batch.objectsBatcher();
       let counter = 0;
       const batchSize = 100;
 
       for (const data of list) {
         batcher = batcher.withObject({
-          class: className,
+          class: VectorDatabaseClassName,
           properties: {
             text: data.text, 
             file: data.file,
@@ -69,7 +62,7 @@ export class DocumentEmbedding {
           await batcher.do();
 
           counter = 0;
-          batcher = this.weaviateClient.batch.objectsBatcher();
+          batcher = weaviateClient.batch.objectsBatcher();
         }
       }
 
