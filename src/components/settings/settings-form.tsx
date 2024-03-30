@@ -12,6 +12,7 @@ import { useSettingsStore } from '@/lib/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Badge } from '../ui/badge';
 import { apiServiceModelTypes, apiServices } from '@/lib/data';
+import { toast } from 'sonner';
 
 interface SettingsFormProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -49,7 +50,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
 
   const onSubmit = (data: TSettingsSchema) => {
     setSettings(data.modelListVariant, data.url, data.apiKey);
-    setDialogOpen(false);
+    toast.success('Saved!');
   };
 
   const setFormValues = (url: string, modelType: string) => {

@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useSettingsStore } from '@/lib/store';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 interface SettingsFormProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,7 +34,7 @@ const SystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
 
   const onSubmit = (data: TSystemPromptSchema) => {
     setSystemPrompt(data.systemPrompt);
-    window.location.href = '/';
+    toast.success('Saved!');
   };
 
   return (

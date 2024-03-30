@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SettingsForm from './settings-form';
 import SystemPromptForm from './system-prompt-form';
-import { Button } from '../ui/button';
+import RagSystemPromptForm from './rag-system-prompt-form';
 
 interface SettingsMenuProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -26,6 +26,12 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setDialogOpen }) => 
             System Prompt
           </TabsTrigger>
           <TabsTrigger
+            value="system-prompt-rag"
+            className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:bg-stone-900 data-[state=active]:shadow-none"
+          >
+            System Prompt (RAG)
+          </TabsTrigger>
+          <TabsTrigger
             value="parameters"
             className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:bg-stone-900 data-[state=active]:shadow-none"
           >
@@ -37,6 +43,9 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setDialogOpen }) => 
         </TabsContent>
         <TabsContent value="system-prompt" className="w-4/6">
           <SystemPromptForm setDialogOpen={setDialogOpen} />
+        </TabsContent>
+        <TabsContent value="system-prompt-rag" className="w-4/6">
+          <RagSystemPromptForm setDialogOpen={setDialogOpen} />
         </TabsContent>
         <TabsContent value="parameters" className="w-4/6">
           <section>Parameters</section>
