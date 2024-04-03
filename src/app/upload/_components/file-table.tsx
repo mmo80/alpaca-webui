@@ -14,7 +14,9 @@ type FileTableProps = {
   files: TFile[];
   filesLoading: boolean;
   isEmbedding: boolean;
+  // eslint-disable-next-line no-unused-vars
   onEmbedDocument: (documentId: number) => void;
+  // eslint-disable-next-line no-unused-vars
   initConversationWithDocument: (documentId: number, filename: string, embeddingModel: string) => void;
 };
 

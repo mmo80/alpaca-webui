@@ -286,10 +286,6 @@ export default function Page() {
       toast.warning('RAG System Prompt not set!');
       return;
     }
-    // if (modelName == null) {
-    //   toast.warning('No conversation model choosen');
-    //   return;
-    // }
 
     setSelectedDocument({
       documentId: documentId,
@@ -356,7 +352,7 @@ export default function Page() {
           )}
 
           {embeddedModelList.modelsIsError && (
-            <AlertBox title="Error" description={embeddedModelList.modelsError?.message || ''} />
+            <AlertBox title="Error" description={embeddedModelList.modelsError?.message ?? ''} />
           )}
           <div className="flex items-baseline gap-2">
             {selectedEmbedModel == null ? (
@@ -390,7 +386,7 @@ export default function Page() {
         </section>
         <section className="h-screen basis-3/5 border-l-2 border-stone-800 ps-3">
           <div className="flex-1 space-y-3 overflow-y-auto" ref={mainDiv}>
-            {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message || ''} />}
+            {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message ?? ''} />}
             {selectedDocument != null ? (
               <div className="p-3">
                 <div className="flex items-baseline gap-2 pb-3">
