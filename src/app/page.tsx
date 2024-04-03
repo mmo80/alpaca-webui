@@ -1,50 +1,25 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { ArrowUpIcon } from '@radix-ui/react-icons';
-import { ModelMenu } from '@/components/model-menu';
-import { Spinner } from '@/components/spinner';
-import { useQuery } from '@tanstack/react-query';
-import { ChatMessage, ChatRole, TModelsResponseSchema } from '@/lib/types';
-import { useModelStore, useSettingsStore } from '@/lib/store';
+import { TChatMessage, ChatRole } from '@/lib/types';
 import { api } from '@/lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { useChatStream } from '@/hooks/use-chat-stream';
+import { useModelList } from '@/hooks/use-model-list';
+import { useModelStore, useSettingsStore } from '@/lib/store';
+import ModelAlts from '@/components/model-alts';
 
 export default function Home() {
-  const { modelName, updateModelName } = useModelStore();
-  const { modelVariant, hostname, token, systemPrompt, hasHydrated } = useSettingsStore();
+  const { selectedModel: modelName, setModel: setModelName } = useModelStore();
+  const { systemPrompt, hasHydrated } = useSettingsStore();
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
   const textareaPlaceholder = useRef<string>('Choose model...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
-
-  const {
-    isLoading: modelsIsLoading,
-    error: modelsError,
-    data: models,
-    isSuccess: modelsIsSuccess,
-    isError: modelsIsError,
-  } = useQuery<TModelsResponseSchema>({
-    queryKey: ['models', modelVariant, token, hostname],
-    queryFn: async () => {
-      switch (modelVariant) {
-        case 'ollama': {
-          const tags = await api.getTag(hostname);
-          return tags.models.map((model) => ({ id: model.name, object: 'model', created: 0 }));
-        }
-        case 'openai':
-          return await api.getModelList(hostname, token);
-        case 'manual':
-          return [] as TModelsResponseSchema;
-      }
-      return [] as TModelsResponseSchema;
-    },
-  });
+  const { modelList } = useModelList();
 
   useEffect(() => {
     if (modelName != null) {
@@ -54,13 +29,13 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
-  const chatStream = async (message: ChatMessage) => {
+  const chatStream = async (message: TChatMessage) => {
     if (modelName == null) {
       return;
     }
 
     setIsFetchLoading(true);
-    const streamReader = await api.getChatStream(modelName, [...chats, message], token, hostname);
+    const streamReader = await api.getChatStream(modelName, [...chats, message], modelList.baseUrl, modelList.token);
     setIsFetchLoading(false);
     await handleStream(streamReader);
   };
@@ -75,54 +50,20 @@ export default function Home() {
     delayHighlighter();
   };
 
-  const renderModelListVariant = () => {
-    if (modelName == null) {
-      switch (modelVariant) {
-        case 'manual':
-          return (
-            <Input
-              placeholder="Modelname"
-              className="mt-2 w-80"
-              onChange={(e) => {
-                updateModelName(e.target.value);
-              }}
-            />
-          );
-        case 'ollama':
-        case 'openai':
-          return (
-            <div className="flex pt-2">
-              <ModelMenu models={models ?? []} disabled={!modelsIsSuccess} className="py-3" />
-              {modelsIsLoading && (
-                <span className="ml-2">
-                  <Spinner />
-                </span>
-              )}
-            </div>
-          );
-        default:
-          return (
-            <span className="flex items-center px-4 pt-2">
-              {hasHydrated ? (
-                <>
-                  <h4 className="text-xl font-semibold">Configure settings to begin chat</h4>
-                  <ArrowUpIcon className="ml-2" />
-                </>
-              ) : (
-                <Spinner />
-              )}
-            </span>
-          );
-      }
-    }
-    return <></>;
-  };
-
   return (
     <>
       <main className="flex-1 space-y-4 overflow-y-auto" ref={mainDiv}>
-        {modelsIsError && <AlertBox title="Error" description={modelsError.message} />}
-        {renderModelListVariant()}
+        {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message || ''} />}
+        <ModelAlts
+          modelName={modelName}
+          models={modelList.models || []}
+          modelsIsSuccess={modelList.modelsIsSuccess}
+          modelsIsLoading={modelList.modelsIsLoading}
+          hasHydrated={hasHydrated}
+          onModelChange={(modelName: string) => {
+            setModelName(modelName);
+          }}
+        />
 
         {modelName != null && chats.length === 1 && (
           <h2 className="mt-10 scroll-m-20 pb-2 text-center text-3xl font-semibold tracking-tight transition-colors first:mt-0">

@@ -1,13 +1,15 @@
 import fs from 'fs';
 import { chunkTextBySentences } from 'matts-llm-tools';
-import { Ollama } from 'ollama';
 import { DocumentReader } from './document-reader';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
+import { embedMessage } from './embed-message';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
   errorMessage: string;
   embedModel: string;
+  textCharacterCount: number;
+  noOfChunks: number;
 };
 
 export type DocumentVectorSchema = {
@@ -15,20 +17,20 @@ export type DocumentVectorSchema = {
   file: string;
   chunkIndex: number;
   chunkTotal: number;
-  embed: number[];
+  embedding: number[];
+  totalTokens?: number;
 };
 
 export class DocumentEmbedding {
   private filePath: string;
   private filename: string;
-  private basePath = './uploads/';
-  private ollama: Ollama;
+  private baseFilePath = './uploads/';
 
   constructor(filename: string) {
     if (!filename) {
       throw new Error('Filename is required.');
     }
-    const filePath = `${this.basePath}${filename}`;
+    const filePath = `${this.baseFilePath}${filename}`;
 
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
@@ -36,8 +38,6 @@ export class DocumentEmbedding {
 
     this.filename = filename;
     this.filePath = filePath;
-
-    this.ollama = new Ollama({ host: 'http://localhost:11434' });
   }
 
   private async batchVectorsToDatabase(list: DocumentVectorSchema[]): Promise<boolean> {
@@ -50,12 +50,13 @@ export class DocumentEmbedding {
         batcher = batcher.withObject({
           class: VectorDatabaseClassName,
           properties: {
-            text: data.text, 
+            text: data.text,
             file: data.file,
             chunkIndex: data.chunkIndex,
-            chunkTotal: data.chunkTotal
+            chunkTotal: data.chunkTotal,
+            totalTokens: data.totalTokens,
           },
-          vector: data.embed,
+          vector: data.embedding,
         });
 
         if (counter++ == batchSize) {
@@ -79,15 +80,28 @@ export class DocumentEmbedding {
     return true;
   }
 
-  private async getOllamaEmbeddings(chunks: string[], filename: string, model: string): Promise<DocumentVectorSchema[]> {
+  private async embedChunks(
+    chunks: string[],
+    filename: string,
+    model: string,
+    baseUrl: string,
+    apiKey: string
+  ): Promise<DocumentVectorSchema[]> {
     const documentVectors: DocumentVectorSchema[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const result = await this.ollama.embeddings({ model: model, prompt: chunk });
-      const embed = result.embedding;
 
-      const chunkjson = { text: chunk, file: filename, embed: embed, chunkIndex: i, chunkTotal: chunks.length };
+      const data = await embedMessage(chunk, model, baseUrl, apiKey);
+
+      const chunkjson = {
+        text: chunk,
+        file: filename,
+        embedding: data.embedding,
+        chunkIndex: i,
+        chunkTotal: chunks.length,
+        totalTokens: data.totalTokens,
+      };
       documentVectors.push(chunkjson);
     }
 
@@ -99,11 +113,20 @@ export class DocumentEmbedding {
     return await reader.getFileContent();
   };
 
-  async EmbedAndPersistDocument(embedModel: string): Promise<DocumentEmbeddingRespopnse> {
+  async EmbedAndPersistDocument(embedModel: string, baseUrl: string, apiKey: string): Promise<DocumentEmbeddingRespopnse> {
     const fileContent = await this.getFileContent();
     const documentChunks = chunkTextBySentences(fileContent, 8, 0);
-    const documentVectors = await this.getOllamaEmbeddings(documentChunks, this.filename, embedModel);
+    console.log(`Document has ${documentChunks.length} chunks.`);
+    console.log(`Start embedding document: ${this.filename}`);
+    const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, baseUrl, apiKey);
+    console.log(`Finished embedding document: ${this.filename}`);
     const success = await this.batchVectorsToDatabase(documentVectors);
-    return { success: success, errorMessage: '', embedModel: embedModel };
+    return {
+      success: success,
+      errorMessage: '',
+      embedModel: embedModel,
+      textCharacterCount: fileContent.length,
+      noOfChunks: documentChunks.length,
+    };
   }
 }

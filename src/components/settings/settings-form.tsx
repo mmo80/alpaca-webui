@@ -32,7 +32,7 @@ type TSettingsSchema = z.infer<typeof SettingsSchema>;
 
 const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   const [open, setOpen] = useState(false);
-  const { setSettings, token, hostname, modelVariant } = useSettingsStore();
+  const { setSettings, token, baseUrl, modelVariant } = useSettingsStore();
 
   const form = useForm<TSettingsSchema>({
     resolver: zodResolver(SettingsSchema),
@@ -43,10 +43,10 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
   });
 
   useEffect(() => {
-    form.setValue('url', hostname ?? '');
+    form.setValue('url', baseUrl ?? '');
     form.setValue('apiKey', token ?? '');
     form.setValue('modelListVariant', modelVariant ?? '');
-  }, [form, hostname, token, modelVariant]);
+  }, [form, baseUrl, token, modelVariant]);
 
   const onSubmit = (data: TSettingsSchema) => {
     setSettings(data.modelListVariant, data.url, data.apiKey);

@@ -1,9 +1,9 @@
-import { ChatMessage, ChatRole } from "@/lib/types";
+import { TChatMessage, ChatRole } from "@/lib/types";
 import { parseJsonStream } from "@/lib/utils";
 import { useState } from "react";
 
 export const useChatStream = () => {
-  const [chats, setChats] = useState<ChatMessage[]>([]);
+  const [chats, setChats] = useState<TChatMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
   
   const updateLastChatsItem = (type: string, content: string = '') => {

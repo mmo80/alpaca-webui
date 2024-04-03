@@ -1,20 +1,21 @@
 import {
-  ChatCompletionnRequest,
-  ChatMessage,
-  EmbedDocumentResponse,
+  TChatCompletionRequest,
+  TChatMessage,
+  TEmbedDocumentResponse,
   EmbedDocumentResponseSchema,
   ModelsResponseSchema,
-  OllamaTag,
+  OllamaModel,
   OllamaTagSchema,
   TModelResponseSchema,
 } from '@/lib/types';
+import { apiServices } from './data';
 
 // eslint-disable-next-line no-unused-vars
 const keepAlive = '10m';
 let chatStreamController: AbortController | null = null;
 
 // eslint-disable-next-line no-unused-vars
-enum HttpMethod { GET = 'GET', POST = 'POST' }
+export enum HttpMethod { GET = 'GET', POST = 'POST' }
 
 const validUrl = (url: string | null): string => {
   if (url == null) {
@@ -23,26 +24,48 @@ const validUrl = (url: string | null): string => {
   return url;
 };
 
-const getTag = async (baseUrl: string | null): Promise<OllamaTag> => {
+const getTag = async (baseUrl: string | null, embeddedOnly: boolean): Promise<OllamaModel[]> => {
   const url = `${validUrl(baseUrl)}/api/tags`;
-  const response = await fetchData(url, HttpMethod.GET);
+  const response = await executeFetch(url, HttpMethod.GET);
   const data = await response.json();
 
   const validatedOllamaTag = await OllamaTagSchema.safeParseAsync(data);
   if (!validatedOllamaTag.success) {
     throw validatedOllamaTag.error;
   }
-  return validatedOllamaTag.data;
+  if (embeddedOnly) {
+    return validatedOllamaTag.data.models = validatedOllamaTag.data.models.filter((model) => model.details.family.includes('bert'));
+  }
+  return validatedOllamaTag.data.models;
 };
 
-const getModelList = async (baseUrl: string | null, apiKey: string | null): Promise<TModelResponseSchema[]> => {
+const getModelList = async (baseUrl: string | null, apiKey: string | null, embeddedOnly: boolean): Promise<TModelResponseSchema[]> => {
   const url = `${validUrl(baseUrl)}/v1/models`;
-  const response = await fetchData(url, HttpMethod.GET, apiKey);
+  const response = await executeFetch(url, HttpMethod.GET, apiKey);
   let data = await response.json();
 
-  // ugly fix for mistral model list as they don't respect the OpenAI API model contract
-  if (baseUrl?.indexOf('mistral.ai') !== -1) {
+  // ugly fix for together model list as they don't respect the OpenAI API model contract
+  if (baseUrl?.indexOf('api.together.xyz') !== -1) {
+    data = data;
+  } else {
     data = data.data;
+  }
+
+  if (embeddedOnly) {
+    const apiLabel = apiServices.filter((api) => api.url === baseUrl)[0].label;
+    switch (apiLabel) {
+      case 'OpenAI': {
+        return data.filter((model: TModelResponseSchema) => model.id.indexOf('embedding') !== -1);
+      }
+      case 'Together.ai': {
+        return data.filter((model: TModelResponseSchema) => (model.type === 'embedding'));
+      }
+      case 'Mistral.ai': {
+        return data.filter((model: TModelResponseSchema) => model.id === 'mistral-embed');
+      }
+      default:
+        return [];
+    }
   }
 
   const validatedModelList = await ModelsResponseSchema.safeParseAsync(data);
@@ -60,22 +83,22 @@ const cancelChatStream = () => {
 
 const getChatStream = async (
   model: string,
-  messages: ChatMessage[],
-  apiKey: string | null,
-  baseUrl: string | null
+  messages: TChatMessage[],
+  baseUrl: string | null,
+  apiKey: string | null
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   const url = `${validUrl(baseUrl)}/v1/chat/completions`;
 
   chatStreamController = new AbortController();
   const chatStreamSignal = chatStreamController.signal;
 
-  const payload: ChatCompletionnRequest = {
+  const payload: TChatCompletionRequest = {
     model: model,
     messages: messages,
     stream: true,
   };
 
-  const response = await fetchData(url, HttpMethod.POST, apiKey, payload, chatStreamSignal);
+  const response = await executeFetch(url, HttpMethod.POST, apiKey, payload, chatStreamSignal);
 
   if (response.body == null) {
     throw new Error(`API request failed with empty response body`);
@@ -84,15 +107,14 @@ const getChatStream = async (
   return response.body.getReader();
 };
 
-const postEmbedDocument = async (documentId: number, model: string): Promise<EmbedDocumentResponse> => {
-  const url = `/api/documents/embed`;
-
+const embedDocument = async (documentId: number, model: string, baseUrl: string | null, apiKey: string | null): Promise<TEmbedDocumentResponse> => {
   const payload = {
     embedModel: model,
     documentId: documentId,
+    baseUrl: validUrl(baseUrl),
+    apiKey: apiKey,
   };
-
-  const response = await fetchData(url, HttpMethod.POST, null, payload);
+  const response = await executeFetch(`/api/documents/embed`, HttpMethod.POST, null, payload);
   const data = await response.json();
 
   const validator = await EmbedDocumentResponseSchema.safeParseAsync(data);
@@ -107,10 +129,10 @@ export const api = {
   getModelList,
   getChatStream,
   cancelChatStream,
-  postEmbedDocument,
+  embedDocument,
 };
 
-const fetchData = async <T>(
+export const executeFetch = async <T>(
   url: string,
   method: HttpMethod,
   apiKey: string | null = null,

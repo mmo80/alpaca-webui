@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SettingsForm from './settings-form';
 import SystemPromptForm from './system-prompt-form';
-import RagSystemPromptForm from './rag-system-prompt-form';
+import RagSettingsForm from './rag-settings-form';
 
 interface SettingsMenuProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -11,7 +11,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setDialogOpen }) => 
   return (
     <div className='flex flex-col'>
       <span className="ms-2 mb-2 text-xl">Settings</span>
-      <Tabs defaultValue="manage" className="flex">
+      <Tabs defaultValue="manage" className="flex h-96 overflow-auto">
         <TabsList className="me-3 flex w-2/6 flex-col items-start justify-start gap-1 bg-inherit">
           <TabsTrigger
             value="manage"
@@ -29,7 +29,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setDialogOpen }) => 
             value="system-prompt-rag"
             className="w-full items-start justify-start rounded p-2 ps-3 hover:bg-stone-900 data-[state=active]:bg-stone-900 data-[state=active]:shadow-none"
           >
-            System Prompt (RAG)
+            RAG
           </TabsTrigger>
           <TabsTrigger
             value="parameters"
@@ -45,7 +45,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setDialogOpen }) => 
           <SystemPromptForm setDialogOpen={setDialogOpen} />
         </TabsContent>
         <TabsContent value="system-prompt-rag" className="w-4/6">
-          <RagSystemPromptForm setDialogOpen={setDialogOpen} />
+          <RagSettingsForm setDialogOpen={setDialogOpen} />
         </TabsContent>
         <TabsContent value="parameters" className="w-4/6">
           <section>Parameters</section>

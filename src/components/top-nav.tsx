@@ -19,7 +19,7 @@ import { SettingsMenu } from './settings/settings-menu';
 import { cn } from '@/lib/utils';
 
 export const TopNav: React.FC = () => {
-  const { modelName } = useModelStore();
+  const { selectedModel } = useModelStore();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -58,18 +58,18 @@ export const TopNav: React.FC = () => {
                   <GearIcon className="mr-2 h-4 w-4" /> Settings
                 </NavigationMenuLink>
               </DialogTrigger>
-              <DialogContent className="top-5 min-h-96 translate-y-0 p-3 sm:max-w-[625px]">
+              <DialogContent className="top-5 translate-y-0 p-3 sm:max-w-[625px]">
                 <SettingsMenu setDialogOpen={setDialogOpen} />
               </DialogContent>
             </Dialog>
           </NavigationMenuItem>
 
           <NavigationMenuItem>
-            {modelName != null && (
+            {selectedModel != null && (
               <div className="flex gap-1">
                 <LayersIcon className="mt-1 h-4 w-4" />
                 <span className="hidden md:block">You are talking to</span>
-                <Badge variant="outline">{modelName}</Badge>
+                <Badge variant="outline">{selectedModel}</Badge>
               </div>
             )}
           </NavigationMenuItem>

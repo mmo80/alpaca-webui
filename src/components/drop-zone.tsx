@@ -53,17 +53,14 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
         onKeyDown={handleKeyDown}
         onClick={handleClick}
       >
-        <div className="flex items-center">
-          <UploadIcon className="me-2" />{' '}
+        <div className="flex flex-col items-center">
+          <UploadIcon />
           <span>
             Drag and drop or <u>select document</u>
           </span>
         </div>
-        <div className="text-sm text-slate-500 italic">.pdf, .txt, .docx</div>
+        <div className="text-sm text-slate-500 italic">.pdf, .txt, .docx, .doc</div>
       </div>
-      {/* <div className='my-3 flex h-28 w-[30%] items-center justify-center rounded-lg border p-3 text-2xl border-zinc-700 bg-zinc-800'>
-      Chat
-    </div> */}
     </section>
   );
 };

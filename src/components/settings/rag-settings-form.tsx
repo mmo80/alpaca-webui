@@ -7,24 +7,27 @@ import { z } from 'zod';
 import { useSettingsStore } from '@/lib/store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { Input } from '../ui/input';
 
 interface SettingsFormProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SystemPromptSchema = z.object({
+const RagSettingsFormSchema = z.object({
+  // embeddingModel: z.string().min(1, 'Model name is required.'),
   systemPromptForRag: z.union([z.string().min(5, 'Prompt must be at least 5 characters long.'), z.literal('')]),
   systemPromptForRagSlim: z.union([z.string().min(5, 'Prompt must be at least 5 characters long.'), z.literal('')]),
 });
 
-type TSystemPromptSchema = z.infer<typeof SystemPromptSchema>;
+type TRagSettingsFormSchema = z.infer<typeof RagSettingsFormSchema>;
 
-const RagSystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
-  const { setSystemPromptForRag, systemPromptForRag, setSystemPromptForRagSlim, systemPromptForRagSlim } = useSettingsStore();
+const RagSettingsForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => {
+  const { setSystemPromptForRag, systemPromptForRag, setSystemPromptForRagSlim, systemPromptForRagSlim, setEmbedModel, embedModel } = useSettingsStore();
 
-  const form = useForm<TSystemPromptSchema>({
-    resolver: zodResolver(SystemPromptSchema),
+  const form = useForm<TRagSettingsFormSchema>({
+    resolver: zodResolver(RagSettingsFormSchema),
     defaultValues: {
+      // embeddingModel: '',
       systemPromptForRag: '',
       systemPromptForRagSlim: '',
     },
@@ -35,7 +38,8 @@ const RagSystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => 
     form.setValue('systemPromptForRagSlim', systemPromptForRagSlim ?? '');
   }, [form, systemPromptForRag, systemPromptForRagSlim]);
 
-  const onSubmit = (data: TSystemPromptSchema) => {
+  const onSubmit = (data: TRagSettingsFormSchema) => {
+    // setEmbedModel(data.embeddingModel);
     setSystemPromptForRag(data.systemPromptForRag);
     setSystemPromptForRagSlim(data.systemPromptForRagSlim);
     toast.success('Saved!');
@@ -45,6 +49,23 @@ const RagSystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => 
     <section>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* <FormField
+            control={form.control}
+            name="embeddingModel"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Embedding Model</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>
+                  Model used for embedding the document content.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+
           <FormField
             control={form.control}
             name="systemPromptForRag"
@@ -91,4 +112,4 @@ const RagSystemPromptForm: React.FC<SettingsFormProps> = ({ setDialogOpen }) => 
   );
 };
 
-export default RagSystemPromptForm;
+export default RagSettingsForm;

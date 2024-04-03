@@ -7,26 +7,32 @@ import { z } from 'zod';
 import throttle from 'lodash.throttle';
 import { Progress } from '@/components/ui/progress';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FileTextIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
-import { TFileSchema } from '@/db/schema';
+import { TFile } from '@/db/schema';
 import { delayHighlighter, formatBytes } from '@/lib/utils';
 import { DropZone } from '@/components/drop-zone';
-import { Button } from '@/components/ui/button';
 import { getFiles } from '@/actions/get-files';
 import { api } from '@/lib/api';
-import { Spinner } from '@/components/spinner';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { RagSystemPromptVariable, useModelStore, useSettingsStore } from '@/lib/store';
-import { GetChunksRequest, getChunks } from '@/actions/get-chunks';
+import { GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
 import { ChatRole } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import FileTable from './_components/file-table';
+import { getApiService } from '@/lib/data';
+import { useModelList } from '@/hooks/use-model-list';
+import ModelAlts from '@/components/model-alts';
+import { AlertBox } from '@/components/alert-box';
 
-const maxFileSizeMb = 30;
+const maxFileSizeMb = 50;
+const allowedFileTypes: string[] = [
+  'application/pdf',
+  'text/plain',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/msword',
+] as const;
 const formSchema = z.object({
   file: z
     .custom<FileList>()
@@ -53,10 +59,10 @@ const formSchema = z.object({
         });
       }
 
-      if (!['application/pdf', 'text/plain'].includes(file.type)) {
+      if (!allowedFileTypes.includes(file.type)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'File must be an document (pdf, txt)',
+          message: 'File must be an document (pdf, txt, docx, doc)',
         });
       }
     })
@@ -71,15 +77,15 @@ type SelectedDocument = {
 };
 
 export default function Page() {
-  const { modelName, updateModelName, embedModelName, updateEmbedModelName } = useModelStore();
-  const { hostname, token, systemPromptForRag, systemPromptForRagSlim } = useSettingsStore();
+  const { selectedModel, setModel, selectedEmbedModel, setEmbedModel } = useModelStore();
+  const { systemPromptForRag, systemPromptForRagSlim, hasHydrated } = useSettingsStore();
   const [progress, setProgress] = useState(0);
+  const [files, setFiles] = useState<TFile[]>([]);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
   const [filesLoading, setFilesLoading] = useState<boolean>(true);
   const [filename, setFilename] = useState<string>('');
   const [filesize, setFilesize] = useState<number>(0);
   const [, startTransition] = useTransition();
-  const [files, setFiles] = useState<TFileSchema[]>([]);
   const [fadeOut, setFadeOut] = useState<boolean>(false);
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
   const [selectedDocument, setSelectedDocument] = useState<SelectedDocument | null>(null);
@@ -87,9 +93,12 @@ export default function Page() {
   // Chats : START
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
-  const textareaPlaceholder = useRef<string>('Choose document...');
+  const textareaPlaceholder = useRef<string>('Choose document to interact with...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
   // Chats : END
+
+  const { modelList } = useModelList();
+  const { modelList: embeddedModelList } = useModelList(true);
 
   const form = useForm<TFormSchema>({
     resolver: zodResolver(formSchema),
@@ -191,9 +200,19 @@ export default function Page() {
     }
   };
 
-  const embedDocumentPost = async (documentId: number) => {
+  const onEmbedDocument = async (documentId: number) => {
+    if (selectedEmbedModel == null) {
+      toast.warning('No embedding model choosen');
+      return;
+    }
+
     setIsEmbedding(true);
-    const response = await api.postEmbedDocument(documentId, 'nomic-embed-text');
+    const response = await api.embedDocument(
+      documentId,
+      selectedEmbedModel,
+      embeddedModelList.baseUrl,
+      embeddedModelList.token
+    );
 
     if (response.success) {
       toast.success('Document embedded successfully');
@@ -202,20 +221,24 @@ export default function Page() {
         description: response.errorMessage,
       });
     }
-    loadFiles().catch(console.error);
+    await loadFiles(); //.catch(console.error);
     setIsEmbedding(false);
   };
 
-  const sendChat = async (chatInput: string) => {
+  const onSendChat = async (chatInput: string) => {
     if (chatInput === '') {
       toast.warning('Ask a question first');
       return;
     }
-    if (embedModelName == null) {
+    if (systemPromptForRagSlim == null) {
+      toast.warning('No slim version of the RAG system prompt set!');
+      return;
+    }
+    if (selectedEmbedModel == null) {
       toast.warning('No embed model choosen');
       return;
     }
-    if (modelName == null) {
+    if (selectedModel == null) {
       toast.warning('No conversation model choosen');
       return;
     }
@@ -223,47 +246,58 @@ export default function Page() {
       toast.warning('No document selected');
       return;
     }
-    if (systemPromptForRagSlim == null) {
-      toast.warning('No slim version of the RAG system prompt set!');
-      return;
-    }
+
+    setIsFetchLoading(true);
+
+    const chatMessage = { content: chatInput, role: ChatRole.USER };
+    setChats((prevArray) => [...prevArray, chatMessage]);
 
     const request: GetChunksRequest = {
       question: chatInput,
       documentId: selectedDocument.documentId,
-      embedModel: embedModelName,
+      embedModel: selectedEmbedModel,
+      baseUrl: modelList.baseUrl,
+      apiKey: modelList.token,
     };
 
-    const documents = await getChunks(request);
+    const documents = await getFilteredChunks(request);
     const context = documents.map((d) => d.text).join(' ');
-
+    console.log(`context: `, context);
     const systemPrompt = systemPromptForRagSlim
       .replace(RagSystemPromptVariable.userQuestion, chatInput)
       .replace(RagSystemPromptVariable.documentContent, context);
     const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM };
+    console.log(`systemPrompt: `, systemPrompt);
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 
-    // User Prompt
-    const chatMessage = { content: chatInput, role: ChatRole.USER };
-    setChats((prevArray) => [...prevArray, chatMessage]);
-
-    setIsFetchLoading(true);
-    const streamReader = await api.getChatStream(modelName, [...chats, systemPromptMessage, chatMessage], token, hostname);
+    const streamReader = await api.getChatStream(
+      selectedModel,
+      [...chats, systemPromptMessage, chatMessage],
+      modelList.baseUrl,
+      modelList.token
+    );
     setIsFetchLoading(false);
     await handleStream(streamReader);
     delayHighlighter();
   };
 
-  const initiateConversationWithDocument = async (documentId: number, filename: string) => {
+  const initConversationWithDocument = async (documentId: number, filename: string, embeddingModel: string) => {
     if (systemPromptForRag == null || systemPromptForRag === '') {
       toast.warning('RAG System Prompt not set!');
+      return;
     }
+    // if (modelName == null) {
+    //   toast.warning('No conversation model choosen');
+    //   return;
+    // }
+
     setSelectedDocument({
       documentId: documentId,
       filename: filename,
     });
-    updateEmbedModelName('nomic-embed-text');
-    updateModelName('mistral:latest');
+    setEmbedModel(embeddingModel);
+
+    textareaPlaceholder.current = `Ask a question to start conversation with ${filename}`;
 
     const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
@@ -271,123 +305,128 @@ export default function Page() {
 
   return (
     <>
-      <main className="flex-1 space-y-3 overflow-y-auto" ref={mainDiv}>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
-            <FormField
-              control={form.control}
-              name="file"
-              render={() => {
-                return (
-                  <FormItem>
-                    <FormControl>
-                      <input
-                        type="file"
-                        multiple={false}
-                        className="hidden"
-                        {...fileRest}
-                        ref={(e) => {
-                          fileRef(e);
-                          fileInputRef.current = e;
-                        }}
-                        onChange={handleChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
-            />
+      <main className="flex h-full">
+        <section className="basis-2/5 pe-3">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+              <FormField
+                control={form.control}
+                name="file"
+                render={() => {
+                  return (
+                    <FormItem>
+                      <FormControl>
+                        <input
+                          type="file"
+                          multiple={false}
+                          className="hidden"
+                          {...fileRest}
+                          ref={(e) => {
+                            fileRef(e);
+                            fileInputRef.current = e;
+                          }}
+                          onChange={handleChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
-            <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
-          </form>
-        </Form>
+              <DropZone onFileSelected={onFileSelected} fileInputRef={fileInputRef} />
+            </form>
+          </Form>
 
-        {fileLoading && (
-          <div
-            className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
-          >
-            <div className="flex-1 space-y-1">
-              <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
-              <div className="text-sm text-muted-foreground">
-                <Progress value={progress} className="w-full" />
-                <div className="flex justify-between">
-                  <p className="mt-1">{formatBytes(filesize)}</p>
-                  <p className="mt-1">{progress?.toFixed()}% Complete</p>
+          {fileLoading && (
+            <div
+              className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
+            >
+              <div className="flex-1 space-y-1">
+                <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
+                <div className="text-sm text-muted-foreground">
+                  <Progress value={progress} className="w-full" />
+                  <div className="flex justify-between">
+                    <p className="mt-1">{formatBytes(filesize)}</p>
+                    <p className="mt-1">{progress?.toFixed()}% Complete</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[35%]">Document</TableHead>
-              <TableHead className="w-[10%] text-right">Size</TableHead>
-              <TableHead className="w-[18%]">Upload Date</TableHead>
-              <TableHead className="w-[37%] text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {files.map((file) => (
-              <TableRow key={file.filename}>
-                <TableCell className="flex items-center font-medium">
-                  <FileTextIcon className="me-2" />
-                  <span>
-                    #{file.id} {file.filename}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">{formatBytes(file.fileSize ?? 0)}</TableCell>
-                <TableCell>{file.timestamp}</TableCell>
-                <TableCell className="flex justify-end gap-2 text-right text-xs">
-                  {!file.isEmbedded ? (
-                    <>
-                      <p>
-                        with Ollama: <br />
-                        <strong>nomic-embed-text</strong>
-                      </p>
-                      <Button size={'sm'} onClick={() => embedDocumentPost(file.id)} disabled={isEmbedding}>
-                        {isEmbedding && <Spinner color="" />}
-                        Embedd
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p>
-                        Embedded with ollama: <br />
-                        <strong>{file.embedModel}</strong>
-                      </p>
-                      <Button
-                        size={'sm'}
-                        onClick={() => {
-                          initiateConversationWithDocument(file.id, file.filename);
-                        }}
-                      >
-                        <ChatBubbleIcon className="me-1" />
-                        Question with AI
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-            {filesLoading && (
-              <TableRow key="loading">
-                <TableCell>
-                  <Skeleton className="h-3 w-full rounded-full" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-3 w-full rounded-full" />
-                </TableCell>
-                <TableCell colSpan={2}>
-                  <Skeleton className="h-3 w-full rounded-full" />
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+          )}
 
+          {embeddedModelList.modelsIsError && (
+            <AlertBox title="Error" description={embeddedModelList.modelsError?.message || ''} />
+          )}
+          <div className="flex items-baseline gap-2">
+            {selectedEmbedModel == null ? (
+              <>
+                Model for embedding:
+                <ModelAlts
+                  modelName={selectedEmbedModel}
+                  models={embeddedModelList.models || []}
+                  modelsIsSuccess={embeddedModelList.modelsIsSuccess}
+                  modelsIsLoading={embeddedModelList.modelsIsLoading}
+                  hasHydrated={hasHydrated}
+                  onModelChange={(modelName: string) => {
+                    setEmbedModel(modelName);
+                  }}
+                />
+              </>
+            ) : (
+              <span className="text-xs">
+                Embedd with: {getApiService(embeddedModelList.baseUrl)?.label}, <strong>{selectedEmbedModel}</strong>
+              </span>
+            )}
+          </div>
+
+          <FileTable
+            files={files}
+            filesLoading={filesLoading}
+            isEmbedding={isEmbedding}
+            onEmbedDocument={onEmbedDocument}
+            initConversationWithDocument={initConversationWithDocument}
+          />
+        </section>
+        <section className="h-screen basis-3/5 border-l-2 border-stone-800 ps-3">
+          <div className="flex-1 space-y-3 overflow-y-auto" ref={mainDiv}>
+            {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message || ''} />}
+            {selectedDocument != null ? (
+              <div className="p-3">
+                <div className="flex items-baseline gap-2 pb-3">
+                  <span>Model for conversation: </span>
+                  <ModelAlts
+                    modelName={selectedModel}
+                    models={modelList.models || []}
+                    modelsIsSuccess={modelList.modelsIsSuccess}
+                    modelsIsLoading={modelList.modelsIsLoading}
+                    hasHydrated={hasHydrated}
+                    onModelChange={(modelName: string) => {
+                      setModel(modelName);
+                    }}
+                  />
+                </div>
+                Interacting with <Badge>{selectedDocument?.filename}</Badge>
+              </div>
+            ) : (
+              <div className="p-3">Upload your documents and start asking questions to initiate the conversation.</div>
+            )}
+
+            <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
+          </div>
+          <div className="sticky top-[100vh] py-3">
+            <ChatInput
+              onSendInput={onSendChat}
+              onCancelStream={api.cancelChatStream}
+              chatInputPlaceholder={textareaPlaceholder.current}
+              isStreamProcessing={isStreamProcessing}
+              isFetchLoading={isFetchLoading}
+              isLlmModelActive={selectedModel != null && selectedEmbedModel != null}
+            />
+          </div>
+        </section>
+      </main>
+      {/* <main className="flex-1 space-y-3 overflow-y-auto" ref={mainDiv}>
         <section>
           {selectedDocument != null && (
             <div className="p-3">
@@ -397,18 +436,7 @@ export default function Page() {
 
           <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
         </section>
-      </main>
-
-      <section className="sticky top-[100vh] py-3">
-        <ChatInput
-          onSendInput={sendChat}
-          onCancelStream={api.cancelChatStream}
-          chatInputPlaceholder={textareaPlaceholder.current}
-          isStreamProcessing={isStreamProcessing}
-          isFetchLoading={isFetchLoading}
-          isLlmModelActive={modelName != null && embedModelName != null}
-        />
-      </section>
+      </main> */}
     </>
   );
 }

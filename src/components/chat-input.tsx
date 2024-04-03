@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { FC, useState } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
@@ -13,7 +13,7 @@ interface ChatInputProps {
   isLlmModelActive: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({
+export const ChatInput: FC<ChatInputProps> = ({
   onSendInput,
   onCancelStream,
   chatInputPlaceholder,

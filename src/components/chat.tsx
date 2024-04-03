@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useScrollBottom } from '@/hooks/use-scroll-bottom';
-import { ChatMessage } from '@/lib/types';
+import { TChatMessage } from '@/lib/types';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
 
 interface ChatProps {
   isFetchLoading: boolean;
-  chats: ChatMessage[];
+  chats: TChatMessage[];
   mainDiv: React.RefObject<HTMLDivElement>;
 }
 

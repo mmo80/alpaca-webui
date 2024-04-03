@@ -8,23 +8,29 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TModelResponseSchema } from '@/lib/types';
-import { useModelStore } from '../lib/store';
 import { useState } from 'react';
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   models: TModelResponseSchema[];
+  selectedValue: string;
+  onModelChange: (modelName: string) => void;
 }
 
-const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(({ models, ...props }, ref) => {
-  const { updateModelName } = useModelStore();
+// eslint-disable-next-line no-unused-vars
+const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(({ models, selectedValue, onModelChange, ...props }, ref) => {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(selectedValue);
+
+  const displayLabel = () => {
+    const id = models.find((model) => model.id.toLowerCase() === value.toLowerCase())?.id;
+    return id ? `${id}` : 'Select model...';
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-[300px] justify-between">
-          {value ? models.find((model) => model.id === value)?.id : 'Select model...'}
+          {value ? `${displayLabel()}` : 'Select model...'}
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -39,14 +45,14 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(({ models,
                   key={model.id}
                   value={model.id}
                   onSelect={(currentValue) => {
-                    const selectedModel = currentValue === value ? '' : currentValue;
+                    const selectedModel = currentValue.toLowerCase() === value.toLowerCase() ? '' : currentValue;
                     setValue(selectedModel);
-                    updateModelName(selectedModel);
+                    onModelChange(selectedModel);
                     setOpen(false);
                   }}
                 >
                   {model.id}
-                  <CheckIcon className={cn('ml-auto h-4 w-4', value === model.id ? 'opacity-100' : 'opacity-0')} />
+                  <CheckIcon className={cn('ml-auto h-4 w-4', value.toLowerCase() === model.id.toLowerCase() ? 'opacity-100' : 'opacity-0')} />
                 </CommandItem>
               ))}
             </ScrollArea>

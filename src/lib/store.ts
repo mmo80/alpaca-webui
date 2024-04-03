@@ -2,31 +2,33 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 interface ModelStoreState {
-  modelName: string | null;
-  embedModelName: string | null;
-  updateModelName: (m: string | null) => void;
-  updateEmbedModelName: (m: string | null) => void;
+  selectedModel: string | null;
+  selectedEmbedModel: string | null;
+  setModel: (model: string | null) => void;
+  setEmbedModel: (model: string | null) => void;
 }
 
 export const useModelStore = create<ModelStoreState>((set) => ({
-  modelName: null,
-  embedModelName: null,
-  updateModelName: (m: string | null) => set(() => ({ modelName: m })),
-  updateEmbedModelName: (m: string | null) => set(() => ({ embedModelName: m })),
+  selectedModel: null,
+  selectedEmbedModel: null,
+  setModel: (model: string | null) => set(() => ({ selectedModel: model })),
+  setEmbedModel: (model: string | null) => set(() => ({ selectedEmbedModel: model })),
 }));
 
 interface SettingsStoreState {
   modelVariant: string | null;
-  hostname: string | null;
+  baseUrl: string | null;
   token: string | null;
-  systemPrompt: string | null;
-  systemPromptForRag: string | null;
-  systemPromptForRagSlim: string | null;
+  systemPrompt: string;
+  systemPromptForRag: string;
+  systemPromptForRagSlim: string;
+  embedModel: string | null;
   hasHydrated: boolean;
-  setSettings: (modelListVariant: string | null, hostname: string | null, token: string | null) => void;
-  setSystemPrompt: (systemPrompt: string | null) => void;
-  setSystemPromptForRag: (systemPrompt: string | null) => void;
-  setSystemPromptForRagSlim: (systemPrompt: string | null) => void;
+  setSettings: (modelListVariant: string | null, baseUrl: string | null, token: string | null) => void;
+  setSystemPrompt: (systemPrompt: string) => void;
+  setSystemPromptForRag: (systemPrompt: string) => void;
+  setSystemPromptForRagSlim: (systemPrompt: string) => void;
+  setEmbedModel: (model: string | null) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
 }
 
@@ -39,7 +41,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
       modelVariant: null,
-      hostname: null,
+      baseUrl: null,
       token: null,
       systemPrompt: `Hello i am a AI assistant, how can i help you?`,
       systemPromptForRag: `Instructions: Carefully read and synthesize the information presented in the document section below to answer the user's question. Your response must be derived exclusively from the content found between the "### Begin Document ###" and "### End Document ###" markers. If the information within these markers does not contain sufficient details to answer the question, you must clearly state that an answer cannot be provided based on the available document/data. Aim for a concise, accurate, and relevant response to the user's query.
@@ -62,12 +64,14 @@ export const useSettingsStore = create<SettingsStoreState>()(
       ### End Document ###
       
       Answer:`,
+      embedModel: null,
       hasHydrated: false,
-      setSettings: (modelVariant, hostname, token) =>
-        set(() => ({ modelVariant: modelVariant, hostname: hostname, token: token })),
+      setSettings: (modelVariant, baseUrl, token) =>
+        set(() => ({ modelVariant: modelVariant, baseUrl: baseUrl, token: token })),
       setSystemPrompt: (systemPrompt) => set(() => ({ systemPrompt: systemPrompt })),
       setSystemPromptForRag: (systemPrompt) => set(() => ({ systemPromptForRag: systemPrompt })),
       setSystemPromptForRagSlim: (systemPrompt) => set(() => ({ systemPromptForRagSlim: systemPrompt })),
+      setEmbedModel: (model) => set(() => ({ embedModel: model })),
       setHasHydrated: (state) => {
         set({
           hasHydrated: state,

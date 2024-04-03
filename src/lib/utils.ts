@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import hljs from 'highlight.js';
-import { ChatCompletionResponse } from './types';
+import { TChatCompletionResponse } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -42,7 +42,7 @@ function isNullOrWhitespace(input: string | null | undefined): boolean {
   return !input?.trim();
 }
 
-export const parseJsonStream = (json: string): ChatCompletionResponse[] => {
+export const parseJsonStream = (json: string): TChatCompletionResponse[] => {
   try {
     if (isNullOrWhitespace(removeDataString(json))) {
       return [];
@@ -57,7 +57,7 @@ export const parseJsonStream = (json: string): ChatCompletionResponse[] => {
         }
       });
     }
-    return [JSON.parse(removeDataString(json)) as ChatCompletionResponse];
+    return [JSON.parse(removeDataString(json)) as TChatCompletionResponse];
   } catch (error) {
     console.error(`${error}. Failed to parse JSON: ${removeDataString(json)}`);
     return [];

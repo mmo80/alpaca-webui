@@ -8,6 +8,7 @@ export type Documents = {
   file: string;
   chunkIndex: number;
   chunkTotal: number;
+  totalTokens: number;
 };
 
 export type Additional = {

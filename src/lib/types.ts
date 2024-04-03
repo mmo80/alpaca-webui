@@ -2,14 +2,15 @@
 import { z } from 'zod';
 import { formatBytes } from './utils';
 
+// ----- Common API Models ----- //
 export enum ChatRole {
   USER = 'user',
   SYSTEM = 'system',
   ASSISTANT = 'assistant',
 }
-
 const ChatRoleSchema = z.nativeEnum(ChatRole);
 
+// ----- Ollama API Models ----- //
 const OllamaModelSchema = z
   .object({
     name: z.string(),
@@ -40,7 +41,7 @@ export const OllamaTagSchema = z.object({
 export type OllamaModel = z.infer<typeof OllamaModelSchema>;
 export type OllamaTag = z.infer<typeof OllamaTagSchema>;
 
-// OpenAI API Models
+// ----- OpenAI API Models ----- //
 const UsageSchema = z.object({
   prompt_tokens: z.number(),
   completion_tokens: z.number(),
@@ -68,31 +69,31 @@ const ChatCompletionSchema = z.object({
   usage: UsageSchema.or(z.nullable(UsageSchema)),
 });
 
-export type ChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
-export type ChatMessage = z.infer<typeof MessageSchema>;
-
 const ChatCompletionRequestSchema = z.object({
   model: z.string(),
   messages: z.array(MessageSchema),
   stream: z.boolean(),
 });
 
-export type ChatCompletionnRequest = z.infer<typeof ChatCompletionRequestSchema>;
-
 const ModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number(),
+  type: z.string().nullable(),
 });
 
 export const ModelsResponseSchema = z.array(ModelResponseSchema);
 
+export type TChatMessage = z.infer<typeof MessageSchema>;
+export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
+export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
 export type TModelsResponseSchema = z.infer<typeof ModelsResponseSchema>;
 export type TModelResponseSchema = z.infer<typeof ModelResponseSchema>;
 
+// ----- Custom Models ----- //
 export const EmbedDocumentResponseSchema = z.object({
   success: z.boolean(),
   errorMessage: z.string().nullable(),
 });
 
-export type EmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>;
+export type TEmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>;
