@@ -23,5 +23,12 @@
   },
   "javascript.format.enable": true,
   "editor.tabSize": 2,
-  "sonarlint.analysisExcludesStandalone": "**/.next/**, **/.github/**"
+  "sonarlint.analysisExcludesStandalone": "**/.next/**, **/.github/**",
+  "editor.formatOnSave": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
 }
