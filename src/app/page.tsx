@@ -52,8 +52,8 @@ export default function Home() {
 
   return (
     <>
-      <main className="flex-1 space-y-4 overflow-y-auto" ref={mainDiv}>
-        {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message || ''} />}
+      <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
+        {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message ?? ''} />}
         <ModelAlts
           modelName={modelName}
           models={modelList.models || []}

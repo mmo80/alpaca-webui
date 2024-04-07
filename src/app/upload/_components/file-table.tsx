@@ -47,7 +47,7 @@ const FileTable: FC<FileTableProps> = ({
               </span>
               {file.isEmbedded && (
                 <span className="italic">
-                  Embedded with ${file.embedApiServiceName}, <strong>{file.embedModel}</strong>
+                  Embedded with {file.embedApiServiceName}, <strong>{file.embedModel}</strong>
                 </span>
               )}
             </TableCell>

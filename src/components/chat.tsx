@@ -11,11 +11,7 @@ interface ChatProps {
   mainDiv: React.RefObject<HTMLDivElement>;
 }
 
-export const Chat: React.FC<ChatProps> = ({
-  isFetchLoading,
-  chats,
-  mainDiv
-}) => {
+export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) => {
   const chatsDiv = useRef<HTMLDivElement>(null);
   const { isScrollBottom } = useScrollBottom(mainDiv);
 
@@ -67,7 +63,7 @@ export const Chat: React.FC<ChatProps> = ({
       {!isScrollBottom && (
         <PageDownButton
           onClick={directScrollToBottom}
-          className="animate-bounce-short absolute bottom-24 left-1/2 animate-bounce rounded-full hover:animate-none"
+          className="animate-bounce-short fixed bottom-24 right-9 animate-bounce rounded-full border-white hover:animate-none"
         />
       )}
     </>

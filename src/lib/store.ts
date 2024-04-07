@@ -46,24 +46,24 @@ export const useSettingsStore = create<SettingsStoreState>()(
       systemPrompt: `Hello i am a AI assistant, how can i help you?`,
       systemPromptForRag: `Instructions: Carefully read and synthesize the information presented in the document section below to answer the user's question. Your response must be derived exclusively from the content found between the "### Begin Document ###" and "### End Document ###" markers. If the information within these markers does not contain sufficient details to answer the question, you must clearly state that an answer cannot be provided based on the available document/data. Aim for a concise, accurate, and relevant response to the user's query.
 
-      User's Question:
-      {{UserQuestion}}
-      
-      Relevant Document Information:
-      ### Begin Document
-      {{DocumentContent}}
-      ### End Document
-      
-      Answer:`,
+User's Question:
+${RagSystemPromptVariable.userQuestion}
+
+Relevant Document Information:
+### Begin Document
+${RagSystemPromptVariable.documentContent}
+### End Document
+
+Answer:`,
       systemPromptForRagSlim: `User's Question:
-      ${RagSystemPromptVariable.userQuestion}
-      
-      Relevant Document Information:
-      ### Begin Document ###
-      ${RagSystemPromptVariable.documentContent}
-      ### End Document ###
-      
-      Answer:`,
+${RagSystemPromptVariable.userQuestion}
+
+Relevant Document Information:
+### Begin Document ###
+${RagSystemPromptVariable.documentContent}
+### End Document ###
+
+Answer:`,
       embedModel: null,
       hasHydrated: false,
       setSettings: (modelVariant, baseUrl, token) =>

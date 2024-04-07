@@ -31,14 +31,10 @@ export const embedMessage = async (message: string, model: string, baseUrl: stri
   } else if (apiService.modelType === 'openai') {
     embedding = data.data[0].embedding;
 
-    if (data.usage && data.usage.total_tokens) {
+    if (data.usage?.total_tokens) {
       totalTokens = data.usage.total_tokens;
-      // mistral: data.usage.total_tokens
-      // openAI: data.usage.total_tokens
-      // together: no token count!
-      // ollama: no token count!
     }
   }
 
-  return { embedding, totalTokens: totalTokens || 0 };
+  return { embedding, totalTokens: totalTokens ?? 0 };
 }

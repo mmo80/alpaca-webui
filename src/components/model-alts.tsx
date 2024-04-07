@@ -2,9 +2,9 @@ import type { FC } from 'react';
 import { Input } from './ui/input';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
-import { ArrowUpIcon } from '@radix-ui/react-icons';
 import { TModelResponseSchema } from '@/lib/types';
 import { useSettingsStore } from '@/lib/store';
+import Link from 'next/link';
 
 type ModelAltsProps = {
   modelName: string | null;
@@ -27,45 +27,48 @@ const ModelAlts: FC<ModelAltsProps> = ({
 
   const onModelChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     onModelChange(e.target.value);
-  }
+  };
 
   const renderModelListVariant = () => {
     // if (modelName == null) {
-      switch (modelVariant) {
-        case 'manual':
-          return (
-            <Input
-              placeholder="Modelname"
-              className="mt-2 w-80"
-              onChange={onModelChangeHandler}
+    switch (modelVariant) {
+      case 'manual':
+        return <Input placeholder="Modelname" className="mt-2 w-80" onChange={onModelChangeHandler} />;
+      case 'ollama':
+      case 'openai':
+        return (
+          <div className="flex w-full pt-2">
+            <ModelMenu
+              models={models ?? []}
+              selectedValue={modelName ?? ''}
+              onModelChange={onModelChange}
+              disabled={!modelsIsSuccess}
+              className="py-3"
             />
-          );
-        case 'ollama':
-        case 'openai':
-          return (
-            <div className="flex pt-2">
-              <ModelMenu models={models ?? []} selectedValue={modelName || ''} onModelChange={onModelChange} disabled={!modelsIsSuccess} className="py-3" />
-              {modelsIsLoading && (
-                <span className="ml-2">
-                  <Spinner />
-                </span>
-              )}
-            </div>
-          );
-        default:
-          return (
-            <span className="flex items-center px-4 pt-2">
-              {hasHydrated ? (
-                <>
-                  <h4 className="text-xl font-semibold">Configure settings to begin chat</h4>
-                  <ArrowUpIcon className="ml-2" />
-                </>
-              ) : (
+            {modelsIsLoading && (
+              <span className="ml-2">
                 <Spinner />
-              )}
-            </span>
-          );
-      }
+              </span>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <span className="flex items-center px-4 pt-2">
+            {hasHydrated ? (
+              <h4 className="text-xl font-semibold">
+                Configure{' '}
+                <Link href={'/settings'} className="underline">
+                  settings
+                </Link>{' '}
+                to begin chat
+              </h4>
+            ) : (
+              <Spinner />
+            )}
+          </span>
+        );
+    }
     // }
     // return <></>;
   };

@@ -70,6 +70,7 @@ const getModelList = async (baseUrl: string | null, apiKey: string | null, embed
 
   const validatedModelList = await ModelsResponseSchema.safeParseAsync(data);
   if (!validatedModelList.success) {
+    console.error(validatedModelList.error);
     throw validatedModelList.error;
   }
   return validatedModelList.data;

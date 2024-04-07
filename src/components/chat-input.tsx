@@ -42,14 +42,14 @@ export const ChatInput: FC<ChatInputProps> = ({
   };
 
   return (
-    <>
+    <div className='px-3'>
       <Textarea
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
         onKeyUp={chatEnterPress}
         onKeyDown={preventEnterPress}
         placeholder={chatInputPlaceholder}
-        className="overflow-hidden pr-20"
+        className="overflow-hidden pr-20 resize-none"
         disabled={!isLlmModelActive}
       />
       {isStreamProcessing ? (
@@ -67,12 +67,12 @@ export const ChatInput: FC<ChatInputProps> = ({
           onClick={sendChat}
           variant="secondary"
           size="icon"
-          className="absolute bottom-6 right-3"
+          className="absolute bottom-6 right-6"
           disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
         >
           <DoubleArrowUpIcon className="h-4 w-4" />
         </Button>
       )}
-    </>
+    </div>
   );
 };

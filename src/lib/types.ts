@@ -79,7 +79,7 @@ const ModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number(),
-  type: z.string().nullable(),
+  type: z.string().nullable().optional(),
 });
 
 export const ModelsResponseSchema = z.array(ModelResponseSchema);
