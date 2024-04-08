@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/drawer';
 import { toast } from 'sonner';
 import { delayHighlighter } from '@/lib/utils';
@@ -28,8 +28,15 @@ export default function Page() {
   // ---- Chats ----
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
-  const textareaPlaceholder = useRef<string>('Choose document to interact with...');
+  const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose document to interact with...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+
+  useEffect(() => {
+    if (selectedDocument != null && selectedModel != null) {
+      setTextareaPlaceholder(`Ask a question to start conversation with ${selectedDocument?.filename}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModel]);
 
   const onSendChat = async (chatInput: string) => {
     if (chatInput === '') {
@@ -92,6 +99,12 @@ export default function Page() {
   const onInitDocumentConversation = (document: SelectedDocument | null) => {
     setSelectedDocument(document);
     setOpenDrawer(false);
+
+    if (selectedModel == null || selectedModel.length < 1) {
+      setTextareaPlaceholder(`Choose a model to converce with...`);
+    } else {
+      setTextareaPlaceholder(`Ask a question to start conversation with ${document?.filename}`);
+    }
   };
 
   return (
@@ -99,7 +112,6 @@ export default function Page() {
       <section className="hidden basis-2/5 overflow-y-scroll px-3 sm:block">
         <DocumentsForm
           setChats={setChats}
-          textareaPlaceholder={textareaPlaceholder}
           hasHydrated={hasHydrated}
           systemPromptForRag={systemPromptForRag}
           onInitDocumentConversation={onInitDocumentConversation}
@@ -113,7 +125,6 @@ export default function Page() {
             <DrawerContent className="px-3">
               <DocumentsForm
                 setChats={setChats}
-                textareaPlaceholder={textareaPlaceholder}
                 hasHydrated={hasHydrated}
                 systemPromptForRag={systemPromptForRag}
                 onInitDocumentConversation={onInitDocumentConversation}
@@ -145,7 +156,9 @@ export default function Page() {
               Interacting with <Badge>{selectedDocument?.filename}</Badge>
             </div>
           ) : (
-            <div className="p-3">Upload your documents and start asking questions to initiate the conversation.</div>
+            <div className="p-3">
+              Upload and embed documents to start, or initiate conversations with those you&apos;ve already uploaded.
+            </div>
           )}
 
           <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
@@ -154,10 +167,10 @@ export default function Page() {
           <ChatInput
             onSendInput={onSendChat}
             onCancelStream={api.cancelChatStream}
-            chatInputPlaceholder={textareaPlaceholder.current}
+            chatInputPlaceholder={textareaPlaceholder}
             isStreamProcessing={isStreamProcessing}
             isFetchLoading={isFetchLoading}
-            isLlmModelActive={selectedModel != null && selectedEmbedModel != null}
+            isLlmModelActive={selectedModel != null && selectedEmbedModel != null && selectedDocument != null}
           />
         </div>
       </section>

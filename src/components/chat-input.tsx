@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
@@ -22,6 +22,11 @@ export const ChatInput: FC<ChatInputProps> = ({
   isLlmModelActive,
 }) => {
   const [chatInput, setChatInput] = useState<string>('');
+  const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
+
+  useEffect(() => {
+    setTextareaPlaceholder(chatInputPlaceholder);
+  }, [chatInputPlaceholder]);
 
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
@@ -42,14 +47,14 @@ export const ChatInput: FC<ChatInputProps> = ({
   };
 
   return (
-    <div className='px-3'>
+    <div className="px-3">
       <Textarea
         value={chatInput}
         onChange={(e) => setChatInput(e.target.value)}
         onKeyUp={chatEnterPress}
         onKeyDown={preventEnterPress}
-        placeholder={chatInputPlaceholder}
-        className="overflow-hidden pr-20 resize-none"
+        placeholder={textareaPlaceholder}
+        className="resize-none overflow-hidden pr-20"
         disabled={!isLlmModelActive}
       />
       {isStreamProcessing ? (

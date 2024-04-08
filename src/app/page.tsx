@@ -17,14 +17,14 @@ export default function Home() {
   const { systemPrompt, hasHydrated } = useSettingsStore();
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
-  const textareaPlaceholder = useRef<string>('Choose model...');
+  const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
   const { modelList } = useModelList();
 
   useEffect(() => {
     if (modelName != null) {
       setChats((prevArray) => [...prevArray, { content: systemPrompt || '', role: ChatRole.SYSTEM }]);
-      textareaPlaceholder.current = 'Ask me anything...';
+      setTextareaPlaceholder('Ask me anything...');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
@@ -77,7 +77,7 @@ export default function Home() {
         <ChatInput
           onSendInput={sendChat}
           onCancelStream={api.cancelChatStream}
-          chatInputPlaceholder={textareaPlaceholder.current}
+          chatInputPlaceholder={textareaPlaceholder}
           isStreamProcessing={isStreamProcessing}
           isFetchLoading={isFetchLoading}
           isLlmModelActive={modelName != null}

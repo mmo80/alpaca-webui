@@ -1,4 +1,4 @@
-import { useTransition, useEffect, useState, useRef, FC, SetStateAction, Dispatch, MutableRefObject } from 'react';
+import { useTransition, useEffect, useState, useRef, FC, SetStateAction, Dispatch } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import throttle from 'lodash.throttle';
@@ -70,7 +70,6 @@ export type SelectedDocument = {
 
 type DocumentsFormProps = {
   setChats: Dispatch<SetStateAction<TChatMessage[]>>;
-  textareaPlaceholder: MutableRefObject<string>;
   hasHydrated: boolean;
   systemPromptForRag: string;
   // eslint-disable-next-line no-unused-vars
@@ -79,7 +78,6 @@ type DocumentsFormProps = {
 
 export const DocumentsForm: FC<DocumentsFormProps> = ({
   setChats,
-  textareaPlaceholder,
   hasHydrated,
   systemPromptForRag,
   onInitDocumentConversation,
@@ -136,7 +134,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
     try {
       const response = await fetch('/api/documents', requestOptions);
-      if (!response.ok) throw new Error('Failed to upload');
+      if (!response.ok) toast.error('Failed to upload');
       const data = await response.body;
 
       const reader = data?.getReader();
@@ -153,6 +151,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
         updateProgress(step);
       }
     } catch (error) {
+      toast.error('Error uploading file');
       console.error('Error uploading file:', error);
     } finally {
       toast.success(`Document uploaded successfully!`, {
@@ -228,10 +227,6 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
       filename: filename,
     });
     setChats([]);
-    // setSelectedDocument({
-    //   documentId: documentId,
-    //   filename: filename,
-    // });
     setEmbedModel(embeddingModel);
 
     /*
@@ -265,8 +260,6 @@ Note: The information provided is accurate as of my knowledge up to 2021.`,
     setChats((prevArray) => [...prevArray, msg1]);
     setChats((prevArray) => [...prevArray, msg2]);
     */
-
-    textareaPlaceholder.current = `Ask a question to start conversation with ${filename}`;
 
     const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);

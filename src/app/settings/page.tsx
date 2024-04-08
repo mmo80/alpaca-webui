@@ -72,7 +72,8 @@ export default function Page() {
             <CardTitle>API</CardTitle>
             <CardDescription>
               Configure the API endpoints and authentication credentials required for the AI service to connect with external
-              model providers. Enter the base URL and input your API key or bearer token to authenticate your session with the service provider.
+              model providers. Enter the base URL and input your API key or bearer token to authenticate your session with
+              the service provider.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col space-y-8">
@@ -149,7 +150,10 @@ export default function Page() {
                     <Input {...field} />
                   </FormControl>
                   <FormDescription>
-                    This is your base domain url. ex. <i>&quot;<strong>&#123;Base Url&#125;</strong>/v1/chat/completions&quot;</i>
+                    This is your base domain url. ex.{' '}
+                    <i>
+                      &quot;<strong>&#123;Base Url&#125;</strong>/v1/chat/completions&quot;
+                    </i>
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
