@@ -19,22 +19,28 @@ import { apiServiceModelTypes, apiServices } from '@/lib/data';
 
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?$/;
 
-const SettingsSchema = z.object({
+const ApiSettingsSchema = z.object({
   url: z
     .string()
     .regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name, without any trailing path."),
-  apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]),
+  apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
   modelListVariant: z.string({ required_error: 'Please select a model api.' }),
 });
 
-type TSettingsSchema = z.infer<typeof SettingsSchema>;
+export type TApiSettingsSchema = z.infer<typeof ApiSettingsSchema>;
+
+const ApiSettingsFormSchema = z.object({
+  services: z.array(ApiSettingsSchema),
+});
+
+type TApiSettingsFormSchema = z.infer<typeof ApiSettingsFormSchema>;
 
 export default function Page() {
   const [open, setOpen] = useState(false);
   const { setSettings, token, baseUrl, modelVariant } = useSettingsStore();
 
-  const form = useForm<TSettingsSchema>({
-    resolver: zodResolver(SettingsSchema),
+  const form = useForm<TApiSettingsSchema>({
+    resolver: zodResolver(ApiSettingsSchema),
     defaultValues: {
       url: '',
       apiKey: '',
@@ -47,7 +53,7 @@ export default function Page() {
     form.setValue('modelListVariant', modelVariant ?? '');
   }, [form, baseUrl, token, modelVariant]);
 
-  const onSubmit = (data: TSettingsSchema) => {
+  const onSubmit = (data: TApiSettingsSchema) => {
     setSettings(data.modelListVariant, data.url, data.apiKey);
     toast.success('Saved!');
   };

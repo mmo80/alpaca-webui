@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { TApiSettingsSchema } from '@/app/settings/page';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 interface ModelStoreState {
@@ -16,6 +17,8 @@ export const useModelStore = create<ModelStoreState>((set) => ({
 }));
 
 interface SettingsStoreState {
+  services: TApiSettingsSchema[];
+  setServices: (services: TApiSettingsSchema[]) => void;
   modelVariant: string | null;
   baseUrl: string | null;
   token: string | null;
@@ -24,7 +27,7 @@ interface SettingsStoreState {
   systemPromptForRagSlim: string;
   embedModel: string | null;
   hasHydrated: boolean;
-  setSettings: (modelListVariant: string | null, baseUrl: string | null, token: string | null) => void;
+  setSettings: (modelListVariant: string | null, baseUrl: string | null, token: string | undefined) => void;
   setSystemPrompt: (systemPrompt: string) => void;
   setSystemPromptForRag: (systemPrompt: string) => void;
   setSystemPromptForRagSlim: (systemPrompt: string) => void;
@@ -34,12 +37,14 @@ interface SettingsStoreState {
 
 export const RagSystemPromptVariable = {
   userQuestion: '{{UserQuestion}}',
-  documentContent: '{{DocumentContent}}'
+  documentContent: '{{DocumentContent}}',
 } as const;
 
 export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
+      services: [],
+      setServices: (services: TApiSettingsSchema[]) => set(() => ({ services: services })),
       modelVariant: null,
       baseUrl: null,
       token: null,
