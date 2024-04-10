@@ -182,13 +182,13 @@ const FileTable: FC<FileTableProps> = ({
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button
+                            {/* <Button
                               onClick={() => {
                                 handleOpenChange(file.id, false);
                               }}
                             >
                               Cancel
-                            </Button>
+                            </Button> */}
                             <Button
                               onClick={() => {
                                 removeDocument(file.id);
