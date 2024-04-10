@@ -1,4 +1,6 @@
-import type { FC } from 'react';
+'use client';
+
+import { useState, type FC } from 'react';
 import { Spinner } from '@/components/spinner';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,20 +11,22 @@ import { ChatBubbleIcon, DotsVerticalIcon, FileTextIcon, TrashIcon, InfoCircledI
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MultiDialog } from '@/components/ui/multiDialog';
+import { toast } from 'sonner';
+import { HttpMethod, executeFetch } from '@/lib/api';
+import { OpenPopovers } from '@/lib/types';
 
 type FileTableProps = {
   files: TFile[];
   filesLoading: boolean;
   isEmbedding: boolean;
-  // eslint-disable-next-line no-unused-vars
   onEmbedDocument: (documentId: number) => void;
-  // eslint-disable-next-line no-unused-vars
   initConversationWithDocument: (
     documentId: number,
     filename: string,
     embeddingModel: string,
     embeddingServiceId: string
   ) => void;
+  reload: () => void;
 };
 
 type Modals = 'details' | 'delete';
@@ -33,7 +37,28 @@ const FileTable: FC<FileTableProps> = ({
   isEmbedding,
   onEmbedDocument,
   initConversationWithDocument,
+  reload,
 }) => {
+  const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
+
+  const handleOpenChange = (id: number, open: boolean) => {
+    setOpenPopovers((prev) => ({ ...prev, [id.toString()]: open }));
+  };
+
+  const removeDocument = async (documentId: number) => {
+    const payload = { documentId };
+    const response = await executeFetch(`/api/documents/remove`, HttpMethod.POST, null, payload);
+    const successful = await response.json();
+
+    if (successful) {
+      toast.success('Document removed successfully.');
+      handleOpenChange(documentId, false);
+      reload();
+      return;
+    }
+    toast.success('Something went wrong when removing the document.');
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -147,7 +172,7 @@ const FileTable: FC<FileTableProps> = ({
                     </mdb.Container>
 
                     <mdb.Container value="delete">
-                      <Dialog>
+                      <Dialog open={openPopovers[file.id] || false} onOpenChange={(open) => handleOpenChange(file.id, open)}>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Are you absolutely sure?</DialogTitle>
@@ -157,7 +182,20 @@ const FileTable: FC<FileTableProps> = ({
                             </DialogDescription>
                           </DialogHeader>
                           <DialogFooter>
-                            <Button>Confirm</Button>
+                            <Button
+                              onClick={() => {
+                                handleOpenChange(file.id, false);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                removeDocument(file.id);
+                              }}
+                            >
+                              Confirm
+                            </Button>
                           </DialogFooter>
                         </DialogContent>
                       </Dialog>

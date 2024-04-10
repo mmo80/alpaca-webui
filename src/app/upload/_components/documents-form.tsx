@@ -14,7 +14,7 @@ import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { HttpMethod, api } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
 import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
@@ -129,13 +129,13 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setFilename(formFileData.file.name);
     setFilesize(formFileData.file.size);
 
-    const requestOptions: RequestInit = {
-      method: 'POST',
+    const uploadRequestOptions: RequestInit = {
+      method: HttpMethod.POST,
       body: formData,
     };
 
     try {
-      const response = await fetch('/api/documents', requestOptions);
+      const response = await fetch('/api/documents', uploadRequestOptions);
       if (!response.ok) toast.error('Failed to upload');
       const data = await response.body;
 
@@ -279,6 +279,10 @@ Note: The information provided is accurate as of my knowledge up to 2021.`,
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
   };
 
+  const reload = async () => {
+    await loadFiles();
+  };
+
   return (
     <>
       <Form {...form}>
@@ -361,6 +365,7 @@ Note: The information provided is accurate as of my knowledge up to 2021.`,
         isEmbedding={isEmbedding}
         onEmbedDocument={onEmbedDocument}
         initConversationWithDocument={initConversationWithDocument}
+        reload={reload}
       />
     </>
   );

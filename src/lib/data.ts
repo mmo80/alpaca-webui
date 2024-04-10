@@ -62,3 +62,5 @@ export const apiServices: ApiServiceModel[] = [
 export const getApiService = (url: string | null): ApiServiceModel | undefined => {
   return apiServices.find((service) => service.url === url);
 };
+
+export const fileUploadFolder = './uploads/';
