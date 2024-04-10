@@ -8,6 +8,7 @@ import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type ModelAltsProps = {
   selectedService: TApiSettingsSchema | null | undefined;
@@ -56,6 +57,24 @@ const ModelAlts: FC<ModelAltsProps> = ({
     );
   };
 
+  const renderResetButton = () => {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="secondary" size="icon" className="ms-2 shrink-0 p-2" onClick={onReset}>
+              <ArrowUturnLeftIcon />
+              <span className="sr-only">Reset service and model choice</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Reset service and model choice</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const renderModelMenu = () => {
     if (!hasHydrated || modelsIsLoading) {
       return (
@@ -69,11 +88,8 @@ const ModelAlts: FC<ModelAltsProps> = ({
       <div className="flex items-center pt-2">
         {models.length == 0 ? (
           <>
-            <span className="me-2">No models available</span>
-            <Button variant="secondary" size="icon" className="shrink-0 p-2" onClick={onReset}>
-              <ArrowUturnLeftIcon />
-              <span className="sr-only">Reset service and model choice</span>
-            </Button>
+            <span>No models available</span>
+            {renderResetButton()}
           </>
         ) : (
           <>
@@ -84,10 +100,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
               disabled={!modelsIsSuccess}
               className="py-3"
             />
-            <Button variant="secondary" size="icon" className="ms-2 shrink-0 p-2" onClick={onReset}>
-              <ArrowUturnLeftIcon />
-              <span className="sr-only">Reset service and model choice</span>
-            </Button>
+            {renderResetButton()}
           </>
         )}
       </div>
