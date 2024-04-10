@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useSettingsStore } from '@/lib/settings-store';
+import { RagSystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 
@@ -47,7 +47,11 @@ export default function Page() {
         <Card>
           <CardHeader>
             <CardTitle>Retrieval Augmented Generation</CardTitle>
-            <CardDescription></CardDescription>
+            <CardDescription>
+              Formulate RAG guidelines to aid AI in synthesizing document content when addressing queries. Both prompt
+              settings need to containe <code className="bg-stone-800">{RagSystemPromptVariable.userQuestion}</code> and{' '}
+              <code className="bg-stone-800">{RagSystemPromptVariable.documentContent}</code> in order to work.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col space-y-8">
             <FormField
