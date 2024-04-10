@@ -29,7 +29,7 @@ export async function POST(request: Request): Promise<NextResponse<TEmbedDocumen
           .set({
             isEmbedded: true,
             embedModel: embedModel,
-            embedApiServiceName: apiService?.label,
+            embedApiServiceName: apiService?.id,
             noOfChunks: response.noOfChunks,
             textCharacterCount: response.textCharacterCount,
           })

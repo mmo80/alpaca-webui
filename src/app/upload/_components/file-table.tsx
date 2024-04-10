@@ -17,7 +17,12 @@ type FileTableProps = {
   // eslint-disable-next-line no-unused-vars
   onEmbedDocument: (documentId: number) => void;
   // eslint-disable-next-line no-unused-vars
-  initConversationWithDocument: (documentId: number, filename: string, embeddingModel: string) => void;
+  initConversationWithDocument: (
+    documentId: number,
+    filename: string,
+    embeddingModel: string,
+    embeddingServiceId: string
+  ) => void;
 };
 
 type Modals = 'details' | 'delete';
@@ -70,7 +75,12 @@ const FileTable: FC<FileTableProps> = ({
                         {file.isEmbedded && (
                           <DropdownMenuItem
                             onClick={() => {
-                              initConversationWithDocument(file.id, file.filename, file.embedModel ?? '');
+                              initConversationWithDocument(
+                                file.id,
+                                file.filename,
+                                file.embedModel ?? '',
+                                file.embedApiServiceName ?? ''
+                              );
                             }}
                           >
                             <ChatBubbleIcon className="me-2" />
@@ -93,7 +103,9 @@ const FileTable: FC<FileTableProps> = ({
                     <mdb.Container value="details">
                       <Dialog>
                         <DialogContent>
-                          <div className="pb-2 text-xl">File details for <span className='font-semibold'>{file.filename}</span></div>
+                          <div className="pb-2 text-xl">
+                            File details for <span className="font-semibold">{file.filename}</span>
+                          </div>
                           <Table>
                             <TableBody>
                               <TableRow>

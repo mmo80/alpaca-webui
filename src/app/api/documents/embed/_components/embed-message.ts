@@ -1,16 +1,24 @@
-import { HttpMethod, executeFetch } from "@/lib/api";
-import { getApiService } from "@/lib/data";
+import { HttpMethod, executeFetch } from '@/lib/api';
+import { getApiService } from '@/lib/data';
 
 type EmbedMessageResponse = {
   embedding: number[];
   totalTokens: number;
 };
 
-export const embedMessage = async (message: string, model: string, baseUrl: string | null, apiKey: string | null): Promise<EmbedMessageResponse> => {
+export const embedMessage = async (
+  message: string,
+  model: string,
+  baseUrl: string | null,
+  apiKey: string | null | undefined
+): Promise<EmbedMessageResponse> => {
   let payload = {};
   const apiService = getApiService(baseUrl);
   if (apiService === undefined) {
-    throw new Error(`API service '${baseUrl}' not found.`);
+    throw new Error(`API service '${baseUrl}' not supported.`);
+  }
+  if (!apiService.hasEmbedding) {
+    throw new Error(`API service '${baseUrl}' does not support embedding.`);
   }
 
   const url = apiService.url + apiService.embeddingPath;
@@ -37,4 +45,4 @@ export const embedMessage = async (message: string, model: string, baseUrl: stri
   }
 
   return { embedding, totalTokens: totalTokens ?? 0 };
-}
+};

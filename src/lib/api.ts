@@ -10,21 +10,21 @@ import {
 } from '@/lib/types';
 import { apiServices } from './data';
 
-// eslint-disable-next-line no-unused-vars
-const keepAlive = '10m';
 let chatStreamController: AbortController | null = null;
 
-// eslint-disable-next-line no-unused-vars
-export enum HttpMethod { GET = 'GET', POST = 'POST' }
+export enum HttpMethod {
+  GET = 'GET',
+  POST = 'POST',
+}
 
-const validUrl = (url: string | null): string => {
-  if (url == null) {
+const validUrl = (url: string | null | undefined): string => {
+  if (url == null || url == undefined) {
     throw new Error('Invalid URL');
   }
   return url;
 };
 
-const getTag = async (baseUrl: string | null, embeddedOnly: boolean): Promise<OllamaModel[]> => {
+const getTag = async (baseUrl: string | undefined, embeddedOnly: boolean): Promise<OllamaModel[]> => {
   const url = `${validUrl(baseUrl)}/api/tags`;
   const response = await executeFetch(url, HttpMethod.GET);
   const data = await response.json();
@@ -34,12 +34,18 @@ const getTag = async (baseUrl: string | null, embeddedOnly: boolean): Promise<Ol
     throw validatedOllamaTag.error;
   }
   if (embeddedOnly) {
-    return validatedOllamaTag.data.models = validatedOllamaTag.data.models.filter((model) => model.details.family.includes('bert'));
+    return (validatedOllamaTag.data.models = validatedOllamaTag.data.models.filter((model) =>
+      model.details.family.includes('bert')
+    ));
   }
   return validatedOllamaTag.data.models;
 };
 
-const getModelList = async (baseUrl: string | null, apiKey: string | null, embeddedOnly: boolean): Promise<TModelResponseSchema[]> => {
+const getModelList = async (
+  baseUrl: string | undefined,
+  apiKey: string | null | undefined,
+  embeddedOnly: boolean
+): Promise<TModelResponseSchema[]> => {
   const url = `${validUrl(baseUrl)}/v1/models`;
   const response = await executeFetch(url, HttpMethod.GET, apiKey);
   let data = await response.json();
@@ -52,13 +58,13 @@ const getModelList = async (baseUrl: string | null, apiKey: string | null, embed
   }
 
   if (embeddedOnly) {
-    const apiLabel = apiServices.filter((api) => api.url === baseUrl)[0].label;
-    switch (apiLabel) {
+    const apiServiceId = apiServices.filter((api) => api.url === baseUrl)[0].id;
+    switch (apiServiceId) {
       case 'OpenAI': {
         return data.filter((model: TModelResponseSchema) => model.id.indexOf('embedding') !== -1);
       }
       case 'Together.ai': {
-        return data.filter((model: TModelResponseSchema) => (model.type === 'embedding'));
+        return data.filter((model: TModelResponseSchema) => model.type === 'embedding');
       }
       case 'Mistral.ai': {
         return data.filter((model: TModelResponseSchema) => model.id === 'mistral-embed');
@@ -86,7 +92,7 @@ const getChatStream = async (
   model: string,
   messages: TChatMessage[],
   baseUrl: string | null,
-  apiKey: string | null
+  apiKey: string | null | undefined
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
   const url = `${validUrl(baseUrl)}/v1/chat/completions`;
 
@@ -108,7 +114,12 @@ const getChatStream = async (
   return response.body.getReader();
 };
 
-const embedDocument = async (documentId: number, model: string, baseUrl: string | null, apiKey: string | null): Promise<TEmbedDocumentResponse> => {
+const embedDocument = async (
+  documentId: number,
+  model: string,
+  baseUrl: string | null,
+  apiKey: string | null | undefined
+): Promise<TEmbedDocumentResponse> => {
   const payload = {
     embedModel: model,
     documentId: documentId,

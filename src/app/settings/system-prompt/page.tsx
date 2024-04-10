@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useSettingsStore } from '@/lib/store';
+import { useSettingsStore } from '@/lib/settings-store';
 
 const SystemPromptSchema = z.object({
   systemPrompt: z.union([z.string().min(5, 'Prompt must be at least 5 characters long.'), z.literal('')]),
@@ -43,7 +43,10 @@ export default function Page() {
           <Card>
             <CardHeader>
               <CardTitle>System Prompt</CardTitle>
-              <CardDescription>Define the welcome message that guides users and instructs the AI on its role in the conversation. Keep it concise, informative, and engaging to ensure a clear and helpful interaction.</CardDescription>
+              <CardDescription>
+                Define the welcome message that guides users and instructs the AI on its role in the conversation. Keep it
+                concise, informative, and engaging to ensure a clear and helpful interaction.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <FormField

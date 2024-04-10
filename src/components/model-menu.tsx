@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   models: TModelResponseSchema[];
-  selectedValue: string;
+  selectedModel: string;
   defaultText?: string;
   // eslint-disable-next-line no-unused-vars
   onModelChange: (modelName: string) => void;
@@ -20,9 +20,9 @@ interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
   // eslint-disable-next-line no-unused-vars
-  ({ models: modelList, selectedValue, defaultText = 'Select model...', onModelChange, ...props }, ref) => {
+  ({ models: modelList, selectedModel, defaultText = 'Select model...', onModelChange, ...props }, ref) => {
     const [open, setOpen] = useState(false);
-    const [value, setValue] = useState(selectedValue);
+    const [value, setValue] = useState(selectedModel);
     const [models, setModels] = useState<TModelResponseSchema[]>(modelList);
     const [buttonText, setButtonText] = useState(defaultText);
 
@@ -31,8 +31,8 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
     }, [defaultText]);
 
     useEffect(() => {
-      setValue(selectedValue);
-    }, [selectedValue]);
+      setValue(selectedModel);
+    }, [selectedModel]);
 
     useEffect(() => {
       setModels(modelList);
@@ -54,7 +54,7 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
         <PopoverContent side="bottom" className="popover-content w-[300px] p-0">
           <Command>
             <CommandInput placeholder="Search model..." className="h-9" />
-            <CommandEmpty>No model found.</CommandEmpty>
+            <CommandEmpty>No models found.</CommandEmpty>
             <CommandGroup>
               <ScrollArea className="h-64">
                 {models.map((model) => (

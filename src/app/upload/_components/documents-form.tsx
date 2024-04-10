@@ -7,7 +7,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { DropZone } from '@/components/drop-zone';
 import { getFiles } from '@/actions/get-files';
 import { TFile } from '@/db/schema';
-import { useModelStore } from '@/lib/store';
 import { ChatRole, TChatMessage } from '@/lib/types';
 import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
@@ -17,6 +16,8 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
+import { useModelStore } from '@/lib/model-store';
+import { useSettingsStore } from '@/lib/settings-store';
 
 const maxFileSizeMb = 50;
 const allowedFileTypes: string[] = [
@@ -82,7 +83,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   systemPromptForRag,
   onInitDocumentConversation,
 }) => {
-  const { selectedEmbedModel, setEmbedModel } = useModelStore();
+  const { selectedEmbedModel, setEmbedModel, selectedEmbedService, setEmbedService } = useModelStore();
+  const { services } = useSettingsStore();
   const [progress, setProgress] = useState(0);
   const [files, setFiles] = useState<TFile[]>([]);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
@@ -192,8 +194,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   };
 
   const onEmbedDocument = async (documentId: number) => {
-    if (selectedEmbedModel == null) {
-      toast.warning('No embedding model choosen');
+    if (selectedEmbedModel == null || selectedEmbedService == null) {
+      toast.warning('No embedding model or service choosen');
       return;
     }
 
@@ -201,8 +203,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     const response = await api.embedDocument(
       documentId,
       selectedEmbedModel,
-      embeddedModelList.baseUrl,
-      embeddedModelList.token
+      selectedEmbedService.url,
+      selectedEmbedService.apiKey
     );
 
     if (response.success) {
@@ -216,9 +218,20 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setIsEmbedding(false);
   };
 
-  const initConversationWithDocument = async (documentId: number, filename: string, embeddingModel: string) => {
+  const initConversationWithDocument = async (
+    documentId: number,
+    filename: string,
+    embeddingModel: string,
+    embeddingServiceId: string
+  ) => {
     if (systemPromptForRag == null || systemPromptForRag === '') {
       toast.warning('RAG System Prompt not set!');
+      return;
+    }
+
+    const embedService = services.find((s) => s.serviceId == embeddingServiceId);
+    if (embedService === undefined) {
+      toast.warning(`Settings for Service not found! ${embeddingServiceId}`);
       return;
     }
 
@@ -228,6 +241,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     });
     setChats([]);
     setEmbedModel(embeddingModel);
+    setEmbedService(embedService);
 
     /*
     const msg1 = {
@@ -321,13 +335,22 @@ Note: The information provided is accurate as of my knowledge up to 2021.`,
       <div className="flex flex-col items-baseline gap-1">
         <span>Model for embedding:</span>
         <ModelAlts
-          modelName={selectedEmbedModel}
+          selectedService={selectedEmbedService}
+          selectedModel={selectedEmbedModel}
           models={embeddedModelList.models ?? []}
           modelsIsSuccess={embeddedModelList.modelsIsSuccess}
           modelsIsLoading={embeddedModelList.modelsIsLoading}
           hasHydrated={hasHydrated}
-          onModelChange={(modelName: string) => {
-            setEmbedModel(modelName);
+          onModelChange={(model) => {
+            setEmbedModel(model);
+          }}
+          onServiceChange={(service) => {
+            setEmbedService(service);
+            setEmbedModel(null);
+          }}
+          onReset={() => {
+            setEmbedService(null);
+            setEmbedModel(null);
           }}
         />
       </div>

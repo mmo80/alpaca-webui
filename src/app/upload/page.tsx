@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
-import { RagSystemPromptVariable, useModelStore, useSettingsStore } from '@/lib/store';
+import { RagSystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
 import { ChatRole } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -17,9 +17,10 @@ import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { buttonVariants } from '@/components/ui/button';
 import { DocumentsForm, type SelectedDocument } from './_components/documents-form';
+import { useModelStore } from '@/lib/model-store';
 
 export default function Page() {
-  const { selectedModel, setModel, selectedEmbedModel } = useModelStore();
+  const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();
   const { systemPromptForRag, systemPromptForRagSlim, hasHydrated } = useSettingsStore();
   const { modelList } = useModelList();
   const [selectedDocument, setSelectedDocument] = useState<SelectedDocument | null>(null);
@@ -39,6 +40,9 @@ export default function Page() {
   }, [selectedModel]);
 
   const onSendChat = async (chatInput: string) => {
+    if (selectedService == null || selectedEmbedService == null) {
+      return;
+    }
     if (chatInput === '') {
       toast.warning('Ask a question first');
       return;
@@ -69,27 +73,27 @@ export default function Page() {
       question: chatInput,
       documentId: selectedDocument.documentId,
       embedModel: selectedEmbedModel,
-      baseUrl: modelList.baseUrl,
-      apiKey: modelList.token,
+      baseUrl: selectedEmbedService.url,
+      apiKey: selectedEmbedService.apiKey,
     };
 
-    //console.log('request: ', request);
     const documents = await getFilteredChunks(request);
-    //console.log('documents: ', documents);
     const context = documents.map((d) => d.text).join(' ');
-    //console.log(`context: `, context);
     const systemPrompt = systemPromptForRagSlim
       .replace(RagSystemPromptVariable.userQuestion, chatInput)
       .replace(RagSystemPromptVariable.documentContent, context);
     const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM };
+
+    // TODO: Remove
     console.log(`systemPrompt: `, systemPrompt);
+
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 
     const streamReader = await api.getChatStream(
       selectedModel,
       [...chats, systemPromptMessage, chatMessage],
-      modelList.baseUrl,
-      modelList.token
+      selectedService.url,
+      selectedService.apiKey
     );
     setIsFetchLoading(false);
     await handleStream(streamReader);
@@ -143,13 +147,23 @@ export default function Page() {
               <div className="flex flex-col items-baseline gap-1 pb-3">
                 <span>Model for conversation: </span>
                 <ModelAlts
-                  modelName={selectedModel}
+                  selectedService={selectedService}
+                  selectedModel={selectedModel}
                   models={modelList.models || []}
                   modelsIsSuccess={modelList.modelsIsSuccess}
                   modelsIsLoading={modelList.modelsIsLoading}
                   hasHydrated={hasHydrated}
-                  onModelChange={(modelName: string) => {
-                    setModel(modelName);
+                  onModelChange={(model) => {
+                    setModel(model);
+                  }}
+                  onServiceChange={(service) => {
+                    setService(service);
+                    setModel(null);
+                  }}
+                  onReset={() => {
+                    setService(null);
+                    setModel(null);
+                    setChats([]);
                   }}
                 />
               </div>

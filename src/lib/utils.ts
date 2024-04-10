@@ -50,6 +50,7 @@ export const parseJsonStream = (json: string): TChatCompletionResponse[] => {
       return [];
     }
     if (containsTwoOrMoreDataBlocks(json)) {
+      json = json.replace('\n', '');
       const jsonStrings = json.split('data: {');
       return jsonStrings.map((str) => {
         if (str.length > 0) {
@@ -81,4 +82,8 @@ export const removeClassesByWord = (classes: string, wordToRemove: string): stri
     .replace(wordRegex, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
+};
+
+export const removeHttp = (url: string): string => {
+  return url.replace(/^(https?:\/\/)/, '');
 };

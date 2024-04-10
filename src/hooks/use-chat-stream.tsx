@@ -1,11 +1,11 @@
-import { TChatMessage, ChatRole } from "@/lib/types";
-import { parseJsonStream } from "@/lib/utils";
-import { useState } from "react";
+import { TChatMessage, ChatRole } from '@/lib/types';
+import { parseJsonStream } from '@/lib/utils';
+import { useState } from 'react';
 
 export const useChatStream = () => {
   const [chats, setChats] = useState<TChatMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
-  
+
   const updateLastChatsItem = (type: string, content: string = '') => {
     setChats((prevArray) => {
       return prevArray.map((chat, index) => {
@@ -47,6 +47,9 @@ export const useChatStream = () => {
             }
 
             let chunkContent = chunkObj.choices[0].delta.content;
+            if (chunkContent == null || chunkContent == undefined) {
+              continue;
+            }
             if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
               // Remove eventual initial linebreaks and spaces
               assistantChatMessage = '';
@@ -72,7 +75,7 @@ export const useChatStream = () => {
       }
     }
     setIsStreamProcessing(false);
-  }
+  };
 
   return { chats, setChats, handleStream, isStreamProcessing };
-}
+};

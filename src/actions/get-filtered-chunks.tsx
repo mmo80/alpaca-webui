@@ -11,7 +11,7 @@ export type GetChunksRequest = {
   documentId: number;
   embedModel: string;
   baseUrl: string | null;
-  apiKey: string | null;
+  apiKey: string | null | undefined;
 };
 
 export const getFilteredChunks = async (request: GetChunksRequest): Promise<Documents[]> => {
