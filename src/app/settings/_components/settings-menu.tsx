@@ -17,10 +17,10 @@ const settingsMenuItems = [
     title: 'RAG',
     href: '/settings/rag-system-prompt',
   },
-  {
-    title: 'Parameters',
-    href: '/settings/parameters',
-  },
+  // {
+  //   title: 'Parameters',
+  //   href: '/settings/parameters',
+  // },
 ] as const;
 
 export const SettingsMenu: FC = () => {
