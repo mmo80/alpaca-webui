@@ -24,7 +24,7 @@ const allowedFileTypes: string[] = [
   'application/pdf',
   'text/plain',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
+  //'application/msword',
 ] as const;
 const formSchema = z.object({
   file: z
@@ -55,7 +55,7 @@ const formSchema = z.object({
       if (!allowedFileTypes.includes(file.type)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'File must be an document (pdf, txt, docx, doc)',
+          message: 'File must be an document (pdf, txt, docx)',
         });
       }
     })
