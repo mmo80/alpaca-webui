@@ -231,7 +231,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
     const embedService = services.find((s) => s.serviceId == embeddingServiceId);
     if (embedService === undefined) {
-      toast.warning(`Settings for Service not found! ${embeddingServiceId}`);
+      toast.warning(`Settings for service '${embeddingServiceId}' has been removed. Please add them under settings.`);
       return;
     }
 

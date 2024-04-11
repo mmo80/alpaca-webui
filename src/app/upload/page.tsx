@@ -85,7 +85,7 @@ export default function Page() {
     const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM };
 
     // TODO: Remove
-    console.log(`systemPrompt: `, systemPrompt);
+    console.debug(`systemPrompt: `, systemPrompt);
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 

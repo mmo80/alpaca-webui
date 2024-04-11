@@ -4,6 +4,15 @@ import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +28,12 @@ import { apiServiceModelTypes, apiServices, getApiService } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';
+import { useModelStore } from '@/lib/model-store';
 
 export default function Page() {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
   const { services, setServices, hasHydrated } = useSettingsStore();
+  const { setModel, setService, setEmbedModel, setEmbedService } = useModelStore();
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   const form = useForm<TSettingsFormSchema>({
@@ -44,6 +55,10 @@ export default function Page() {
 
     setServices(data.services);
     setErrorMessages([]);
+    setEmbedModel(null);
+    setEmbedService(null);
+    setModel(null);
+    setService(null);
     toast.success('Saved!');
   };
 
@@ -226,15 +241,27 @@ export default function Page() {
                         />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="shrink-0 p-2"
-                          onClick={() => removeService(index)}
-                        >
-                          <TrashIcon className="h-6 w-6" />
-                          <span className="sr-only">Remove service</span>
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger>
+                            <TrashIcon className="h-6 w-6" title="Remove Service" />
+                            <span className="sr-only">Remove service</span>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Are you absolutely sure?</DialogTitle>
+                              <DialogDescription>
+                                While this removes the service from the list, saving is required to permanently reflect this
+                                change. <br />
+                                <br />
+                                <strong>Note!</strong> Ensure that the service has not been utilized for embedding existing
+                                documents, as this action renders interaction with it unusable.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                              <Button onClick={() => removeService(index)}>Remove</Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                   ))}
