@@ -2,10 +2,6 @@ import { TChatMessage, ChatRole, TChatCompletionResponse } from '@/lib/types';
 import { isNullOrWhitespace, removeDataString } from '@/lib/utils';
 import { useState } from 'react';
 
-type StreamChunk = {
-  firstCharSpacingChecked: boolean;
-};
-
 export const useChatStream = () => {
   const [chats, setChats] = useState<TChatMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
