@@ -6,6 +6,7 @@ import { useState, type FC } from 'react';
 import { Header, menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
 import { Bars3Icon } from '@heroicons/react/24/outline';
+import { appName } from '@/lib/data';
 
 export const MobileTopmenu: FC = () => {
   const [open, setOpen] = useState(false);
@@ -20,7 +21,7 @@ export const MobileTopmenu: FC = () => {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="flex w-[300px] flex-col">
-          <Header isSheet={true}>Company</Header>
+          <Header isSheet={true}>{appName}</Header>
           <nav className="grid gap-1 text-base font-medium">
             {menuItems.map((item) => (
               <Link
@@ -36,7 +37,10 @@ export const MobileTopmenu: FC = () => {
           </nav>
         </SheetContent>
       </Sheet>
-      {/* <span>Menu</span> */}
+      <span className="text-nowrap text-xl font-semibold">{appName}</span>
+      {/* <Link href={'https://github.com/mmo80/alpaca-webui'} className="ml-auto">
+        <GitHubLogoIcon className="h-6 w-6" />
+      </Link> */}
     </header>
   );
 };

@@ -64,3 +64,5 @@ export const getApiService = (url: string | null): ApiServiceModel | undefined =
 };
 
 export const fileUploadFolder = './uploads/';
+
+export const appName = 'Alpaca WebUI';

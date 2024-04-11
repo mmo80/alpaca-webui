@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
-
 import { ChatBubbleLeftIcon, Cog6ToothIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { appName } from '@/lib/data';
+import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 export const menuItems = [
   {
@@ -29,9 +30,14 @@ export const menuItems = [
 
 export const Header: FC<{ children: ReactNode; isSheet?: boolean }> = ({ children, isSheet = false }) => {
   return (
-    <Link href="/" className={`text-2xl font-semibold ${!isSheet && 'py-4 pl-6'}`}>
-      <span>{children}</span>
-    </Link>
+    <div className={`flex items-center gap-4 ${!isSheet && 'p-6 py-4'}`}>
+      <Link href="/" className={`text-2xl font-semibold`}>
+        <span>{children}</span>
+      </Link>
+      <Link href={'https://github.com/mmo80/alpaca-webui'} title={`Visit the GitHub ${appName} Repository`}>
+        <GitHubLogoIcon className="h-6 w-6" />
+      </Link>
+    </div>
   );
 };
 
@@ -41,7 +47,7 @@ export const DesktopSidemenu: FC = () => {
   return (
     <div className="hidden lg:block">
       <div className="flex h-full max-h-screen flex-col bg-stone-800 md:w-[200px] lg:w-[260px]">
-        <Header>Alpaca webUI</Header>
+        <Header>{appName}</Header>
         <div className="flex-1">
           <nav className="grid items-start gap-2 px-4 text-sm font-medium">
             {menuItems.map((item) => (
