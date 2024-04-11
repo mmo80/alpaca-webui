@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { TChatMessage, ChatRole } from '@/lib/types';
-import { api } from '@/lib/api';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
@@ -12,6 +11,7 @@ import { useModelList } from '@/hooks/use-model-list';
 import { useSettingsStore } from '@/lib/settings-store';
 import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
+import { api } from '@/lib/api';
 
 export default function Home() {
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
@@ -78,6 +78,7 @@ export default function Home() {
             setService(null);
             setModel(null);
             setChats([]);
+            setTextareaPlaceholder('Choose model...');
           }}
         />
 

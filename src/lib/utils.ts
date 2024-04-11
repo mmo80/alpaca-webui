@@ -1,7 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import hljs from 'highlight.js';
-import { TChatCompletionResponse } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -27,7 +26,7 @@ const setHighlighter = () => {
   }
 };
 
-const removeDataString = (data: string) => {
+export const removeDataString = (data: string) => {
   data = data.replace('data: [DONE]', '');
   return data
     .replace(/^data:\s*/, '')
@@ -35,36 +34,8 @@ const removeDataString = (data: string) => {
     .trimStart();
 };
 
-function containsTwoOrMoreDataBlocks(str: string): boolean {
-  const matches = str.match(/data:\s*{/g) ?? [];
-  return matches.length >= 2;
-}
-
-function isNullOrWhitespace(input: string | null | undefined): boolean {
+export const isNullOrWhitespace = (input: string | null | undefined): boolean => {
   return !input?.trim();
-}
-
-export const parseJsonStream = (json: string): TChatCompletionResponse[] => {
-  try {
-    if (isNullOrWhitespace(removeDataString(json))) {
-      return [];
-    }
-    if (containsTwoOrMoreDataBlocks(json)) {
-      json = json.replace('\n', '');
-      const jsonStrings = json.split('data: {');
-      return jsonStrings.map((str) => {
-        if (str.length > 0) {
-          return JSON.parse(removeDataString(`{${str}`));
-        } else {
-          return null;
-        }
-      });
-    }
-    return [JSON.parse(removeDataString(json)) as TChatCompletionResponse];
-  } catch (error) {
-    console.error(`${error}. Failed to parse JSON: ${removeDataString(json)}`);
-    return [];
-  }
 };
 
 // url: https://stackoverflow.com/a/18650828
