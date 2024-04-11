@@ -74,7 +74,7 @@ const FileTable: FC<FileTableProps> = ({
           <TableRow key={file.id}>
             <TableCell>
               <span className="flex">
-                <FileTextIcon className="me-2" />
+                <FileTextIcon className="mr-2 h-4 w-4 shrink-0" />
                 {file.filename}
               </span>
               {file.isEmbedded && (

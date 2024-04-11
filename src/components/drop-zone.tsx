@@ -46,7 +46,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
       <div
         role="button"
         tabIndex={0}
-        className={`my-3 flex h-28 w-full flex-col items-center justify-center rounded-lg border p-3 text-2xl ${dragging ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-700 bg-zinc-800'} hover:border-zinc-800 hover:bg-zinc-900`}
+        className={`my-3 flex h-28 w-full flex-col items-center justify-center rounded-lg border p-3 ${dragging ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-700 bg-zinc-800'} hover:border-zinc-800 hover:bg-zinc-900`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -55,11 +55,11 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
       >
         <div className="flex flex-col items-center">
           <UploadIcon />
-          <span className="text-center">
+          <span className="text-center text-xl xl:text-2xl">
             Drag and drop or <u>select document</u>
           </span>
         </div>
-        <div className="text-sm italic text-slate-500">.pdf, .txt, .docx, .doc</div>
+        <div className="text-sm italic text-slate-500">.pdf, .txt, .docx</div>
       </div>
     </section>
   );
