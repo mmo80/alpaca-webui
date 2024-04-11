@@ -94,6 +94,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const [, startTransition] = useTransition();
   const [fadeOut, setFadeOut] = useState<boolean>(false);
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
+  const [fileIdEmbedding, setFileIdEmbedding] = useState<number | null>(null);
   const { modelList: embeddedModelList } = useModelList(true);
   const form = useForm<TFormSchema>({ resolver: zodResolver(formSchema) });
   const { ref: fileRef, ...fileRest } = form.register('file');
@@ -200,6 +201,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     }
 
     setIsEmbedding(true);
+    setFileIdEmbedding(documentId);
     const response = await api.embedDocument(
       documentId,
       selectedEmbedModel,
@@ -216,6 +218,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     }
     await loadFiles();
     setIsEmbedding(false);
+    setFileIdEmbedding(null);
   };
 
   const initConversationWithDocument = async (
@@ -363,6 +366,7 @@ Note: The information provided is accurate as of my knowledge up to 2021.`,
         files={files}
         filesLoading={filesLoading}
         isEmbedding={isEmbedding}
+        fileIdEmbedding={fileIdEmbedding}
         onEmbedDocument={onEmbedDocument}
         initConversationWithDocument={initConversationWithDocument}
         reload={reload}

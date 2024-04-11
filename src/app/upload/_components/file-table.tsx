@@ -19,6 +19,7 @@ type FileTableProps = {
   files: TFile[];
   filesLoading: boolean;
   isEmbedding: boolean;
+  fileIdEmbedding: number | null;
   onEmbedDocument: (documentId: number) => void;
   initConversationWithDocument: (
     documentId: number,
@@ -35,6 +36,7 @@ const FileTable: FC<FileTableProps> = ({
   files,
   filesLoading,
   isEmbedding,
+  fileIdEmbedding,
   onEmbedDocument,
   initConversationWithDocument,
   reload,
@@ -84,8 +86,8 @@ const FileTable: FC<FileTableProps> = ({
             <TableCell className="flex h-auto items-center justify-end gap-2 text-right text-xs">
               {!file.isEmbedded && (
                 <Button size={'sm'} onClick={() => onEmbedDocument(file.id)} disabled={isEmbedding}>
-                  {isEmbedding && <Spinner color="" />}
-                  Embedd
+                  {fileIdEmbedding == file.id && <Spinner color="" />}
+                  {fileIdEmbedding == file.id ? 'Embedding...' : 'Embedd'}
                 </Button>
               )}
 
