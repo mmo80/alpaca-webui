@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { TApiSettingsSchema } from './types';

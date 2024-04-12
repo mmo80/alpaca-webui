@@ -14,12 +14,10 @@ interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   models: TModelResponseSchema[];
   selectedModel: string;
   defaultText?: string;
-  // eslint-disable-next-line no-unused-vars
   onModelChange: (modelName: string) => void;
 }
 
 const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
-  // eslint-disable-next-line no-unused-vars
   ({ models: modelList, selectedModel, defaultText = 'Select model...', onModelChange, ...props }, ref) => {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(selectedModel);

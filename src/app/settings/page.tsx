@@ -62,12 +62,12 @@ export default function Page() {
     toast.success('Saved!');
   };
 
-  const addService = (url: string = 'https://', modelListVariant: string = '') => {
+  const addService = (url: string = 'https://', modelListType: string = '') => {
     const formList = form.getValues();
     const service: TApiSettingsSchema = {
       serviceId: getApiService(url)?.id ?? removeHttp(url),
       url: url,
-      modelListVariant: modelListVariant,
+      modelListType: modelListType,
       apiKey: '',
     };
 
@@ -158,7 +158,7 @@ export default function Page() {
                         <FormField
                           control={form.control}
                           key={field.serviceId}
-                          name={`services.${index}.modelListVariant`}
+                          name={`services.${index}.modelListType`}
                           render={({ field: formField }) => (
                             <FormItem className="flex flex-col">
                               <Popover
@@ -168,7 +168,7 @@ export default function Page() {
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button
-                                      {...form.register(`services.${index}.modelListVariant`)}
+                                      {...form.register(`services.${index}.modelListType`)}
                                       variant="outline"
                                       role="combobox"
                                       className={cn(
@@ -191,7 +191,7 @@ export default function Page() {
                                           value={model.label}
                                           key={model.value}
                                           onSelect={() => {
-                                            form.setValue(`services.${index}.modelListVariant`, model.value);
+                                            form.setValue(`services.${index}.modelListType`, model.value);
                                             handleOpenChange(field.id, false);
                                           }}
                                         >

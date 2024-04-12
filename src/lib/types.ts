@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { z } from 'zod';
 import { formatBytes } from './utils';
 
@@ -98,13 +97,12 @@ export const EmbedDocumentResponseSchema = z.object({
 
 export type TEmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>;
 
-//const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?$/;
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?(\/.*)?$/;
 
 const ApiSettingsSchema = z.object({
   serviceId: z.string().optional(),
   url: z.string().regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name."), //  without any trailing path.
-  modelListVariant: z.string({ required_error: 'Please select a model api.' }).min(2, 'Please select a model api.'),
+  modelListType: z.string({ required_error: 'Please select a model api.' }).min(2, 'Please select a model api.'),
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
 });
 

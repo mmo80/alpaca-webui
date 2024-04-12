@@ -4,7 +4,6 @@ import { Textarea } from './ui/textarea';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
 
 interface ChatInputProps {
-  // eslint-disable-next-line no-unused-vars
   onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
   chatInputPlaceholder: string;

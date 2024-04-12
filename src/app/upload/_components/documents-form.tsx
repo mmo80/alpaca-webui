@@ -73,7 +73,6 @@ type DocumentsFormProps = {
   setChats: Dispatch<SetStateAction<TChatMessage[]>>;
   hasHydrated: boolean;
   systemPromptForRag: string;
-  // eslint-disable-next-line no-unused-vars
   onInitDocumentConversation: (document: SelectedDocument | null) => void;
 };
 
@@ -245,38 +244,6 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setChats([]);
     setEmbedModel(embeddingModel);
     setEmbedService(embedService);
-
-    /*
-    const msg1 = {
-      content: `Elon Musk is a business magnate, industrial designer, and engineer from South Africa, currently residing in the United States.
-He is the founder, CEO, CTO, and chief designer of SpaceX; co-founder, CEO, and product architect of Tesla, Inc.; and CEO of Neuralink and The Boring Company.
-Musk's companies have disrupted industries such as electric cars, solar energy, and space travel.
-He is known for his ambitious goals and his unconventional approach to business.
-Musk was born in Pretoria, South Africa, and moved to Canada when he was 17 to attend Queen's University.
-He then moved to the United States to attend the University of Pennsylvania, where he earned degrees in physics and economics.
-Musk's first company, Zip2, was sold to Compaq for $307 million in 1999.
-He then founded X.com, an online payment company, which later became PayPal.
-Musk's net worth is estimated to be over $200 billion, making him one of the richest people in the world.
-Musk is also known for his involvement in various philanthropic efforts, including donating to charities and funding research in artificial intelligence and renewable energy.`,
-      role: ChatRole.ASSISTANT,
-    };
-    const msg2 = {
-      content: `Jensen Huang is the Taiwanese-American businessman and engineer who has served as the CEO of Nvidia Corporation since January 1993.
-He joined Nvidia in 1993 as the vice president of sales and marketing, and became CEO just a year later.
-Huang is a pioneer in the field of graphics processing units (GPUs) and has led Nvidia to become a leading company in this technology.
-He is known for his visionary leadership and his ability to anticipate market trends and consumer needs.
-Huang earned a Bachelor's degree in electrical engineering from Oregon State University and a Master's degree in electrical engineering from Stanford University.
-He began his career at LSI Logic, where he worked on graphics and multimedia products.
-Huang has been recognized for his contributions to the technology industry with numerous awards, including the National Medal of Technology and Innovation. a member of the National Academy of Engineering and the American Academy of Arts and Sciences.
-Huang is also an active investor and advisor to various technology startups.
-He is known for his passion for technology and his commitment to pushing the boundaries of what is possible with GPUs.
-Note: The information provided is accurate as of my knowledge up to 2021.`,
-      role: ChatRole.ASSISTANT,
-    };
-    
-    setChats((prevArray) => [...prevArray, msg1]);
-    setChats((prevArray) => [...prevArray, msg2]);
-    */
 
     const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);

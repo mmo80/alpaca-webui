@@ -124,7 +124,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
       return renderServiceMenu();
     }
 
-    switch (selectedService?.modelListVariant) {
+    switch (selectedService?.modelListType) {
       case 'manual':
         return <Input placeholder="Modelname" className="mt-2 w-80" onChange={onModelChangeHandler} />;
       case 'ollama':

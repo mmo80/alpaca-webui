@@ -7,7 +7,7 @@ export const useModelList = (embeddedOnly: boolean = false) => {
   const { selectedService, selectedEmbedService } = useModelStore();
 
   const keyName = embeddedOnly ? 'embed-models' : 'models';
-  const modelListVariant = embeddedOnly ? selectedEmbedService?.modelListVariant : selectedService?.modelListVariant;
+  const modelListType = embeddedOnly ? selectedEmbedService?.modelListType : selectedService?.modelListType;
   const apiKey = embeddedOnly ? selectedEmbedService?.apiKey : selectedService?.apiKey;
   const url = embeddedOnly ? selectedEmbedService?.url : selectedService?.url;
 
@@ -18,9 +18,9 @@ export const useModelList = (embeddedOnly: boolean = false) => {
     isSuccess: modelsIsSuccess,
     isError: modelsIsError,
   } = useQuery<TModelsResponseSchema>({
-    queryKey: [keyName, modelListVariant, apiKey, url],
+    queryKey: [keyName, modelListType, apiKey, url],
     queryFn: async () => {
-      switch (modelListVariant) {
+      switch (modelListType) {
         case 'ollama': {
           const models = await api.getTag(url, embeddedOnly);
           return models.map((model) => ({ id: model.name, object: 'model', created: 0, type: null }));

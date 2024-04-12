@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { UploadIcon } from '@radix-ui/react-icons';
 
 interface DropZoneProps {
-  // eslint-disable-next-line no-unused-vars
   onFileSelected: (file: File) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
