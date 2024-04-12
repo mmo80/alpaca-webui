@@ -44,12 +44,12 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
     return (
       <Popover open={open} onOpenChange={setOpen} {...props}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between lg:w-[300px]">
+          <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between lg:w-[280px]">
             <span className="truncate hover:text-clip">{value ? `${displayLabel()}` : buttonText}</span>
             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent side="bottom" className="popover-content w-[300px] p-0">
+        <PopoverContent side="bottom" className="popover-content w-[280px] p-0">
           <Command>
             <CommandInput placeholder="Search model..." className="h-9" />
             <CommandEmpty>No models found.</CommandEmpty>
