@@ -1,49 +1,29 @@
 // url: https://gist.github.com/adnanalbeda/12d6fbe8a40d1a79a0ca9e772b0a3863
 
-import {
-  Children,
-  cloneElement,
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
-import { Slot, SlotProps } from "@radix-ui/react-slot";
-import { DialogProps } from "@radix-ui/react-dialog";
+import { Children, cloneElement, createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { Slot, SlotProps } from '@radix-ui/react-slot';
+import { DialogProps } from '@radix-ui/react-dialog';
 
 type Maybe<T> = T | null | undefined;
 
 const MultiDialogContainerContext = createContext<unknown>(null);
-MultiDialogContainerContext.displayName = "MultiDialogContainerContext";
+MultiDialogContainerContext.displayName = 'MultiDialogContainerContext';
 
-export function useMultiDialog<T = unknown>(): [
-  Maybe<T>,
-  React.Dispatch<React.SetStateAction<Maybe<T>>>,
-];
-export function useMultiDialog<T = unknown>(
-  v: T,
-): [boolean, (v: boolean) => void];
+export function useMultiDialog<T = unknown>(): [Maybe<T>, React.Dispatch<React.SetStateAction<Maybe<T>>>];
+export function useMultiDialog<T = unknown>(v: T): [boolean, (v: boolean) => void];
 export function useMultiDialog<T = unknown>(v?: T) {
-  const s = useContext(MultiDialogContainerContext) as [
-    Maybe<T>,
-    React.Dispatch<React.SetStateAction<Maybe<T>>>,
-  ];
-  if (!s)
-    throw new Error(
-      "Cannot use 'useMultiDialog' outside 'MultiDialogProvider'.",
-    );
-  if (v == null) return s;
+  const s = useContext(MultiDialogContainerContext) as [Maybe<T>, React.Dispatch<React.SetStateAction<Maybe<T>>>];
 
   const [dialog, setDialog] = s;
 
-  const onOpenChange = useCallback(
-    (o: boolean) => (o ? setDialog(v) : setDialog(null)),
-    [v],
-  );
+  const onOpenChange = useCallback((o: boolean) => (o ? setDialog(v) : setDialog(null)), [v]);
+
+  if (!s) throw new Error("Cannot use 'useMultiDialog' outside 'MultiDialogProvider'.");
 
   const open = dialog === v;
   const result = useMemo(() => [open, onOpenChange] as const, [open]);
+
+  if (v == null) return s;
 
   return result;
 }
@@ -62,7 +42,7 @@ export function MultiDialogTrigger<T = unknown>({
       open(true);
       onClick && onClick(e);
     },
-    [value, onClick],
+    [value, onClick]
   );
   return <Slot onClick={oc} {...props} />;
 }
@@ -71,7 +51,7 @@ export function MultiDialogContainer<T = unknown>({
   value,
   children,
   ...props
-}: Omit<DialogProps, "open" | "onOpenChange"> & {
+}: Omit<DialogProps, 'open' | 'onOpenChange'> & {
   value: T;
   children?: JSX.Element;
 }) {
@@ -90,12 +70,8 @@ export function MultiDialogContainer<T = unknown>({
 }
 
 type Builder<T = unknown> = {
-  readonly Trigger: (
-    ...args: Parameters<typeof MultiDialogTrigger<T>>
-  ) => React.ReactNode;
-  readonly Container: (
-    ...args: Parameters<typeof MultiDialogContainer<T>>
-  ) => React.ReactNode;
+  readonly Trigger: (...args: Parameters<typeof MultiDialogTrigger<T>>) => React.ReactNode;
+  readonly Container: (...args: Parameters<typeof MultiDialogContainer<T>>) => React.ReactNode;
 };
 
 const builder = {
@@ -103,9 +79,7 @@ const builder = {
   Container: MultiDialogContainer,
 } as const;
 
-export type MultiDialogBuilder<T = unknown> = (
-  builder: Builder<T>,
-) => React.ReactNode;
+export type MultiDialogBuilder<T = unknown> = (builder: Builder<T>) => React.ReactNode;
 export function MultiDialog<T = unknown>({
   defaultOpen = null,
   children,
@@ -115,14 +89,7 @@ export function MultiDialog<T = unknown>({
 }) {
   const [state, setState] = useState<T | null>(defaultOpen);
 
-  const c = useMemo(
-    () => (typeof children === "function" ? children(builder) : children),
-    [children],
-  );
+  const c = useMemo(() => (typeof children === 'function' ? children(builder) : children), [children]);
 
-  return (
-    <MultiDialogContainerContext.Provider value={[state, setState]}>
-      {c}
-    </MultiDialogContainerContext.Provider>
-  );
+  return <MultiDialogContainerContext.Provider value={[state, setState]}>{c}</MultiDialogContainerContext.Provider>;
 }
