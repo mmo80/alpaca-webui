@@ -16,7 +16,6 @@ export type Additional = {
 };
 
 export const weaviateClient: WeaviateClient = weaviate.client({
-  scheme: 'http',
-  host: 'localhost:8080',
+  scheme: process.env.WEAVIATE_DB_SCHEME,
+  host: process.env.WEAVIATE_DB_HOST ?? '', // localhost:8080
 });
-

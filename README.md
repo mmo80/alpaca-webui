@@ -15,7 +15,7 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 - [x] List available models for services supporting OpenAI API model endpoint
 - [x] Responsive Layout
 - [x] Modify System Prompt
-- [x] Upload document (pdf, txt) for RAG usage
+- [x] Upload document (pdf, txt, docx) for RAG usage
 
 ![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
 
@@ -35,12 +35,14 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 1. `git clone https://github.com/mmo80/alpaca-webui.git`
 2. `npm run dev`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see start chatting.
+Open [http://localhost:3000](http://localhost:3000) with your browser to start chatting.
 
 #### Docker
 
 ```shell
 docker run --name alpaca-webui -p 3033:3000 -d forloopse/alpaca-webui
 ```
+
+Then Open [http://localhost:3033](http://localhost:3033) with your browser to start chatting.
 
 The official [Alpaca webUI Docker image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.

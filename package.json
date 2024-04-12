@@ -1,6 +1,6 @@
 {
   "name": "alpaca-webui",
-  "version": "0.2",
+  "version": "0.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -40,7 +40,7 @@
     "lodash.throttle": "^4.1.1",
     "mammoth": "^1.7.1",
     "matts-llm-tools": "^0.0.2",
-    "next": "14.1.0",
+    "next": "^14.2.0",
     "next-themes": "^0.2.1",
     "pdfjs-dist": "^4.0.379",
     "react": "^18",
