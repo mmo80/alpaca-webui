@@ -7,9 +7,7 @@ export const useModelList = (embeddedOnly: boolean = false) => {
   const { selectedService, selectedEmbedService } = useModelStore();
 
   const keyName = embeddedOnly ? 'embed-models' : 'models';
-  const modelListType = embeddedOnly ? selectedEmbedService?.modelListType : selectedService?.modelListType;
-  const apiKey = embeddedOnly ? selectedEmbedService?.apiKey : selectedService?.apiKey;
-  const url = embeddedOnly ? selectedEmbedService?.url : selectedService?.url;
+  const apiService = embeddedOnly ? selectedEmbedService : selectedService;
 
   const {
     isLoading: modelsIsLoading,
@@ -18,15 +16,15 @@ export const useModelList = (embeddedOnly: boolean = false) => {
     isSuccess: modelsIsSuccess,
     isError: modelsIsError,
   } = useQuery<TModelsResponseSchema>({
-    queryKey: [keyName, modelListType, apiKey, url],
+    queryKey: [keyName, apiService],
     queryFn: async () => {
-      switch (modelListType) {
+      switch (apiService?.modelListType) {
         case 'ollama': {
-          const models = await api.getTag(url, embeddedOnly);
+          const models = await api.getTag(apiService.url, embeddedOnly);
           return models.map((model) => ({ id: model.name, object: 'model', created: 0, type: null }));
         }
         case 'openai':
-          return await api.getModelList(url, apiKey, embeddedOnly);
+          return await api.getModelList(apiService, embeddedOnly);
         case 'manual':
           return [] as TModelsResponseSchema;
       }

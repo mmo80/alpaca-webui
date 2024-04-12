@@ -1,7 +1,7 @@
 'use client';
 
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -17,18 +17,19 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import { CaretSortIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { cn, removeClassesByWord, removeHttp } from '@/lib/utils';
+import { cn, removeClassesByWord } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
-import { apiServiceModelTypes, apiServices, getApiService } from '@/lib/data';
+import { apiServiceModelTypes, preDefinedApiServices } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function Page() {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
@@ -49,10 +50,6 @@ export default function Page() {
   }, [form, services]);
 
   const onSubmit = (data: TSettingsFormSchema) => {
-    for (const item of data.services) {
-      item.serviceId = getApiService(item.url)?.id ?? removeHttp(item.url);
-    }
-
     setServices(data.services);
     setErrorMessages([]);
     setEmbedModel(null);
@@ -62,13 +59,23 @@ export default function Page() {
     toast.success('Saved!');
   };
 
-  const addService = (url: string = 'https://', modelListType: string = '') => {
+  const addService = (
+    url: string,
+    modelListType: string,
+    serviceId: string,
+    hasEmbedding: boolean,
+    embeddingPath: string,
+    lockedModelType: boolean
+  ) => {
     const formList = form.getValues();
     const service: TApiSettingsSchema = {
-      serviceId: getApiService(url)?.id ?? removeHttp(url),
+      serviceId: serviceId,
       url: url,
       modelListType: modelListType,
+      lockedModelType: lockedModelType,
       apiKey: '',
+      hasEmbedding: hasEmbedding,
+      embeddingPath: embeddingPath,
     };
 
     form.setValue('services', [...formList.services, service]);
@@ -121,25 +128,54 @@ export default function Page() {
           <CardContent className="flex flex-col space-y-8">
             <div className="flex flex-col space-y-2">
               <p className="font-medium leading-none">
-                Predefined api services
+                Add Service
                 <br />
-                <span className="text-xs font-thin">(Except for key / token))</span>
+                <span className="text-xs font-thin">(and then add key / token)</span>
               </p>
               <div className="flex flex-wrap items-start gap-2">
-                {apiServices
-                  .filter((s) => !s.hidden)
-                  .map((as) => (
-                    <Badge key={as.url} className="cursor-pointer" onClick={() => addService(as.url, as.modelType)}>
-                      {as.id}
-                    </Badge>
-                  ))}
+                {preDefinedApiServices.map((as) => (
+                  <Badge
+                    key={as.url}
+                    variant={as.hasEmbedding ? 'default' : 'secondary'}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      addService(as.url, as.modelType, as.id, as.hasEmbedding, as.embeddingPath, as.lockedModelType)
+                    }
+                  >
+                    {as.id}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant={'default'}>&nbsp;</Badge>
+                  <span className="text-xs font-thin">= Supports embeddings</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={'secondary'}>&nbsp;</Badge>
+                  <span className="text-xs font-thin">= Embeddings not supported</span>
+                </div>
               </div>
             </div>
             {/* w-[calc(100vw-4.5rem)] */}
-            <div className="relative w-[calc(100vw-4.5rem)] overflow-x-auto lg:w-full">
+            <div className="relative w-[calc(100vw-5.5rem)] overflow-x-auto lg:w-full">
               <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild className="w-6 cursor-help px-2 py-0">
+                            <Button type="button" variant={'default'} className="h-6 text-xs font-semibold">
+                              E
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Supports Embeddings?</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>
                       Models Api <br />
@@ -153,6 +189,17 @@ export default function Page() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
+                      <TableCell>
+                        {field.hasEmbedding ? (
+                          <Badge variant={'default'} className="h-6 w-6 px-1">
+                            <CheckIcon />
+                          </Badge>
+                        ) : (
+                          <Badge variant={'secondary'} className="h-6 w-6 px-1">
+                            <Cross2Icon />
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{field.serviceId ?? field.url}</TableCell>
                       <TableCell>
                         <FormField
@@ -168,6 +215,7 @@ export default function Page() {
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button
+                                      disabled={field.lockedModelType}
                                       {...form.register(`services.${index}.modelListType`)}
                                       variant="outline"
                                       role="combobox"
@@ -176,6 +224,7 @@ export default function Page() {
                                         !formField.value && 'text-muted-foreground'
                                       )}
                                     >
+                                      <Input type="hidden" {...form.register(`services.${index}.modelListType`)} />
                                       {formField.value
                                         ? apiServiceModelTypes.find((model) => model.value === formField.value)?.label
                                         : 'Select'}
@@ -186,24 +235,28 @@ export default function Page() {
                                 <PopoverContent className="w-[200px] p-0">
                                   <Command>
                                     <CommandGroup>
-                                      {apiServiceModelTypes.map((model) => (
-                                        <CommandItem
-                                          value={model.label}
-                                          key={model.value}
-                                          onSelect={() => {
-                                            form.setValue(`services.${index}.modelListType`, model.value);
-                                            handleOpenChange(field.id, false);
-                                          }}
-                                        >
-                                          {model.label}
-                                          <CheckIcon
-                                            className={cn(
-                                              'ml-auto h-4 w-4',
-                                              model.value === formField.value ? 'opacity-100' : 'opacity-0'
-                                            )}
-                                          />
-                                        </CommandItem>
-                                      ))}
+                                      {apiServiceModelTypes
+                                        .filter(
+                                          (m) => (!field.lockedModelType && m.value !== 'ollama') || field.lockedModelType
+                                        )
+                                        .map((model) => (
+                                          <CommandItem
+                                            value={model.label}
+                                            key={model.value}
+                                            onSelect={() => {
+                                              form.setValue(`services.${index}.modelListType`, model.value);
+                                              handleOpenChange(field.id, false);
+                                            }}
+                                          >
+                                            {model.label}
+                                            <CheckIcon
+                                              className={cn(
+                                                'ml-auto h-4 w-4',
+                                                model.value === formField.value ? 'opacity-100' : 'opacity-0'
+                                              )}
+                                            />
+                                          </CommandItem>
+                                        ))}
                                     </CommandGroup>
                                   </Command>
                                 </PopoverContent>
@@ -266,7 +319,7 @@ export default function Page() {
                     </TableRow>
                   ))}
                   <TableRow key="loading" className={`${hasHydrated && 'hidden'}`}>
-                    <TableCell>
+                    <TableCell colSpan={2}>
                       <Skeleton className="h-3 w-full rounded-full" />
                     </TableCell>
                     <TableCell>
@@ -280,13 +333,6 @@ export default function Page() {
                     </TableCell>
                   </TableRow>
                 </TableBody>
-                <TableFooter className="bg-transparent hover:bg-transparent">
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={5}>
-                      <Button onClick={() => addService()}>Add Service Provider</Button>
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
               </Table>
             </div>
             <div className="p-2">

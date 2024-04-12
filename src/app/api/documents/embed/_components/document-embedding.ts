@@ -3,6 +3,7 @@ import { chunkTextBySentences } from 'matts-llm-tools';
 import { DocumentReader } from './document-reader';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
 import { embedMessage } from './embed-message';
+import { TApiSettingsSchema } from '@/lib/types';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
@@ -52,7 +53,7 @@ export class DocumentEmbedding {
           properties: {
             text: data.text,
             file: data.file,
-            chunkIndex: data.chunkIndex,
+            chunkIndex: data.chunkIndex++,
             chunkTotal: data.chunkTotal,
             totalTokens: data.totalTokens,
           },
@@ -70,7 +71,7 @@ export class DocumentEmbedding {
       await batcher.do();
     } catch (error) {
       if (error instanceof Error) {
-        console.error(error.message);
+        console.error('Error when batching to vector database: ', error.message);
       } else {
         console.error('Failed to batch vectors to database.');
       }
@@ -84,15 +85,14 @@ export class DocumentEmbedding {
     chunks: string[],
     filename: string,
     model: string,
-    baseUrl: string,
-    apiKey: string
+    apiSetting: TApiSettingsSchema
   ): Promise<DocumentVectorSchema[]> {
     const documentVectors: DocumentVectorSchema[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
 
-      const data = await embedMessage(chunk, model, baseUrl, apiKey);
+      const data = await embedMessage(chunk, model, apiSetting);
 
       const chunkjson = {
         text: chunk,
@@ -113,14 +113,15 @@ export class DocumentEmbedding {
     return await reader.getFileContent();
   };
 
-  async EmbedAndPersistDocument(embedModel: string, baseUrl: string, apiKey: string): Promise<DocumentEmbeddingRespopnse> {
+  async EmbedAndPersistDocument(embedModel: string, apiSetting: TApiSettingsSchema): Promise<DocumentEmbeddingRespopnse> {
     const fileContent = await this.getFileContent();
     const documentChunks = chunkTextBySentences(fileContent, 8, 0);
     console.log(`Document has ${documentChunks.length} chunks.`);
     console.log(`Start embedding document: ${this.filename}`);
-    const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, baseUrl, apiKey);
+    const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, apiSetting);
     console.log(`Finished embedding document: ${this.filename}`);
     const success = await this.batchVectorsToDatabase(documentVectors);
+    console.log(`success: ${success.toString()}`);
     return {
       success: success,
       errorMessage: '',

@@ -7,8 +7,9 @@ import {
   OllamaModel,
   OllamaTagSchema,
   TModelResponseSchema,
+  TApiSettingsSchema,
 } from '@/lib/types';
-import { apiServices } from './data';
+import { preDefinedApiServices } from './data';
 
 let chatStreamController: AbortController | null = null;
 
@@ -41,36 +42,32 @@ const getTag = async (baseUrl: string | undefined, embeddedOnly: boolean): Promi
   return validatedOllamaTag.data.models;
 };
 
-const getModelList = async (
-  baseUrl: string | undefined,
-  apiKey: string | null | undefined,
-  embeddedOnly: boolean
-): Promise<TModelResponseSchema[]> => {
-  const url = `${validUrl(baseUrl)}/v1/models`;
-  const response = await executeFetch(url, HttpMethod.GET, apiKey);
+const getModelList = async (apiSetting: TApiSettingsSchema, embeddedOnly: boolean): Promise<TModelResponseSchema[]> => {
+  const url = `${validUrl(apiSetting.url)}/v1/models`;
+  const response = await executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
   let data = await response.json();
 
   // ugly fix for together model list as they don't respect the OpenAI API model contract
-  if (baseUrl?.indexOf('api.together.xyz') !== -1) {
+  if (apiSetting.url?.indexOf('api.together.xyz') !== -1) {
     data = data;
   } else {
     data = data.data;
   }
 
   if (embeddedOnly) {
-    const apiServiceId = apiServices.filter((api) => api.url === baseUrl)[0].id;
-    switch (apiServiceId) {
-      case 'OpenAI': {
-        return data.filter((model: TModelResponseSchema) => model.id.indexOf('embedding') !== -1);
-      }
-      case 'Together.ai': {
-        return data.filter((model: TModelResponseSchema) => model.type === 'embedding');
-      }
-      case 'Mistral.ai': {
-        return data.filter((model: TModelResponseSchema) => model.id === 'mistral-embed');
-      }
+    switch (apiSetting.serviceId) {
+      case 'OpenAI':
+        data = data.filter((model: TModelResponseSchema) => model.id.indexOf('embedding') !== -1);
+        break;
+      case 'Together.xyz':
+        data = data.filter((model: TModelResponseSchema) => model.type === 'embedding');
+        break;
+      case 'Mistral.ai':
+        data = data.filter((model: TModelResponseSchema) => model.id === 'mistral-embed');
+        break;
       default:
-        return [];
+        data = [];
+        break;
     }
   }
 
@@ -116,15 +113,15 @@ const getChatStream = async (
 
 const embedDocument = async (
   documentId: number,
-  model: string,
-  baseUrl: string | null,
-  apiKey: string | null | undefined
+  embedModel: string,
+  apiSetting: TApiSettingsSchema
 ): Promise<TEmbedDocumentResponse> => {
+  validUrl(apiSetting.url);
+
   const payload = {
-    embedModel: model,
+    embedModel: embedModel,
     documentId: documentId,
-    baseUrl: validUrl(baseUrl),
-    apiKey: apiKey,
+    apiSetting: apiSetting,
   };
   const response = await executeFetch(`/api/documents/embed`, HttpMethod.POST, null, payload);
   const data = await response.json();

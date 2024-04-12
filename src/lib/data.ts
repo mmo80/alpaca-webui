@@ -4,65 +4,68 @@ export const apiServiceModelTypes = [
   { label: 'Manual', value: 'manual' },
 ] as const;
 
-type ApiServiceModel = {
+export const apiModelTypeOllama = apiServiceModelTypes[0];
+export const apiModelTypeOpenAI = apiServiceModelTypes[1];
+
+export type ApiServiceModel = {
   id: string;
   url: string;
   modelType: string;
   embeddingPath: string;
   hasEmbedding: boolean;
-  hidden: boolean;
+  lockedModelType: boolean;
 };
 
-export const apiServices: ApiServiceModel[] = [
+export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: 'Ollama',
     url: 'http://localhost:11434',
-    modelType: 'ollama',
+    modelType: apiModelTypeOllama.value,
     embeddingPath: '/api/embeddings',
     hasEmbedding: true,
-    hidden: false,
+    lockedModelType: true,
   },
   {
-    id: 'OpenAI',
+    id: 'OpenAI.com',
     url: 'https://api.openai.com',
-    modelType: 'openai',
+    modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
-    hidden: false,
+    lockedModelType: true,
   },
   {
-    id: 'Together.ai',
+    id: 'Together.xyz',
     url: 'https://api.together.xyz',
-    modelType: 'openai',
+    modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
-    hidden: false,
+    lockedModelType: true,
   },
   {
     id: 'Mistral.ai',
     url: 'https://api.mistral.ai',
-    modelType: 'openai',
+    modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
-    hidden: false,
+    lockedModelType: true,
   },
   {
-    id: 'Groq',
+    id: 'Groq.com',
     url: 'https://api.groq.com/openai',
-    modelType: 'openai',
+    modelType: apiModelTypeOpenAI.value,
     embeddingPath: '',
     hasEmbedding: false,
-    hidden: false,
+    lockedModelType: true,
   },
-  { id: 'Default', url: '', modelType: 'openai', embeddingPath: '', hasEmbedding: false, hidden: true },
+  {
+    id: 'Standard',
+    url: 'https://',
+    modelType: apiModelTypeOpenAI.value,
+    embeddingPath: '',
+    hasEmbedding: false,
+    lockedModelType: false,
+  },
 ] as const;
 
-//export const defaultApiService: ApiServiceModel = apiServices.find(({ id }) => id === 'Default') as ApiServiceModel;
-
-export const getApiService = (url: string | null): ApiServiceModel | undefined => {
-  return apiServices.find((service) => service.url === url);
-};
-
 export const fileUploadFolder = './uploads/';
-
 export const appName = 'Alpaca WebUI';

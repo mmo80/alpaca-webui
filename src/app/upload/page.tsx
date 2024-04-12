@@ -73,8 +73,7 @@ export default function Page() {
       question: chatInput,
       documentId: selectedDocument.documentId,
       embedModel: selectedEmbedModel,
-      baseUrl: selectedEmbedService.url,
-      apiKey: selectedEmbedService.apiKey,
+      apiSetting: selectedEmbedService,
     };
 
     const documents = await getFilteredChunks(request);
@@ -147,6 +146,7 @@ export default function Page() {
               <div className="flex flex-col items-baseline gap-1 pb-3">
                 <span>Model for conversation: </span>
                 <ModelAlts
+                  embeddingModels={false}
                   selectedService={selectedService}
                   selectedModel={selectedModel}
                   models={modelList.models || []}

@@ -162,13 +162,13 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
       setTimeout(() => {
         setFadeOut(true);
-      }, 2000);
+      }, 1000);
       setTimeout(() => {
         setFileLoading(false);
         setFilename('');
         setFilesize(0);
         updateProgress(0);
-      }, 3000);
+      }, 2000);
     }
   };
 
@@ -201,12 +201,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
     setIsEmbedding(true);
     setFileIdEmbedding(documentId);
-    const response = await api.embedDocument(
-      documentId,
-      selectedEmbedModel,
-      selectedEmbedService.url,
-      selectedEmbedService.apiKey
-    );
+    const response = await api.embedDocument(documentId, selectedEmbedModel, selectedEmbedService);
 
     if (response.success) {
       toast.success('Document embedded successfully');
@@ -306,9 +301,10 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
       {embeddedModelList.modelsIsError && (
         <AlertBox title="Error" description={embeddedModelList.modelsError?.message ?? ''} />
       )}
-      <div className="flex flex-col items-baseline gap-1">
+      <div className="flex flex-col items-baseline gap-1 pb-2">
         <span>Model for embedding:</span>
         <ModelAlts
+          embeddingModels={true}
           selectedService={selectedEmbedService}
           selectedModel={selectedEmbedModel}
           models={embeddedModelList.models ?? []}

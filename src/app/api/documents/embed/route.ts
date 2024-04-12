@@ -3,8 +3,7 @@ import { db } from '@/db/db';
 import { files } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { DocumentEmbedding } from './_components/document-embedding';
-import { TEmbedDocumentResponse } from '@/lib/types';
-import { getApiService } from '@/lib/data';
+import { TApiSettingsSchema, TEmbedDocumentResponse } from '@/lib/types';
 
 export async function POST(request: Request): Promise<NextResponse<TEmbedDocumentResponse>> {
   const body = await request.json();
@@ -15,25 +14,27 @@ export async function POST(request: Request): Promise<NextResponse<TEmbedDocumen
     try {
       const filename = result[0].filename;
       const embedModel = body.embedModel;
-      const url = body.baseUrl;
-      const apiKey = body.apiKey;
+      const apiSetting = body.apiSetting as TApiSettingsSchema;
 
       const documentEmbedding = new DocumentEmbedding(filename);
-      const response = await documentEmbedding.EmbedAndPersistDocument(embedModel, url, apiKey);
+      const response = await documentEmbedding.EmbedAndPersistDocument(embedModel, apiSetting);
 
       if (response.success) {
-        const apiService = getApiService(url);
-
-        await db
+        const wResult = await db
           .update(files)
           .set({
             isEmbedded: true,
             embedModel: embedModel,
-            embedApiServiceName: apiService?.id,
+            embedApiServiceName: apiSetting.serviceId,
             noOfChunks: response.noOfChunks,
             textCharacterCount: response.textCharacterCount,
           })
           .where(eq(files.id, documentId));
+
+        if (wResult.changes <= 0) {
+          return NextResponse.json({ success: false, errorMessage: 'Failed to update database.' });
+        }
+
         return NextResponse.json({ success: response.success, errorMessage: null });
       }
 

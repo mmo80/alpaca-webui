@@ -61,6 +61,7 @@ export default function Home() {
       <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
         {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message ?? ''} />}
         <ModelAlts
+          embeddingModels={false}
           selectedService={selectedService}
           selectedModel={selectedModel}
           models={modelList.models || []}

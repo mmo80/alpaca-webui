@@ -1,6 +1,9 @@
 import type { FC } from 'react';
+import React from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Input } from './ui/input';
+import { Input } from '@/components/ui/input';
+import { buttonVariants } from '@/components/ui/button';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
 import { TApiSettingsSchema, TModelResponseSchema } from '@/lib/types';
@@ -8,7 +11,6 @@ import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type ModelAltsProps = {
   selectedService: TApiSettingsSchema | null | undefined;
@@ -17,6 +19,7 @@ type ModelAltsProps = {
   modelsIsSuccess: boolean;
   modelsIsLoading: boolean;
   hasHydrated: boolean;
+  embeddingModels: boolean;
   onModelChange: (model: string) => void;
   onServiceChange: (service: TApiSettingsSchema) => void;
   onReset: () => void;
@@ -29,6 +32,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
   modelsIsSuccess,
   modelsIsLoading,
   hasHydrated,
+  embeddingModels,
   onModelChange,
   onServiceChange,
   onReset,
@@ -45,15 +49,21 @@ const ModelAlts: FC<ModelAltsProps> = ({
     }
 
     return (
-      <>
-        <div className="flex flex-wrap items-start gap-2 pt-2">
-          {services.map((s) => (
-            <Badge key={s.serviceId} className="cursor-pointer" onClick={() => onServiceChange(s)}>
-              {s.serviceId}
-            </Badge>
-          ))}
-        </div>
-      </>
+      <div className="flex flex-wrap items-start gap-2 pt-2">
+        {services.map((s) => (
+          <React.Fragment key={s.serviceId}>
+            {(embeddingModels && s.hasEmbedding) || !embeddingModels ? (
+              <Badge className="cursor-pointer" onClick={() => onServiceChange(s)}>
+                {s.serviceId}
+              </Badge>
+            ) : (
+              <Badge className="cursor-not-allowed" variant={'secondary'}>
+                {s.serviceId}
+              </Badge>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
     );
   };
 
@@ -62,7 +72,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="secondary" size="icon" className="ms-2 shrink-0 p-2" onClick={onReset}>
+            <Button variant="secondary" size="icon" className="ms-1 shrink-0 p-2" onClick={onReset}>
               <ArrowUturnLeftIcon />
               <span className="sr-only">Reset service and model choice</span>
             </Button>
@@ -85,7 +95,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
     }
 
     return (
-      <div className="flex items-center pt-2">
+      <div className="flex items-start pt-2">
         {models.length == 0 ? (
           <>
             <span>No models available</span>
@@ -93,13 +103,22 @@ const ModelAlts: FC<ModelAltsProps> = ({
           </>
         ) : (
           <>
-            <ModelMenu
-              models={models ?? []}
-              selectedModel={selectedModel ?? ''}
-              onModelChange={onModelChange}
-              disabled={!modelsIsSuccess}
-              className="py-3"
-            />
+            <div className="flex flex-col">
+              {/* <span
+                className={`${buttonVariants({ variant: 'secondary' })} rounded-e-0 inline-flex items-center rounded-none rounded-l-md border border-e-0 px-2`}
+              >
+                {selectedService?.serviceId}
+              </span> */}
+              {/* <span className="rounded-t-md bg-secondary p-1 pl-2 text-xs">{selectedService?.serviceId}</span> */}
+              <ModelMenu
+                models={models ?? []}
+                selectedModel={selectedModel ?? ''}
+                onModelChange={onModelChange}
+                disabled={!modelsIsSuccess}
+                className="py-3"
+              />
+              <span className="rounded-b-lg bg-secondary p-1 pl-4 text-xs">{selectedService?.serviceId}</span>
+            </div>
             {renderResetButton()}
           </>
         )}
