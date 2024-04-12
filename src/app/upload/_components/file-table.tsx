@@ -42,16 +42,18 @@ const FileTable: FC<FileTableProps> = ({
   reload,
 }) => {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
+  const [removingFile, setRemovingFile] = useState<boolean>();
 
   const handleOpenChange = (id: number, open: boolean) => {
     setOpenPopovers((prev) => ({ ...prev, [id.toString()]: open }));
   };
 
   const removeDocument = async (documentId: number) => {
+    setRemovingFile(true);
     const payload = { documentId };
     const response = await executeFetch(`/api/documents/remove`, HttpMethod.POST, null, payload);
     const successful = await response.json();
-
+    setRemovingFile(false);
     if (successful) {
       toast.success('Document removed successfully.');
       handleOpenChange(documentId, false);
@@ -185,11 +187,13 @@ const FileTable: FC<FileTableProps> = ({
                           </DialogHeader>
                           <DialogFooter>
                             <Button
+                              disabled={removingFile}
                               onClick={() => {
                                 removeDocument(file.id);
                               }}
                             >
-                              Confirm
+                              {removingFile && <Spinner color="" />}
+                              {removingFile ? 'Removing...' : 'Confirm'}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
