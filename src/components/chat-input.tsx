@@ -61,7 +61,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           onClick={onCancelStream}
           variant="secondary"
           size="icon"
-          className="absolute bottom-6 right-3"
+          className="absolute bottom-6 right-6"
           disabled={isFetchLoading}
         >
           <StopIcon className="h-4 w-4" />
