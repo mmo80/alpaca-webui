@@ -68,6 +68,12 @@ export default function Page() {
     lockedModelType: boolean
   ) => {
     const formList = form.getValues();
+    const excistingService = formList.services?.find((service) => service.serviceId === serviceId);
+    if (excistingService !== undefined && excistingService.serviceId != 'Standard') {
+      toast.warning(`${serviceId} already added!`);
+      return;
+    }
+
     const service: TApiSettingsSchema = {
       serviceId: serviceId,
       url: url,
