@@ -11,6 +11,7 @@ export type DocumentEmbeddingRespopnse = {
   embedModel: string;
   textCharacterCount: number;
   noOfChunks: number;
+  totalDocumentTokens: number;
 };
 
 export type DocumentVectorSchema = {
@@ -128,6 +129,7 @@ export class DocumentEmbedding {
       embedModel: embedModel,
       textCharacterCount: fileContent.length,
       noOfChunks: documentChunks.length,
+      totalDocumentTokens: documentVectors.reduce((a, b) => (b.totalTokens == undefined ? 0 : a + b.totalTokens), 0),
     };
   }
 }

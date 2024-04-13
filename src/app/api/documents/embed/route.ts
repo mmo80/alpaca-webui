@@ -28,6 +28,7 @@ export async function POST(request: Request): Promise<NextResponse<TEmbedDocumen
             embedApiServiceName: apiSetting.serviceId,
             noOfChunks: response.noOfChunks,
             textCharacterCount: response.textCharacterCount,
+            noOfTokens: response.totalDocumentTokens,
           })
           .where(eq(files.id, documentId));
 

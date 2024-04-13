@@ -167,6 +167,12 @@ const FileTable: FC<FileTableProps> = ({
                                     <TableCell className="font-medium">Chunks</TableCell>
                                     <TableCell>{file.noOfChunks}</TableCell>
                                   </TableRow>
+                                  {(file.noOfTokens ?? 0) > 0 && (
+                                    <TableRow>
+                                      <TableCell className="font-medium">Tokens</TableCell>
+                                      <TableCell>{file.noOfTokens}</TableCell>
+                                    </TableRow>
+                                  )}
                                 </>
                               )}
                             </TableBody>
