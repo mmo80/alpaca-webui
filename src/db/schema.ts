@@ -7,12 +7,15 @@ export const files = sqliteTable('files', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   filename: text('filename').notNull(),
   fileSize: integer('file_size', { mode: 'number' }),
-  timestamp: text('timestamp').default(sql`(datetime('now','localtime'))`).notNull(),
+  timestamp: text('timestamp')
+    .default(sql`(datetime('now','localtime'))`)
+    .notNull(),
   isEmbedded: integer('is_embedded', { mode: 'boolean' }).default(false).notNull(),
   embedModel: text('embed_model').default(''),
   embedApiServiceName: text('embed_api_service_name').default(''),
   textCharacterCount: integer('text_character_count', { mode: 'number' }).default(0),
   noOfChunks: integer('no_of_chunks', { mode: 'number' }).default(0),
+  noOfTokens: integer('no_of_tokens', { mode: 'number' }).default(0),
 });
 
 const ZFileSchema = createSelectSchema(files);
