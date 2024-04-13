@@ -17,31 +17,6 @@ export const embedMessage = async (
   let totalTokens: number | undefined = undefined;
 
   try {
-    // if (modelType == null || modelType == '' || modelType.length <= 0) {
-    //   throw new Error(`ModelType can not be null or empty '${modelType}'.`);
-    // }
-    // if (model == null || model == '' || model.length <= 0) {
-    //   throw new Error(`Model can not be null or empty '${model}'.`);
-    // }
-    // if (baseUrl == null || baseUrl == '' || !baseUrl.startsWith('http')) {
-    //   throw new Error(`Invalid base url '${baseUrl}'.`);
-    // }
-
-    // let apiService: ApiServiceModel | undefined = undefined;
-
-    // if (modelType == apiModelTypeOllama.value) {
-    //   apiService = ollamaApiService;
-    // } else if (modelType == apiModelTypeOpenAI.value) {
-    //   apiService = getApiServiceByUrl(baseUrl);
-    // }
-
-    // if (apiService === undefined) {
-    //   throw new Error(`API service '${baseUrl}' not supported.`);
-    // }
-    // if (!apiService.hasEmbedding) {
-    //   throw new Error(`API service '${baseUrl}' does not support embedding.`);
-    // }
-
     const url = apiSetting.url + apiSetting.embeddingPath;
 
     if (apiSetting.modelListType === apiModelTypeOllama.value) {
