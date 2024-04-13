@@ -1,6 +1,8 @@
 # Alpaca WebUI
 
-Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat conversation interface equipped with markup formatting and code syntax highlighting. It now supports a variety of LLM endpoints through the OpenAI Chat Completions API.
+Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat conversation interface featuring markup formatting and code syntax highlighting. It supports a variety of LLM endpoints through the OpenAI Chat Completions API and now includes a RAG (Retrieval-Augmented Generation) feature, allowing users to engage in conversations with information pulled from uploaded documents.
+
+The app lets you easily try out different AI models from various services to find answers using your documents. It simplifies mixing and matching these models to see which one works best for your needs.
 
 <a href="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml"><img src="https://img.shields.io/github/actions/workflow/status/mmo80/alpaca-webui/integrations.yml" /></a> <img src="https://img.shields.io/github/commit-activity/t/mmo80/alpaca-webui" /> <img src="https://img.shields.io/github/languages/top/mmo80/alpaca-webui" /> <img src="https://img.shields.io/github/repo-size/mmo80/alpaca-webui" />
 <br>
@@ -9,13 +11,13 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 
 - [x] Support for your local or remote [Ollama](https://ollama.com/) server
 - [x] Compatible with OpenAI Chat Completions API
-- [x] Tested with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference) and [Mistral.ai](https://mistral.ai/)
-- [x] Markup Formatting
-- [x] Code Highlighting
-- [x] List available models for services supporting OpenAI API model endpoint
-- [x] Responsive Layout
-- [x] Modify System Prompt
+- [x] Workes with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference), [Mistral.ai](https://mistral.ai/), [Groq.com](https://wow.groq.com/) and [Ollama](https://ollama.com/)
 - [x] Upload document (pdf, txt, docx) for RAG usage
+- [x] Modify System Prompt for Chat and RAG
+- [x] Markup Formatting
+- [x] Code Syntax Highlighting
+- [x] List available models for services supporting OpenAI API model endpoint (and listing of Ollama models)
+- [x] Mobile-Friendly and Desktop-Friendly Layout
 
 ![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
 
@@ -33,16 +35,20 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 #### Run the development server:
 
 1. `git clone https://github.com/mmo80/alpaca-webui.git`
-2. `npm run dev`
+2. Setup and install your [Weaviate database](https://weaviate.io/developers/weaviate/installation) or just use the docker-compose weaviate file in the repository with the following command `docker-compose -f docker-compose.weaviate.yml up --build --detach`.
+3. Check the environment variables in `.env.development`
+4. Then just run `npm install` followed by `npm run dev` :sunglasses:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to start chatting.
+Open [http://localhost:3000](http://localhost:3000) with your browser to start using the app.
 
-#### Docker
+#### Docker Compose
+
+This command sets up two containers: one for the app and another for the [Weaviate](https://weaviate.io/) vector database. (Please note that there is no data persistence on a mapped volume in this configuration.)
 
 ```shell
-docker run --name alpaca-webui -p 3033:3000 -d forloopse/alpaca-webui
+docker compose up --detach
 ```
 
-Then Open [http://localhost:3033](http://localhost:3033) with your browser to start chatting.
+Then Open [http://localhost:3033](http://localhost:3033) with your browser to start using the app.
 
-The official [Alpaca webUI Docker image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.
+The official [Alpaca WebUI Docker Image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.
