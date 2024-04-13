@@ -19,8 +19,6 @@ The app lets you easily try out different AI models from various services to fin
 - [x] List available models for services supporting OpenAI API model endpoint (and listing of Ollama models)
 - [x] Mobile-Friendly and Desktop-Friendly Layout
 
-![Alt Text](https://media.giphy.com/media/SYkpUkv9ycAD912GIV/giphy.gif)
-
 **Pending Implementation**
 
 - Modify Parameters (like temperature, mirostat ...)
@@ -52,3 +50,14 @@ docker compose up --detach
 Then Open [http://localhost:3033](http://localhost:3033) with your browser to start using the app.
 
 The official [Alpaca WebUI Docker Image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.
+
+## UI
+
+RAG
+![RAG](https://s12.gifyu.com/images/SZE4V.gif)
+
+Chat
+![Chat](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaW5laGJicndxNTFmbjB1MGw4MGxqbThzYzd2MW91dWw0bjJqa2NpMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N84prxLtD0G7bORIUJ/giphy.gif)
+
+Settings
+![Settings](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWg1NTF1YmR6azh4NXVydjFhdnIzam54ajU5NW5md3Q5b3RjMW8wcSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KbQZ7Vx6JaKTUHgyaR/giphy.gif)
