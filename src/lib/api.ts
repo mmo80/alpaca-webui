@@ -48,7 +48,7 @@ const getModelList = async (apiSetting: TApiSettingsSchema, embeddedOnly: boolea
   let data = await response.json();
 
   // ugly fix for Together model list as they don't respect the OpenAI API model contract
-  if (apiSetting.serviceId === ApiService.TOGETHER) {
+  if (apiSetting.serviceId !== ApiService.TOGETHER) {
     data = data.data;
   }
 
