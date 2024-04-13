@@ -9,7 +9,7 @@ import {
   TModelResponseSchema,
   TApiSettingsSchema,
 } from '@/lib/types';
-import { preDefinedApiServices } from './data';
+import { ApiService } from './data';
 
 let chatStreamController: AbortController | null = null;
 
@@ -47,22 +47,20 @@ const getModelList = async (apiSetting: TApiSettingsSchema, embeddedOnly: boolea
   const response = await executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
   let data = await response.json();
 
-  // ugly fix for together model list as they don't respect the OpenAI API model contract
-  if (apiSetting.url?.indexOf('api.together.xyz') !== -1) {
-    data = data;
-  } else {
+  // ugly fix for Together model list as they don't respect the OpenAI API model contract
+  if (apiSetting.serviceId === ApiService.TOGETHER) {
     data = data.data;
   }
 
   if (embeddedOnly) {
     switch (apiSetting.serviceId) {
-      case 'OpenAI':
+      case ApiService.OPENAI:
         data = data.filter((model: TModelResponseSchema) => model.id.indexOf('embedding') !== -1);
         break;
-      case 'Together.xyz':
+      case ApiService.TOGETHER:
         data = data.filter((model: TModelResponseSchema) => model.type === 'embedding');
         break;
-      case 'Mistral.ai':
+      case ApiService.MISTRAL:
         data = data.filter((model: TModelResponseSchema) => model.id === 'mistral-embed');
         break;
       default:

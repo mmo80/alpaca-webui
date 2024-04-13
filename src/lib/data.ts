@@ -16,9 +16,18 @@ export type ApiServiceModel = {
   lockedModelType: boolean;
 };
 
+export enum ApiService {
+  OLLAMA = 'Ollama',
+  OPENAI = 'OpenAI.com',
+  TOGETHER = 'Together.xyz',
+  MISTRAL = 'Mistral.ai',
+  GROQ = 'Groq.com',
+  STANDARD = 'Standard',
+}
+
 export const preDefinedApiServices: ApiServiceModel[] = [
   {
-    id: 'Ollama',
+    id: ApiService.OLLAMA,
     url: 'http://localhost:11434',
     modelType: apiModelTypeOllama.value,
     embeddingPath: '/api/embeddings',
@@ -26,7 +35,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: 'OpenAI.com',
+    id: ApiService.OPENAI,
     url: 'https://api.openai.com',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -34,7 +43,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: 'Together.xyz',
+    id: ApiService.TOGETHER,
     url: 'https://api.together.xyz',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -42,7 +51,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: 'Mistral.ai',
+    id: ApiService.MISTRAL,
     url: 'https://api.mistral.ai',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -50,7 +59,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: 'Groq.com',
+    id: ApiService.GROQ,
     url: 'https://api.groq.com/openai',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '',
@@ -58,7 +67,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: 'Standard',
+    id: ApiService.STANDARD,
     url: 'https://',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '',
