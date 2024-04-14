@@ -50,14 +50,17 @@ docker compose up --detach
 Then Open [http://localhost:3033](http://localhost:3033) with your browser to start using the app.
 
 The official [Alpaca WebUI Docker Image](https://hub.docker.com/r/forloopse/alpaca-webui) `forloopse/alpaca-webui` is available on Docker Hub.
+<br>
+<br>
+<br>
 
 ## UI
 
-RAG
+**RAG**:<br>
 ![RAG](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-webui-rag-v0.5.gif)
 
-Chat
+**Chat**:<br>
 ![Chat](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-chat-v0.5.gif)
 
-Settings
+**Settings**:<br>
 ![Settings](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-webui-settings-v0.5.gif)
