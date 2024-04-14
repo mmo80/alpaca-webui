@@ -54,10 +54,10 @@ The official [Alpaca WebUI Docker Image](https://hub.docker.com/r/forloopse/alpa
 ## UI
 
 RAG
-![RAG](https://s12.gifyu.com/images/SZE4V.gif)
+![RAG](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-webui-rag-v0.5.gif)
 
 Chat
-![Chat](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaW5laGJicndxNTFmbjB1MGw4MGxqbThzYzd2MW91dWw0bjJqa2NpMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N84prxLtD0G7bORIUJ/giphy.gif)
+![Chat](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-chat-v0.5.gif)
 
 Settings
-![Settings](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWg1NTF1YmR6azh4NXVydjFhdnIzam54ajU5NW5md3Q5b3RjMW8wcSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KbQZ7Vx6JaKTUHgyaR/giphy.gif)
+![Settings](https://f001.backblazeb2.com/file/alpaca-webui/alpaca-webui-settings-v0.5.gif)
