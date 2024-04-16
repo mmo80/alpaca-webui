@@ -4,7 +4,7 @@ Alpaca WebUI, initially crafted for [Ollama](https://ollama.com/), is a chat con
 
 The app lets you easily try out different AI models from various services to find answers using your documents. It simplifies mixing and matching these models to see which one works best for your needs.
 
-<a href="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml"><img src="https://img.shields.io/github/actions/workflow/status/mmo80/alpaca-webui/integrations.yml" /></a> <img src="https://img.shields.io/github/commit-activity/t/mmo80/alpaca-webui" /> <img src="https://img.shields.io/github/languages/top/mmo80/alpaca-webui" /> <img src="https://img.shields.io/github/repo-size/mmo80/alpaca-webui" />
+<a href="https://github.com/mmo80/alpaca-webui/actions/workflows/integrations.yml"><img src="https://img.shields.io/github/actions/workflow/status/mmo80/alpaca-webui/integrations.yml" /></a> <img src="https://img.shields.io/github/commit-activity/t/mmo80/alpaca-webui" /> <img src="https://img.shields.io/github/languages/top/mmo80/alpaca-webui" /> ![Docker Pulls](https://img.shields.io/docker/pulls/forloopse/alpaca-webui) <img src="https://img.shields.io/github/repo-size/mmo80/alpaca-webui" />
 <br>
 
 **Has**
