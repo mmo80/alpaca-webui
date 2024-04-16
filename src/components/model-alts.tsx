@@ -103,13 +103,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
           </>
         ) : (
           <>
-            <div className="flex flex-col">
-              {/* <span
-                className={`${buttonVariants({ variant: 'secondary' })} rounded-e-0 inline-flex items-center rounded-none rounded-l-md border border-e-0 px-2`}
-              >
-                {selectedService?.serviceId}
-              </span> */}
-              {/* <span className="rounded-t-md bg-secondary p-1 pl-2 text-xs">{selectedService?.serviceId}</span> */}
+            <div className="flex w-full flex-col md:w-auto">
               <ModelMenu
                 models={models ?? []}
                 selectedModel={selectedModel ?? ''}
