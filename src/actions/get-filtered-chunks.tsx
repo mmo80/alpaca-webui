@@ -30,7 +30,7 @@ export const getFilteredChunks = async (request: GetChunksRequest): Promise<Docu
 const filterVectorDatabaseDocuments = async (
   filename: string,
   embeddings: number[],
-  limit: number = 3
+  limit: number = 5
 ): Promise<Documents[]> => {
   const result = await weaviateClient.graphql
     .get()
