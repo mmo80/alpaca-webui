@@ -42,7 +42,7 @@
     "matts-llm-tools": "^0.0.2",
     "next": "^14.2.0",
     "next-themes": "^0.2.1",
-    "pdfjs-dist": "^4.0.379",
+    "pdfjs-dist": "4.0.379",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.50.1",
