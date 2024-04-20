@@ -55,7 +55,7 @@ export const useChatStream = () => {
   const handleStreamSyntaxError = (str: string): boolean => {
     if (str.startsWith('{"id"')) {
       jsonFaultBuffer = str;
-    } else if (str.endsWith(']}')) {
+    } else if (str.endsWith('}')) {
       jsonFaultBuffer += str;
       return true;
     }
