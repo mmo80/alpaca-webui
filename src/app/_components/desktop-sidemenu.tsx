@@ -50,16 +50,24 @@ export const DesktopSidemenu: FC = () => {
         <Header>{appName}</Header>
         <div className="flex-1">
           <nav className="grid items-start gap-2 px-4 text-sm font-medium">
-            {menuItems.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && 'bg-stone-500 text-stone-950'} hover:bg-stone-700`}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.title}
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              const isActivePage = (pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href);
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  onClick={() => {
+                    if (isActivePage && item.href === '/') {
+                      location.href = item.href;
+                    }
+                  }}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isActivePage && 'bg-stone-500 text-stone-950'} hover:bg-stone-700`}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.title}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       </div>

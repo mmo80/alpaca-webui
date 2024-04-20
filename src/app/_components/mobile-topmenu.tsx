@@ -7,8 +7,10 @@ import { Header, menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { appName } from '@/lib/data';
+import { usePathname } from 'next/navigation';
 
 export const MobileTopmenu: FC = () => {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   return (
@@ -23,17 +25,26 @@ export const MobileTopmenu: FC = () => {
         <SheetContent side="left" className="flex w-[300px] flex-col">
           <Header isSheet={true}>{appName}</Header>
           <nav className="grid gap-1 text-base font-medium">
-            {menuItems.map((item) => (
-              <Link
-                key={item.title}
-                href={item.href}
-                className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 hover:text-foreground"
-                onClick={() => setOpen(false)}
-              >
-                <item.icon className="h-6 w-6" />
-                {item.title}
-              </Link>
-            ))}
+            {menuItems.map((item) => {
+              const isActivePage = (pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href);
+
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 hover:text-foreground"
+                  onClick={() => {
+                    setOpen(false);
+                    if (isActivePage && item.href === '/') {
+                      location.href = item.href;
+                    }
+                  }}
+                >
+                  <item.icon className="h-6 w-6" />
+                  {item.title}
+                </Link>
+              );
+            })}
           </nav>
         </SheetContent>
       </Sheet>
