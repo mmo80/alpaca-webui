@@ -88,7 +88,7 @@ const FileTable: FC<FileTableProps> = ({
             <TableCell className="flex h-auto items-center justify-end gap-2 text-right text-xs">
               {!file.isEmbedded && (
                 <Button size={'sm'} onClick={() => onEmbedDocument(file.id)} disabled={isEmbedding}>
-                  {fileIdEmbedding == file.id && <Spinner color="" />}
+                  {fileIdEmbedding == file.id && <Spinner />}
                   {fileIdEmbedding == file.id ? 'Embedding...' : 'Embedd'}
                 </Button>
               )}
