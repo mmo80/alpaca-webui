@@ -3,11 +3,13 @@
 import * as React from 'react';
 import { TChatMessage, ChatRole } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
-import { PersonIcon, LayersIcon } from '@radix-ui/react-icons';
-import { FC, LegacyRef, ReactNode } from 'react';
+import { PersonIcon, LayersIcon, CopyIcon } from '@radix-ui/react-icons';
+import { FC, ReactNode } from 'react';
 import { toast } from 'sonner';
 
 export const ChatMessages: React.FC<TChatMessage> = ({ role, content }) => {
+  const messageId = generateGUID();
+
   return (
     <>
       {role != ChatRole.SYSTEM && (
@@ -22,7 +24,18 @@ export const ChatMessages: React.FC<TChatMessage> = ({ role, content }) => {
               role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
             }`}
           >
-            <Markdown components={components}>{content}</Markdown>
+            <div id={messageId}>
+              <Markdown components={components}>{content}</Markdown>
+            </div>
+            <span className="my-1 text-xs text-muted-foreground">
+              <button
+                className="rounded-full p-1 hover:bg-stone-950"
+                title="Copy"
+                onClick={() => copyToClipboard(messageId)}
+              >
+                <CopyIcon className="h-4 w-4" />
+              </button>
+            </span>
           </div>
         </section>
       )}
