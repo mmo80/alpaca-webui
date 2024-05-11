@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
@@ -22,6 +22,7 @@ export const ChatInput: FC<ChatInputProps> = ({
 }) => {
   const [chatInput, setChatInput] = useState<string>('');
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
+  const chatInputDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setTextareaPlaceholder(chatInputPlaceholder);
@@ -30,6 +31,7 @@ export const ChatInput: FC<ChatInputProps> = ({
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
     setChatInput('');
+    if (chatInputDivRef.current) chatInputDivRef.current.dataset.clonedVal = ' ';
     await onSendInput(chatInputTrimmed);
   };
 
@@ -45,17 +47,46 @@ export const ChatInput: FC<ChatInputProps> = ({
     }
   };
 
+  const onInputExpand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = event.target.value;
+    if (chatInputDivRef.current && value.length > 0) {
+      const rows = value.split('\n');
+      if (rows.length < 8) {
+        chatInputDivRef.current.dataset.clonedVal = value;
+      }
+    }
+  };
+
   return (
     <div className="px-3">
-      <Textarea
-        value={chatInput}
-        onChange={(e) => setChatInput(e.target.value)}
-        onKeyUp={chatEnterPress}
-        onKeyDown={preventEnterPress}
-        placeholder={textareaPlaceholder}
-        className="resize-none overflow-hidden pr-20"
-        disabled={!isLlmModelActive}
-      />
+      <div
+        ref={chatInputDivRef}
+        className="grid
+          text-sm
+          after:invisible
+          after:whitespace-pre-wrap
+          after:border
+          after:px-3.5
+          after:py-2.5
+          after:text-inherit
+          after:content-[attr(data-cloned-val)_'_']
+          after:[grid-area:1/1/2/2]
+          [&>textarea]:resize-none
+          [&>textarea]:overflow-x-hidden
+          [&>textarea]:text-inherit
+          [&>textarea]:[grid-area:1/1/2/2]"
+      >
+        <Textarea
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          onKeyUp={chatEnterPress}
+          onKeyDown={preventEnterPress}
+          onInput={onInputExpand}
+          placeholder={textareaPlaceholder}
+          className="h-auto appearance-none pr-20 outline-none"
+          disabled={!isLlmModelActive}
+        />
+      </div>
       {isStreamProcessing ? (
         <Button
           onClick={onCancelStream}
