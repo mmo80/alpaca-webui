@@ -49,10 +49,13 @@ export const ChatInput: FC<ChatInputProps> = ({
 
   const onInputExpand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = event.target.value;
-    if (chatInputDivRef.current && value.length > 0) {
+    if (chatInputDivRef.current) {
       const rows = value.split('\n');
-      if (rows.length < 8) {
-        chatInputDivRef.current.dataset.clonedVal = value;
+      const height = parseFloat(getComputedStyle(event.target).height);
+      if (height < 140) {
+        if (rows.length < 8) {
+          chatInputDivRef.current.dataset.clonedVal = value;
+        }
       }
     }
   };
