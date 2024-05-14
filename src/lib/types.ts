@@ -81,6 +81,31 @@ const ModelResponseSchema = z.object({
   type: z.string().nullable().optional(),
 });
 
+export const CreateImageRequestSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required!'),
+  model: z.string(),
+  n: z.number().default(1),
+  quality: z.string().default('standard'),
+  size: z.string().default('1024x1024'),
+  style: z.string().default('vivid'),
+  user: z.string().optional(),
+});
+
+const CreateImageDataSchema = z.object({
+  url: z.string(),
+  b64_json: z.string().optional(),
+  revised_prompt: z.string(),
+});
+
+const CreateImageResponseSchema = z.object({
+  created: z.number(),
+  data: z.array(CreateImageDataSchema),
+});
+
+export type TCreateImageResponse = z.infer<typeof CreateImageResponseSchema>;
+export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
+export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
+
 export const ModelsResponseSchema = z.array(ModelResponseSchema);
 
 export type TChatMessage = z.infer<typeof MessageSchema>;
@@ -88,6 +113,8 @@ export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
 export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
 export type TModelsResponseSchema = z.infer<typeof ModelsResponseSchema>;
 export type TModelResponseSchema = z.infer<typeof ModelResponseSchema>;
+
+export type TMessage = TChatMessage | TCreateImageData;
 
 // ----- Custom Models ----- //
 export const EmbedDocumentResponseSchema = z.object({

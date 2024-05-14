@@ -12,6 +12,7 @@ import { useSettingsStore } from '@/lib/settings-store';
 import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 
 export default function Home() {
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
@@ -46,14 +47,39 @@ export default function Home() {
     await handleStream(streamReader);
   };
 
+  const chatImage = async (prompt: string) => {
+    if (selectedModel == null || selectedService == null) {
+      return;
+    }
+    if (!selectedModel.startsWith('dall-e')) {
+      toast.warning(
+        'Can only generate image with OpenAI <strong><u>dall-e-3</u></strong> or <strong><u>dall-e-2</u></strong> models'
+      );
+      return;
+    }
+
+    setIsFetchLoading(true);
+    const response = await api.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
+    setChats((prevArray) => [...prevArray, response.data[0]]);
+    setIsFetchLoading(false);
+  };
+
   const sendChat = async (chatInput: string) => {
     if (chatInput === '') {
       return;
     }
-    const chatMessage = { content: chatInput, role: ChatRole.USER };
-    setChats((prevArray) => [...prevArray, chatMessage]);
-    await chatStream(chatMessage);
-    delayHighlighter();
+
+    if (chatInput.startsWith('/image')) {
+      const prompt = chatInput.replace('/image', '');
+      const chatMessage = { content: prompt, role: ChatRole.USER };
+      setChats((prevArray) => [...prevArray, chatMessage]);
+      await chatImage(prompt);
+    } else {
+      const chatMessage = { content: chatInput, role: ChatRole.USER };
+      setChats((prevArray) => [...prevArray, chatMessage]);
+      await chatStream(chatMessage);
+      delayHighlighter();
+    }
   };
 
   return (

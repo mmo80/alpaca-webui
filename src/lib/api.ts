@@ -8,6 +8,10 @@ import {
   OllamaTagSchema,
   TModelResponseSchema,
   TApiSettingsSchema,
+  TCreateImageRequest,
+  CreateImageRequestSchema,
+  TCreateImageResponse,
+  TMessage,
 } from '@/lib/types';
 import { ApiService } from './data';
 
@@ -85,7 +89,7 @@ const cancelChatStream = () => {
 
 const getChatStream = async (
   model: string,
-  messages: TChatMessage[],
+  messages: TMessage[],
   baseUrl: string | null,
   apiKey: string | null | undefined
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> => {
@@ -96,7 +100,7 @@ const getChatStream = async (
 
   const payload: TChatCompletionRequest = {
     model: model,
-    messages: messages,
+    messages: messages as TChatMessage[],
     stream: true,
   };
 
@@ -107,6 +111,23 @@ const getChatStream = async (
   }
 
   return response.body.getReader();
+};
+
+const generateImage = async (
+  prompt: string,
+  model: string,
+  baseUrl: string | null,
+  apiKey: string | null | undefined
+): Promise<TCreateImageResponse> => {
+  const url = `${validUrl(baseUrl)}/v1/images/generations`;
+  const values: Partial<TCreateImageRequest> = { prompt: prompt, model: model };
+  const payload = CreateImageRequestSchema.parse(values);
+
+  const fetchResponse = await executeFetch(url, HttpMethod.POST, apiKey, payload);
+  const response = (await fetchResponse.json()) as TCreateImageResponse;
+
+  //console.log('response: ', response);
+  return response;
 };
 
 const embedDocument = async (
@@ -137,6 +158,7 @@ export const api = {
   getChatStream,
   cancelChatStream,
   embedDocument,
+  generateImage,
 };
 
 export const executeFetch = async <T>(

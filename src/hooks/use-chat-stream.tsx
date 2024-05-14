@@ -1,22 +1,28 @@
-import { TChatMessage, ChatRole, TChatCompletionResponse } from '@/lib/types';
+import { TChatMessage, ChatRole, TChatCompletionResponse, TCreateImageData, TMessage } from '@/lib/types';
 import { isNullOrWhitespace, removeDataString } from '@/lib/utils';
 import { useState } from 'react';
 
 export const useChatStream = () => {
-  const [chats, setChats] = useState<TChatMessage[]>([]);
+  const [chats, setChats] = useState<TMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
 
   let assistantChatMessage = '';
   let checkFirstCharSpacing = true;
 
+  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
+    return (item as TChatMessage).content !== undefined;
+  }
+
   const updateLastChatsItem = (type: string, content: string = '') => {
     setChats((prevArray) => {
       return prevArray.map((chat, index) => {
-        if (index === prevArray.length - 1) {
-          if (type === 'replace') {
-            chat.content = chat.content.replace(/[\n\s]+$/, '');
-          } else if (type === 'update') {
-            chat.content = content;
+        if (isChat(chat)) {
+          if (index === prevArray.length - 1) {
+            if (type === 'replace') {
+              chat.content = chat.content.replace(/[\n\s]+$/, '');
+            } else if (type === 'update') {
+              chat.content = content;
+            }
           }
         }
         return chat;

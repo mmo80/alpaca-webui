@@ -1,14 +1,47 @@
 'use client';
 
 import * as React from 'react';
-import { TChatMessage, ChatRole } from '@/lib/types';
+import { ChatRole, TChatMessage, TCreateImageData, TMessage } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
 import { PersonIcon, LayersIcon, CopyIcon } from '@radix-ui/react-icons';
 import { FC, ReactNode } from 'react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
-export const ChatMessages: React.FC<TChatMessage> = ({ role, content }) => {
+type ChatMessagesProps = {
+  message: TMessage;
+  role: ChatRole;
+};
+
+export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
   const messageId = generateGUID();
+
+  function isImage(item: TChatMessage | TCreateImageData): item is TCreateImageData {
+    return (item as TCreateImageData).url !== undefined;
+  }
+
+  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
+    return (item as TChatMessage).content !== undefined;
+  }
+
+  const render = () => {
+    if (isChat(message)) {
+      return <Markdown components={components}>{message.content}</Markdown>;
+    } else if (isImage(message)) {
+      return (
+        <>
+          <Image src={message.url} width={500} height={500} alt="AI generated" className="pt-2" />
+          <span className="text-xs text-muted-foreground">
+            <a href={message.url} target="_blank" className="underline">
+              Original
+            </a>{' '}
+            (only valid 1 hour)
+          </span>
+        </>
+      );
+    }
+    return <span>(no data)</span>;
+  };
 
   return (
     <>
@@ -24,18 +57,18 @@ export const ChatMessages: React.FC<TChatMessage> = ({ role, content }) => {
               role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
             }`}
           >
-            <div id={messageId}>
-              <Markdown components={components}>{content}</Markdown>
-            </div>
-            <span className="my-1 text-xs text-muted-foreground">
-              <button
-                className="rounded-full p-1 hover:bg-stone-950"
-                title="Copy"
-                onClick={() => copyToClipboard(messageId)}
-              >
-                <CopyIcon className="h-4 w-4" />
-              </button>
-            </span>
+            <div id={messageId}>{render()}</div>
+            {isChat(message) && (
+              <span className="my-1 text-xs text-muted-foreground">
+                <button
+                  className="rounded-full p-1 hover:bg-stone-950"
+                  title="Copy"
+                  onClick={() => copyToClipboard(messageId)}
+                >
+                  <CopyIcon className="h-4 w-4" />
+                </button>
+              </span>
+            )}
           </div>
         </section>
       )}

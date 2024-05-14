@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useScrollBottom } from '@/hooks/use-scroll-bottom';
-import { TChatMessage } from '@/lib/types';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
+import { ChatRole, TChatMessage, TCreateImageData, TMessage } from '@/lib/types';
 
 interface ChatProps {
   isFetchLoading: boolean;
-  chats: TChatMessage[];
+  chats: TMessage[];
   mainDiv: React.RefObject<HTMLDivElement>;
 }
 
@@ -51,12 +51,23 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) =>
     }
   };
 
+  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
+    return (item as TChatMessage).content !== undefined;
+  }
+
+  const render = (message: TMessage, index: number) => {
+    let role = ChatRole.ASSISTANT;
+    if (isChat(message)) {
+      role = message.role;
+    }
+
+    return <ChatMessages role={role} message={message} key={index} />;
+  };
+
   return (
     <>
       <div className="w-full space-y-4" ref={chatsDiv}>
-        {chats.map((message, index) => (
-          <ChatMessages role={message.role} content={message.content} key={index} />
-        ))}
+        {chats.map((message, index) => render(message, index))}
         {isFetchLoading && <Spinner />}
       </div>
 
