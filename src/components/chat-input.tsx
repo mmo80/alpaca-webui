@@ -1,7 +1,7 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
+import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
 
 interface ChatInputProps {
   onSendInput: (input: string) => Promise<void>;
@@ -22,7 +22,6 @@ export const ChatInput: FC<ChatInputProps> = ({
 }) => {
   const [chatInput, setChatInput] = useState<string>('');
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
-  const chatInputDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setTextareaPlaceholder(chatInputPlaceholder);
@@ -30,8 +29,7 @@ export const ChatInput: FC<ChatInputProps> = ({
 
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
-    setChatInput('');
-    if (chatInputDivRef.current) chatInputDivRef.current.dataset.clonedVal = ' ';
+    setChatInput(' ');
     await onSendInput(chatInputTrimmed);
   };
 
@@ -47,55 +45,25 @@ export const ChatInput: FC<ChatInputProps> = ({
     }
   };
 
-  const onInputExpand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = event.target.value;
-    if (chatInputDivRef.current) {
-      const rows = value.split('\n');
-      const height = parseFloat(getComputedStyle(event.target).height);
-      if (height < 140) {
-        if (rows.length < 8) {
-          chatInputDivRef.current.dataset.clonedVal = value;
-        }
-      }
-    }
-  };
-
   return (
     <div className="px-3">
-      <div
-        ref={chatInputDivRef}
-        className="grid
-          text-sm
-          after:invisible
-          after:whitespace-pre-wrap
-          after:border
-          after:px-3.5
-          after:py-2.5
-          after:text-inherit
-          after:content-[attr(data-cloned-val)_'_']
-          after:[grid-area:1/1/2/2]
-          [&>textarea]:resize-none
-          [&>textarea]:overflow-x-hidden
-          [&>textarea]:text-inherit
-          [&>textarea]:[grid-area:1/1/2/2]"
-      >
-        <Textarea
-          value={chatInput}
-          onChange={(e) => setChatInput(e.target.value)}
-          onKeyUp={chatEnterPress}
-          onKeyDown={preventEnterPress}
-          onInput={onInputExpand}
-          placeholder={textareaPlaceholder}
-          className="h-auto appearance-none pr-20 outline-none"
-          disabled={!isLlmModelActive}
-        />
-      </div>
+      <AutosizeTextarea
+        value={chatInput}
+        onChange={(e) => setChatInput(e.target.value)}
+        onKeyUp={chatEnterPress}
+        onKeyDown={preventEnterPress}
+        placeholder={textareaPlaceholder}
+        maxHeight={180}
+        className="appearance-none pr-14 outline-none"
+        disabled={!isLlmModelActive}
+      />
+
       {isStreamProcessing ? (
         <Button
           onClick={onCancelStream}
           variant="secondary"
           size="icon"
-          className="absolute bottom-6 right-6"
+          className="absolute bottom-5 right-5"
           disabled={isFetchLoading}
         >
           <StopIcon className="h-4 w-4" />
@@ -105,7 +73,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           onClick={sendChat}
           variant="secondary"
           size="icon"
-          className="absolute bottom-6 right-6"
+          className="absolute bottom-5 right-5"
           disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
         >
           <DoubleArrowUpIcon className="h-4 w-4" />
