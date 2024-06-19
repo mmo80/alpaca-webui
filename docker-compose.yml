@@ -27,7 +27,7 @@ services:
       - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.24.7
     ports:
-      - 8080:8080
+      - 8083:8080
       - 50051:50051
     restart: on-failure:0
     networks:
