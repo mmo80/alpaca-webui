@@ -3,7 +3,6 @@ import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { buttonVariants } from '@/components/ui/button';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
 import { TApiSettingsSchema, TModelResponseSchema } from '@/lib/types';

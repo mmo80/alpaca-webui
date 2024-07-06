@@ -82,6 +82,10 @@ export default function Home() {
     }
   };
 
+  const onResetChat = () => {
+    setChats([]);
+  };
+
   return (
     <>
       <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
@@ -115,7 +119,7 @@ export default function Home() {
           </h2>
         )}
 
-        <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
+        <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} onReset={onResetChat} />
       </main>
       <section className="sticky top-[100vh] py-3">
         <ChatInput
