@@ -110,6 +110,10 @@ export default function Page() {
     }
   };
 
+  const onResetChat = () => {
+    setChats([]);
+  };
+
   return (
     <main className="flex h-full flex-col lg:flex-row">
       <section className="hidden basis-2/5 overflow-y-scroll px-3 sm:block">
@@ -175,7 +179,7 @@ export default function Page() {
             </div>
           )}
 
-          <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
+          <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} onReset={onResetChat} />
         </div>
         <div className="sticky bottom-0 py-3">
           <ChatInput
