@@ -11,7 +11,7 @@ The app lets you easily try out different AI models from various services to fin
 
 - [x] Support for your local or remote [Ollama](https://ollama.com/) server
 - [x] Compatible with OpenAI Chat Completions API
-- [x] Workes with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference), [Mistral.ai](https://mistral.ai/), [Groq.com](https://wow.groq.com/) and [Ollama](https://ollama.com/)
+- [x] Works with [OpenAI](https://chat.openai.com/), [Together.ai](https://www.together.ai/products#inference), [Mistral.ai](https://mistral.ai/), [Groq.com](https://wow.groq.com/) and [Ollama](https://ollama.com/)
 - [x] Upload document (pdf, txt, docx) for RAG usage
 - [x] Modify System Prompt for Chat and RAG
 - [x] Markup Formatting
@@ -27,6 +27,7 @@ The app lets you easily try out different AI models from various services to fin
 - Chat History
 
 **Env**
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -34,7 +35,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 #### Run the development server:
 
 1. `git clone https://github.com/mmo80/alpaca-webui.git`
-2. Setup and install your [Weaviate database](https://weaviate.io/developers/weaviate/installation) or just use the docker-compose weaviate file in the repository with the following command `docker-compose -f docker-compose.weaviate.yml up --build --detach`.
+2. Setup and install your [Weaviate database](https://weaviate.io/developers/weaviate/installation) or just use the docker-compose weaviate file in the repository with the following command `docker-compose -f docker-compose.weaviate.yaml up --build --detach`.
 3. Check the environment variables in `.env.development`
 4. Then just run `npm install` followed by `npm run dev` :sunglasses:
 
