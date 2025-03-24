@@ -3,14 +3,33 @@
 import * as React from 'react';
 import { ChatRole, TChatMessage, TCreateImageData, TMessage } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
-import { PersonIcon, LayersIcon, CopyIcon } from '@radix-ui/react-icons';
-import { FC, ReactNode } from 'react';
+import rehypeRaw from 'rehype-raw';
+import { PersonIcon, LayersIcon, CopyIcon, TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
+import { FC, ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { visit } from 'unist-util-visit';
 
 type ChatMessagesProps = {
   message: TMessage;
   role: ChatRole;
+};
+
+const thinkPlugin = () => {
+  return (tree: any) => {
+    visit(tree, (node) => {
+      if (node.type === 'html' && node.value.includes('<think>')) {
+        const thinkId = generateGUID();
+        node.value = `<div>
+        <span className="mb-1 font-bold" data-think-id="${thinkId}">Thinking</span>
+        <div class="rounded bg-stone-950 text-stone-300 px-3 py-1 my-2" id="${thinkId}">`;
+      }
+
+      if (node.type === 'html' && node.value.includes('</think>')) {
+        node.value = `</div></div>`;
+      }
+    });
+  };
 };
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
@@ -26,7 +45,11 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
 
   const render = () => {
     if (isChat(message)) {
-      return <Markdown components={components}>{message.content}</Markdown>;
+      return (
+        <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[thinkPlugin]}>
+          {message.content}
+        </Markdown>
+      );
     } else if (isImage(message)) {
       return (
         <>
@@ -137,9 +160,38 @@ const Pre = ({
   );
 };
 
+const Span = ({ node, className, children, ...props }: React.ComponentProps<'span'> & ExtraProps) => {
+  const thinkId = String(node?.properties?.dataThinkId ?? '');
+  const [isVisible, setIsVisible] = useState(true);
+  const elementRef = useRef<HTMLElement>(null);
+
+  const handleClick = () => {
+    const element = document.getElementById(thinkId);
+    if (element) {
+      element.classList.toggle('hidden');
+      setIsVisible((prevIsVisible) => !prevIsVisible);
+    }
+  };
+
+  return thinkId ? (
+    <button
+      {...props}
+      className={`${className} flex items-center gap-1`}
+      onClick={handleClick}
+      type="button"
+      ref={elementRef as React.RefObject<HTMLButtonElement>}
+    >
+      {children} {isVisible ? <TriangleUpIcon /> : <TriangleDownIcon />}
+    </button>
+  ) : (
+    <span {...props}>{children}</span>
+  );
+};
+
 const components = {
   code: Code,
   pre: Pre,
+  span: Span,
 };
 
 const copyToClipboard = async (elementId: string) => {
