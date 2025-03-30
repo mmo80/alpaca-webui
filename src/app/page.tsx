@@ -13,6 +13,9 @@ import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { ApiService, ChatError } from '@/lib/api-service';
+import { ProviderFactory } from '@/lib/providers/provider-factory';
+import { Provider } from '@/lib/providers/provider';
 
 export default function Home() {
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
@@ -22,6 +25,8 @@ export default function Home() {
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
   const { modelList } = useModelList();
+  const [provider, setProvider] = useState<Provider | undefined>(undefined);
+  const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
 
   useEffect(() => {
     if (selectedModel != null) {
@@ -37,14 +42,26 @@ export default function Home() {
     }
 
     setIsFetchLoading(true);
-    const streamReader = await api.getChatStream(
-      selectedModel,
-      [...chats, message],
-      selectedService.url,
-      selectedService.apiKey
-    );
+
+    const apiSrv = new ApiService();
+    const providerFactory = new ProviderFactory(apiSrv);
+
+    const providerInstance = providerFactory.getInstance(selectedService);
+    if (providerInstance) {
+      setProvider(providerInstance);
+      const response = await providerInstance.chatCompletions(
+        selectedModel,
+        [...chats, message],
+        selectedService.url,
+        selectedService.apiKey
+      );
+
+      setChatError(response.error);
+      setIsFetchLoading(false);
+      await handleStream(response.stream);
+    }
+
     setIsFetchLoading(false);
-    await handleStream(streamReader);
   };
 
   const chatImage = async (prompt: string) => {
@@ -119,12 +136,13 @@ export default function Home() {
           </h2>
         )}
 
+        {chatError.isError && <AlertBox title="Error" description={chatError.errorMessage ?? ''} />}
         <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} onReset={onResetChat} />
       </main>
       <section className="sticky top-[100vh] py-3">
         <ChatInput
           onSendInput={sendChat}
-          onCancelStream={api.cancelChatStream}
+          onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
           chatInputPlaceholder={textareaPlaceholder}
           isStreamProcessing={isStreamProcessing}
           isFetchLoading={isFetchLoading}

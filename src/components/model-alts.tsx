@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
-import { TApiSettingsSchema, TModelResponseSchema } from '@/lib/types';
+import { TApiSettingsSchema, TOpenAIModelResponseSchema } from '@/lib/types';
 import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
@@ -14,7 +14,7 @@ import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 type ModelAltsProps = {
   selectedService: TApiSettingsSchema | null | undefined;
   selectedModel: string | null | undefined;
-  models: TModelResponseSchema[];
+  models: TOpenAIModelResponseSchema[];
   modelsIsSuccess: boolean;
   modelsIsLoading: boolean;
   hasHydrated: boolean;

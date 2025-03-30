@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
-import { TModelResponseSchema } from '@/lib/types';
+import { TOpenAIModelResponseSchema } from '@/lib/types';
 import { useEffect, useState } from 'react';
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  models: TModelResponseSchema[];
+  models: TOpenAIModelResponseSchema[];
   selectedModel: string;
   defaultText?: string;
   onModelChange: (modelName: string) => void;
@@ -21,7 +21,7 @@ const ModelMenu = React.forwardRef<HTMLButtonElement, ModelMenuProps>(
   ({ models: modelList, selectedModel, defaultText = 'Select model...', onModelChange, ...props }, ref) => {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(selectedModel);
-    const [models, setModels] = useState<TModelResponseSchema[]>(modelList);
+    const [models, setModels] = useState<TOpenAIModelResponseSchema[]>(modelList);
     const [buttonText, setButtonText] = useState(defaultText);
 
     useEffect(() => {

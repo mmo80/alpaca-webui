@@ -6,7 +6,7 @@ import { useState, type FC } from 'react';
 import { Header, menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
 import { Bars3Icon } from '@heroicons/react/24/outline';
-import { appName } from '@/lib/data';
+import { appName } from '@/lib/providers/data';
 import { usePathname } from 'next/navigation';
 
 export const MobileTopmenu: FC = () => {

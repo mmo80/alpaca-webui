@@ -18,6 +18,9 @@ import { AlertBox } from '@/components/alert-box';
 import { buttonVariants } from '@/components/ui/button';
 import { DocumentsForm, type SelectedDocument } from './_components/documents-form';
 import { useModelStore } from '@/lib/model-store';
+import { ApiService } from '@/lib/api-service';
+import { ProviderFactory } from '@/lib/providers/provider-factory';
+import { Provider } from '@/lib/providers/provider';
 
 export default function Page() {
   const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();
@@ -31,6 +34,7 @@ export default function Page() {
   const mainDiv = useRef<HTMLDivElement>(null);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose document to interact with...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+  const [provider, setProvider] = useState<Provider | undefined>(undefined);
 
   useEffect(() => {
     if (selectedDocument != null && selectedModel != null) {
@@ -88,15 +92,24 @@ export default function Page() {
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 
-    const streamReader = await api.getChatStream(
-      selectedModel,
-      [...chats, systemPromptMessage, chatMessage],
-      selectedService.url,
-      selectedService.apiKey
-    );
+    const apiSrv = new ApiService();
+    const providerFactory = new ProviderFactory(apiSrv);
+
+    const providerInstance = providerFactory.getInstance(selectedService);
+    if (providerInstance) {
+      setProvider(providerInstance);
+      const response = await providerInstance.chatCompletions(
+        selectedModel,
+        [...chats, systemPromptMessage, chatMessage],
+        selectedService.url,
+        selectedService.apiKey
+      );
+
+      setIsFetchLoading(false);
+      await handleStream(response.stream);
+      delayHighlighter();
+    }
     setIsFetchLoading(false);
-    await handleStream(streamReader);
-    delayHighlighter();
   };
 
   const onInitDocumentConversation = (document: SelectedDocument | null) => {
@@ -184,7 +197,7 @@ export default function Page() {
         <div className="sticky bottom-0 py-3">
           <ChatInput
             onSendInput={onSendChat}
-            onCancelStream={api.cancelChatStream}
+            onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
             chatInputPlaceholder={textareaPlaceholder}
             isStreamProcessing={isStreamProcessing}
             isFetchLoading={isFetchLoading}

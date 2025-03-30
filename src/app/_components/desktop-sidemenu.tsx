@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { ChatBubbleLeftIcon, Cog6ToothIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
-import { appName } from '@/lib/data';
+import { appName } from '@/lib/providers/data';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 
 export const menuItems = [

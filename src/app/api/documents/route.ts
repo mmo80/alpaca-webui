@@ -14,7 +14,9 @@ export async function POST(request: Request) {
   const fileBuffer = await file.arrayBuffer();
   const filePath = `./uploads/${file.name}`;
 
-  await fs.writeFile(filePath, Buffer.from(fileBuffer));
+  const uint8Array = new Uint8Array(fileBuffer);
+
+  await fs.writeFile(filePath, uint8Array);
 
   await db.insert(files).values({ filename: file.name, fileSize: file.size });
 

@@ -24,7 +24,7 @@ import { cn, removeClassesByWord } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
-import { apiServiceModelTypes, preDefinedApiServices } from '@/lib/data';
+import { apiServiceModelTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';

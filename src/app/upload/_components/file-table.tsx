@@ -12,8 +12,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MultiDialog } from '@/components/ui/multiDialog';
 import { toast } from 'sonner';
-import { HttpMethod, executeFetch } from '@/lib/api';
 import { OpenPopovers } from '@/lib/types';
+import { apiService, HttpMethod } from '@/lib/api-service';
 
 type FileTableProps = {
   files: TFile[];
@@ -51,8 +51,14 @@ const FileTable: FC<FileTableProps> = ({
   const removeDocument = async (documentId: number) => {
     setRemovingFile(true);
     const payload = { documentId };
-    const response = await executeFetch(`/api/documents/remove`, HttpMethod.POST, null, payload);
-    const successful = await response.json();
+    const response = await apiService.executeFetch(`/api/documents/remove`, HttpMethod.POST, null, payload);
+
+    if (response.response == null || response.error.isError) {
+      console.error(response.error.errorMessage);
+      return;
+    }
+
+    const successful = await response.response.json();
     setRemovingFile(false);
     if (successful) {
       toast.success('Document removed successfully.');

@@ -74,11 +74,26 @@ const ChatCompletionRequestSchema = z.object({
   stream: z.boolean(),
 });
 
-const ModelResponseSchema = z.object({
+const AnthropicModelResponseSchema = z.object({
+  type: z.string(),
+  id: z.string(),
+  display_name: z.string(),
+  created_at: z.string(),
+});
+
+const OpenAIModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number(),
   type: z.string().nullable().optional(),
+});
+
+const ModelSchema = z.object({
+  id: z.string(),
+  object: z.string(),
+  created: z.number(),
+  type: z.string().nullable().optional(),
+  embedding: z.boolean().nullable(),
 });
 
 export const CreateImageRequestSchema = z.object({
@@ -106,13 +121,17 @@ export type TCreateImageResponse = z.infer<typeof CreateImageResponseSchema>;
 export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
 export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
 
-export const ModelsResponseSchema = z.array(ModelResponseSchema);
+export const OpenAIModelsResponseSchema = z.array(OpenAIModelResponseSchema);
+export const AnthropicModelsResponseSchema = z.array(AnthropicModelResponseSchema);
 
 export type TChatMessage = z.infer<typeof MessageSchema>;
 export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
 export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
-export type TModelsResponseSchema = z.infer<typeof ModelsResponseSchema>;
-export type TModelResponseSchema = z.infer<typeof ModelResponseSchema>;
+export type TModelsResponseSchema = z.infer<typeof OpenAIModelsResponseSchema>;
+export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
+export type TAnthropicModelResponseSchema = z.infer<typeof AnthropicModelResponseSchema>;
+
+export type TModelSchema = z.infer<typeof ModelSchema>;
 
 export type TMessage = TChatMessage | TCreateImageData;
 
@@ -146,4 +165,12 @@ export type TSettingsFormSchema = z.infer<typeof SettingsFormSchema>;
 
 export type OpenPopovers = {
   [key: string]: boolean;
+};
+
+export type CompletionsRequest = {
+  model: string;
+  messages: TChatMessage[];
+  // abortSignal: AbortSignal;
+  apiKey: string;
+  baseUrl: string;
 };

@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import { db } from '@/db/db';
 import { files } from '@/db/schema';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
-import { fileUploadFolder } from '@/lib/data';
+import { fileUploadFolder } from '@/lib/providers/data';
 import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {

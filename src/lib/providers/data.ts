@@ -16,18 +16,19 @@ export type ApiServiceModel = {
   lockedModelType: boolean;
 };
 
-export enum ApiService {
+export enum ApiServiceEnum {
   OLLAMA = 'Ollama',
   OPENAI = 'OpenAI.com',
   TOGETHER = 'Together.xyz',
   MISTRAL = 'Mistral.ai',
   GROQ = 'Groq.com',
   STANDARD = 'Standard',
+  ANTHROPIC = 'Anthropic',
 }
 
 export const preDefinedApiServices: ApiServiceModel[] = [
   {
-    id: ApiService.OLLAMA,
+    id: ApiServiceEnum.OLLAMA,
     url: 'http://localhost:11434',
     modelType: apiModelTypeOllama.value,
     embeddingPath: '/api/embeddings',
@@ -35,7 +36,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: ApiService.OPENAI,
+    id: ApiServiceEnum.OPENAI,
     url: 'https://api.openai.com',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -43,7 +44,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: ApiService.TOGETHER,
+    id: ApiServiceEnum.TOGETHER,
     url: 'https://api.together.xyz',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -51,7 +52,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: ApiService.MISTRAL,
+    id: ApiServiceEnum.MISTRAL,
     url: 'https://api.mistral.ai',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '/v1/embeddings',
@@ -59,7 +60,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: ApiService.GROQ,
+    id: ApiServiceEnum.GROQ,
     url: 'https://api.groq.com/openai',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '',
@@ -67,12 +68,20 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     lockedModelType: true,
   },
   {
-    id: ApiService.STANDARD,
+    id: ApiServiceEnum.STANDARD,
     url: 'https://',
     modelType: apiModelTypeOpenAI.value,
     embeddingPath: '',
     hasEmbedding: false,
     lockedModelType: false,
+  },
+  {
+    id: ApiServiceEnum.ANTHROPIC,
+    url: 'https://api.anthropic.com',
+    modelType: apiModelTypeOpenAI.value,
+    embeddingPath: '',
+    hasEmbedding: false,
+    lockedModelType: true,
   },
 ] as const;
 

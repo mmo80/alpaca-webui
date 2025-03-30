@@ -109,7 +109,7 @@ export class DocumentEmbedding {
     return documentVectors;
   }
 
-  private getFileContent = async (): Promise<string> => {
+  private readonly getFileContent = async (): Promise<string> => {
     const reader = new DocumentReader(this.filePath);
     return await reader.getFileContent();
   };

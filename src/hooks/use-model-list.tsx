@@ -1,5 +1,6 @@
-import { api } from '@/lib/api';
+import { ApiService } from '@/lib/api-service';
 import { useModelStore } from '@/lib/model-store';
+import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { TModelsResponseSchema } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 
@@ -18,16 +19,15 @@ export const useModelList = (embeddedOnly: boolean = false) => {
   } = useQuery<TModelsResponseSchema>({
     queryKey: [keyName, apiService],
     queryFn: async () => {
-      switch (apiService?.modelListType) {
-        case 'ollama': {
-          const models = await api.getTag(apiService.url, embeddedOnly);
-          return models.map((model) => ({ id: model.name, object: 'model', created: 0, type: null }));
-        }
-        case 'openai':
-          return await api.getModelList(apiService, embeddedOnly);
-        case 'manual':
-          return [] as TModelsResponseSchema;
+      const apiSrv = new ApiService();
+      const providerFactory = new ProviderFactory(apiSrv);
+
+      if (apiService) {
+        const provider = providerFactory.getInstance(apiService);
+        const models = await provider?.models(apiService, embeddedOnly);
+        return models as TModelsResponseSchema;
       }
+
       return [] as TModelsResponseSchema;
     },
   });

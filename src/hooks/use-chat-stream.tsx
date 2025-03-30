@@ -1,5 +1,5 @@
 import { TChatMessage, ChatRole, TChatCompletionResponse, TCreateImageData, TMessage } from '@/lib/types';
-import { isNullOrWhitespace, removeDataString } from '@/lib/utils';
+import { isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
 import { useState } from 'react';
 
 export const useChatStream = () => {
@@ -38,8 +38,9 @@ export const useChatStream = () => {
   };
 
   const handleStreamChunk = (jsonString: string) => {
-    if (isNullOrWhitespace(removeDataString(jsonString))) return;
-    const chatCompletionResponse = JSON.parse(removeDataString(jsonString)) as TChatCompletionResponse;
+    const streamData = removeJunkStreamData(jsonString);
+    if (isNullOrWhitespace(streamData)) return;
+    const chatCompletionResponse = JSON.parse(streamData) as TChatCompletionResponse;
 
     let chunkContent = chatCompletionResponse.choices[0].delta.content;
     if (chunkContent == null || chunkContent == undefined) {
@@ -83,7 +84,7 @@ export const useChatStream = () => {
         const objects = text.split('\n');
         for (const obj of objects) {
           if (obj == null || obj.length === 0 || obj === '') continue;
-          const jsonString = removeDataString(obj);
+          const jsonString = removeJunkStreamData(obj);
           try {
             handleStreamChunk(jsonString);
           } catch (error) {

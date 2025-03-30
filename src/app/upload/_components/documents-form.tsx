@@ -14,10 +14,11 @@ import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { HttpMethod, api } from '@/lib/api';
+import { api } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
 import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
+import { HttpMethod } from '@/lib/api-service';
 
 const maxFileSizeMb = 50;
 const allowedFileTypes: string[] = [
