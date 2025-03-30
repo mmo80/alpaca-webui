@@ -1,5 +1,5 @@
-import { HttpMethod, executeFetch } from '@/lib/api';
-import { apiModelTypeOllama, apiModelTypeOpenAI } from '@/lib/data';
+import { ApiService, HttpMethod } from '@/lib/api-service';
+import { apiModelTypeOllama, apiModelTypeOpenAI } from '@/lib/providers/data';
 import { TApiSettingsSchema } from '@/lib/types';
 
 type EmbedMessageResponse = {
@@ -25,8 +25,18 @@ export const embedMessage = async (
       payload = { model: model, input: message };
     }
 
-    const response = await executeFetch(url, HttpMethod.POST, apiSetting.apiKey, payload);
-    const data = await response.json();
+    const apiService = new ApiService();
+    const response = await apiService.executeFetch(url, HttpMethod.POST, apiSetting.apiKey, payload);
+
+    if (response.response == null || response.error.isError) {
+      console.error(response.error.errorMessage);
+      return {
+        embedding: [],
+        totalTokens: 0,
+      };
+    }
+
+    const data = await response.response.json();
 
     if (apiSetting.modelListType === apiModelTypeOllama.value) {
       embedding = data.embedding;

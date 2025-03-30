@@ -7,8 +7,8 @@ import * as pdfjs from 'pdfjs-dist/build/pdf.mjs';
 import { TextContent, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 
 export class DocumentReader {
-  private filePath: string;
-  private fileExtension: string;
+  private readonly filePath: string;
+  private readonly fileExtension: string;
 
   constructor(filePath: string) {
     if (!filePath) {
@@ -22,11 +22,11 @@ export class DocumentReader {
     this.fileExtension = path.extname(filePath);
   }
 
-  private getTextFileContent = (path: string): string => {
+  private readonly getTextFileContent = (path: string): string => {
     return readFileSync(path, 'utf-8');
   };
 
-  private getPdfFileContent = async (path: string): Promise<string> => {
+  private readonly getPdfFileContent = async (path: string): Promise<string> => {
     // @ts-ignore
     await import('pdfjs-dist/build/pdf.worker.min.mjs');
 
@@ -49,7 +49,7 @@ export class DocumentReader {
     return fileContent.join('');
   };
 
-  private getDocFileContent = async (path: string): Promise<string> => {
+  private readonly getDocFileContent = async (path: string): Promise<string> => {
     const result = await mammoth.extractRawText({ path: path });
     return result.value.replace(/(\r\n|\n|\r)/gm, '');
   };

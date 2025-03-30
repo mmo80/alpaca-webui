@@ -24,9 +24,9 @@ export type DocumentVectorSchema = {
 };
 
 export class DocumentEmbedding {
-  private filePath: string;
-  private filename: string;
-  private baseFilePath = './uploads/';
+  private readonly filePath: string;
+  private readonly filename: string;
+  private readonly baseFilePath = './uploads/';
 
   constructor(filename: string) {
     if (!filename) {
