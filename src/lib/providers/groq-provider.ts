@@ -3,6 +3,7 @@ import {
   OpenAIModelsResponseSchema,
   TApiSettingsSchema,
   TChatCompletionRequest,
+  TChatCompletionResponse,
   TChatMessage,
   TMessage,
   TModelSchema,
@@ -90,6 +91,10 @@ class GroqProvider implements Provider {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
+  };
+
+  public convertResponse = (streamData: string): TChatCompletionResponse => {
+    return JSON.parse(streamData) as TChatCompletionResponse;
   };
 }
 

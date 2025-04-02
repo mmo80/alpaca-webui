@@ -37,10 +37,11 @@ export const useChatStream = () => {
     return 'unknown';
   };
 
-  const handleStreamChunk = (jsonString: string) => {
+  const handleStreamChunk = (jsonString: string, convertResponse: (streamData: string) => TChatCompletionResponse) => {
     const streamData = removeJunkStreamData(jsonString);
     if (isNullOrWhitespace(streamData)) return;
-    const chatCompletionResponse = JSON.parse(streamData) as TChatCompletionResponse;
+
+    const chatCompletionResponse = convertResponse(streamData);
 
     let chunkContent = chatCompletionResponse.choices[0].delta.content;
     if (chunkContent == null || chunkContent == undefined) {
@@ -69,7 +70,10 @@ export const useChatStream = () => {
     return false;
   };
 
-  const handleStream = async (streamReader: ReadableStreamDefaultReader<Uint8Array>) => {
+  const handleStream = async (
+    streamReader: ReadableStreamDefaultReader<Uint8Array>,
+    convertResponse: (streamData: string) => TChatCompletionResponse
+  ) => {
     setIsStreamProcessing(true);
     try {
       setChats((prevArray) => [...prevArray, { content: assistantChatMessage, role: ChatRole.ASSISTANT }]);
@@ -86,14 +90,14 @@ export const useChatStream = () => {
           if (obj == null || obj.length === 0 || obj === '') continue;
           const jsonString = removeJunkStreamData(obj);
           try {
-            handleStreamChunk(jsonString);
+            handleStreamChunk(jsonString, convertResponse);
           } catch (error) {
             if (errorType(error) === 'SyntaxError') {
               console.warn(`SyntaxError: Failed to parse JSON: '${jsonString}". error: ${error}`);
               const bufferComplete = handleStreamSyntaxError(jsonString);
               if (bufferComplete) {
                 console.warn('Merged json string: ', jsonFaultBuffer);
-                handleStreamChunk(jsonFaultBuffer);
+                handleStreamChunk(jsonFaultBuffer, convertResponse);
                 jsonFaultBuffer = '';
               }
             } else {

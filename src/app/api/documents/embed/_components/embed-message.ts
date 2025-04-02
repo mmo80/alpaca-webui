@@ -1,5 +1,5 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
-import { apiModelTypeOllama, apiModelTypeOpenAI } from '@/lib/providers/data';
+import { ApiTypeEnum } from '@/lib/providers/data';
 import { TApiSettingsSchema } from '@/lib/types';
 
 type EmbedMessageResponse = {
@@ -19,9 +19,9 @@ export const embedMessage = async (
   try {
     const url = apiSetting.url + apiSetting.embeddingPath;
 
-    if (apiSetting.modelListType === apiModelTypeOllama.value) {
+    if (apiSetting.apiType === ApiTypeEnum.OLLAMA) {
       payload = { model: model, prompt: message };
-    } else if (apiSetting.modelListType === apiModelTypeOpenAI.value) {
+    } else if (apiSetting.apiType === ApiTypeEnum.OPENAI) {
       payload = { model: model, input: message };
     }
 
@@ -38,9 +38,9 @@ export const embedMessage = async (
 
     const data = await response.response.json();
 
-    if (apiSetting.modelListType === apiModelTypeOllama.value) {
+    if (apiSetting.apiType === ApiTypeEnum.OLLAMA) {
       embedding = data.embedding;
-    } else if (apiSetting.modelListType === apiModelTypeOpenAI.value) {
+    } else if (apiSetting.apiType === ApiTypeEnum.OPENAI) {
       embedding = data.data[0].embedding;
 
       if (data.usage?.total_tokens) {

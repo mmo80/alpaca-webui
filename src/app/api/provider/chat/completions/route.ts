@@ -1,10 +1,10 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
-import { CompletionsRequest, TChatCompletionRequest } from '@/lib/types';
+import { TLocalCompletionsRequest, TChatCompletionRequest } from '@/lib/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const body = await request.json();
-  const { model, messages, apiKey, baseUrl } = body as CompletionsRequest;
+  const { model, messages, apiKey, baseUrl } = body as TLocalCompletionsRequest;
 
   const controller = new AbortController();
   const signal = controller.signal;

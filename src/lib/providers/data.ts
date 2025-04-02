@@ -1,36 +1,37 @@
-export const apiServiceModelTypes = [
-  { label: 'Ollama - /api/tags', value: 'ollama' },
-  { label: 'OpenAI - /v1/models', value: 'openai' },
-  { label: 'Manual', value: 'manual' },
-] as const;
-
-export const apiModelTypeOllama = apiServiceModelTypes[0];
-export const apiModelTypeOpenAI = apiServiceModelTypes[1];
-
 export type ApiServiceModel = {
   id: string;
   url: string;
-  modelType: string;
+  apiType: string;
   embeddingPath: string;
   hasEmbedding: boolean;
   lockedModelType: boolean;
 };
 
+export enum ApiTypeEnum {
+  OLLAMA = 'Ollama',
+  OPENAI = 'OpenAI',
+  GOOGLE = 'Google',
+}
+
+export const apiTypes = [{ value: ApiTypeEnum.OLLAMA }, { value: ApiTypeEnum.OPENAI }, { value: ApiTypeEnum.GOOGLE }];
+
 export enum ApiServiceEnum {
   OLLAMA = 'Ollama',
-  OPENAI = 'OpenAI.com',
+  OPENAI = 'OpenAI',
   TOGETHER = 'Together.xyz',
   MISTRAL = 'Mistral.ai',
   GROQ = 'Groq.com',
   STANDARD = 'Standard',
   ANTHROPIC = 'Anthropic',
+  GOOGLE = 'Google',
+  DEEPSEEK = 'DeepSeek',
 }
 
 export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.OLLAMA,
     url: 'http://localhost:11434',
-    modelType: apiModelTypeOllama.value,
+    apiType: ApiTypeEnum.OLLAMA,
     embeddingPath: '/api/embeddings',
     hasEmbedding: true,
     lockedModelType: true,
@@ -38,7 +39,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.OPENAI,
     url: 'https://api.openai.com',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
     lockedModelType: true,
@@ -46,7 +47,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.TOGETHER,
     url: 'https://api.together.xyz',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
     lockedModelType: true,
@@ -54,7 +55,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.MISTRAL,
     url: 'https://api.mistral.ai',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     hasEmbedding: true,
     lockedModelType: true,
@@ -62,7 +63,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.GROQ,
     url: 'https://api.groq.com/openai',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     hasEmbedding: false,
     lockedModelType: true,
@@ -70,7 +71,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.STANDARD,
     url: 'https://',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     hasEmbedding: false,
     lockedModelType: false,
@@ -78,7 +79,23 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.ANTHROPIC,
     url: 'https://api.anthropic.com',
-    modelType: apiModelTypeOpenAI.value,
+    apiType: ApiTypeEnum.OPENAI,
+    embeddingPath: '',
+    hasEmbedding: false,
+    lockedModelType: true,
+  },
+  {
+    id: ApiServiceEnum.GOOGLE,
+    url: 'https://generativelanguage.googleapis.com',
+    apiType: ApiTypeEnum.OPENAI,
+    embeddingPath: '',
+    hasEmbedding: true,
+    lockedModelType: true,
+  },
+  {
+    id: ApiServiceEnum.DEEPSEEK,
+    url: 'https://api.deepseek.com',
+    apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     hasEmbedding: false,
     lockedModelType: true,

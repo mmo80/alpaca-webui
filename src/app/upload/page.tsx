@@ -106,7 +106,7 @@ export default function Page() {
       );
 
       setIsFetchLoading(false);
-      await handleStream(response.stream);
+      await handleStream(response.stream, providerInstance.convertResponse);
       delayHighlighter();
     }
     setIsFetchLoading(false);

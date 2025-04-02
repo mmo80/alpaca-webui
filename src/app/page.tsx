@@ -58,7 +58,7 @@ export default function Home() {
 
       setChatError(response.error);
       setIsFetchLoading(false);
-      await handleStream(response.stream);
+      await handleStream(response.stream, providerInstance.convertResponse);
     }
 
     setIsFetchLoading(false);

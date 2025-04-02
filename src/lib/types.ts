@@ -50,6 +50,7 @@ const UsageSchema = z.object({
 const MessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: z.string(),
+  reasoning_content: z.string().optional().nullable(),
 });
 
 const ChoiceSchema = z.object({
@@ -74,17 +75,10 @@ const ChatCompletionRequestSchema = z.object({
   stream: z.boolean(),
 });
 
-const AnthropicModelResponseSchema = z.object({
-  type: z.string(),
-  id: z.string(),
-  display_name: z.string(),
-  created_at: z.string(),
-});
-
 const OpenAIModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
-  created: z.number(),
+  created: z.number().optional(),
   type: z.string().nullable().optional(),
 });
 
@@ -122,18 +116,80 @@ export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
 export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
 
 export const OpenAIModelsResponseSchema = z.array(OpenAIModelResponseSchema);
-export const AnthropicModelsResponseSchema = z.array(AnthropicModelResponseSchema);
 
 export type TChatMessage = z.infer<typeof MessageSchema>;
 export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
 export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
 export type TModelsResponseSchema = z.infer<typeof OpenAIModelsResponseSchema>;
 export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
-export type TAnthropicModelResponseSchema = z.infer<typeof AnthropicModelResponseSchema>;
 
 export type TModelSchema = z.infer<typeof ModelSchema>;
 
 export type TMessage = TChatMessage | TCreateImageData;
+
+// ----- Anthropic API Models ----- //
+const AnthropicModelResponseSchema = z.object({
+  type: z.string(),
+  id: z.string(),
+  display_name: z.string(),
+  created_at: z.string().optional(),
+});
+
+export const AnthropicModelsResponseSchema = z.array(AnthropicModelResponseSchema);
+export type TAnthropicModelResponseSchema = z.infer<typeof AnthropicModelResponseSchema>;
+
+const LocalCompletionsRequestSchema = z.object({
+  model: z.string(),
+  messages: z.array(MessageSchema),
+  apiKey: z.string(),
+  baseUrl: z.string(),
+});
+
+export type TLocalCompletionsRequest = z.infer<typeof LocalCompletionsRequestSchema>;
+
+// ----- Google API Models ----- //
+const GoogleModelResponseSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  displayName: z.string(),
+  description: z.string(),
+  inputTokenLimit: z.number(),
+  outputTokenLimit: z.number(),
+  supportedGenerationMethods: z.array(z.string()).default([]),
+  temperature: z.number().optional(),
+  topP: z.number().optional(),
+  topK: z.number().optional(),
+  maxTemperature: z.number().optional(),
+});
+
+export const GoogleModelsResponseSchema = z.array(GoogleModelResponseSchema);
+export type TGoogleModelResponseSchema = z.infer<typeof GoogleModelResponseSchema>;
+
+const GooglePartSchema = z.object({
+  text: z.string(),
+});
+
+const GoogleContentSchema = z.object({
+  role: z.string(),
+  parts: z.array(GooglePartSchema),
+});
+
+const GoogleCandidateSchema = z.object({
+  content: GoogleContentSchema,
+});
+
+const GoogleChatCompletionResponseSchema = z.object({
+  candidates: z.array(GoogleCandidateSchema),
+  finishReason: z.string().optional(),
+});
+
+const GoogleChatCompletionRequestSchema = z.object({
+  contents: z.array(GoogleContentSchema),
+  finishReason: z.string().optional(),
+});
+
+export type TGoogleChatCompletionRequestSchema = z.infer<typeof GoogleChatCompletionRequestSchema>;
+export type TGoogleChatCompletionResponseSchema = z.infer<typeof GoogleChatCompletionResponseSchema>;
 
 // ----- Custom Models ----- //
 export const EmbedDocumentResponseSchema = z.object({
@@ -151,7 +207,7 @@ const ApiSettingsSchema = z.object({
   embeddingPath: z.string().readonly(),
   lockedModelType: z.boolean().readonly(),
   url: z.string().regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name."), //  without any trailing path.
-  modelListType: z.string({ required_error: 'Please select a model api.' }).min(2, 'Please select a model api.'),
+  apiType: z.string({ required_error: 'Please select the api type.' }).min(2, 'Please select the api type.'),
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
 });
 
@@ -165,12 +221,4 @@ export type TSettingsFormSchema = z.infer<typeof SettingsFormSchema>;
 
 export type OpenPopovers = {
   [key: string]: boolean;
-};
-
-export type CompletionsRequest = {
-  model: string;
-  messages: TChatMessage[];
-  // abortSignal: AbortSignal;
-  apiKey: string;
-  baseUrl: string;
 };

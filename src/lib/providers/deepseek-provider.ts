@@ -1,15 +1,16 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
+  OpenAIModelsResponseSchema,
   TApiSettingsSchema,
-  TChatCompletionResponse,
+  TChatCompletionRequest,
   TChatMessage,
-  TLocalCompletionsRequest,
   TMessage,
   TModelSchema,
+  TChatCompletionResponse,
 } from '../types';
 import { ChatCompletionsResponse, Provider } from './provider';
 
-class AnthropicProvider implements Provider {
+class DeepseekProvider implements Provider {
   service: ApiService;
   chatStreamController: AbortController | null = null;
 
@@ -18,27 +19,35 @@ class AnthropicProvider implements Provider {
   }
 
   public async models(apiSetting: TApiSettingsSchema, embeddedOnly: boolean): Promise<TModelSchema[]> {
-    const payload = {
-      apiKey: apiSetting.apiKey ?? '',
-      baseUrl: this.service.validUrl(apiSetting.url),
-    };
+    const url = `${this.service.validUrl(apiSetting.url)}/v1/models`;
 
-    const response = await this.service.executeFetch(
-      `/api/provider/model?apiKey=${payload.apiKey}&baseUrl=${payload.baseUrl}`,
-      HttpMethod.GET,
-      null,
-      null
-    );
+    const response = await this.service.executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
+
     if (response.response == null || response.error.isError) {
       return [];
     }
+
     let data = await response.response.json();
 
     if (embeddedOnly) {
       data = [];
     }
 
-    return data;
+    console.log('Deepseek models:', data);
+
+    const validatedModelList = await OpenAIModelsResponseSchema.safeParseAsync(data.data);
+    if (!validatedModelList.success) {
+      console.error(validatedModelList.error);
+      throw validatedModelList.error;
+    }
+
+    return validatedModelList.data.map((m) => ({
+      id: m.id,
+      object: m.object,
+      created: 0,
+      type: m.type,
+      embedding: false,
+    }));
   }
 
   public async chatCompletions(
@@ -47,23 +56,18 @@ class AnthropicProvider implements Provider {
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {
+    const url = `${this.service.validUrl(baseUrl)}/v1/chat/completions`;
+
     this.chatStreamController = new AbortController();
     const chatStreamSignal = this.chatStreamController.signal;
 
-    const payload: TLocalCompletionsRequest = {
+    const payload: TChatCompletionRequest = {
       model: model,
       messages: messages as TChatMessage[],
-      apiKey: apiKey ?? '',
-      baseUrl: baseUrl ?? '',
+      stream: true,
     };
 
-    const response = await this.service.executeFetch(
-      `/api/provider/chat/completions`,
-      HttpMethod.POST,
-      null,
-      payload,
-      chatStreamSignal
-    );
+    const response = await this.service.executeFetch(url, HttpMethod.POST, apiKey, payload, chatStreamSignal);
 
     if (response.response == null || response.error.isError) {
       return {
@@ -96,4 +100,4 @@ class AnthropicProvider implements Provider {
   };
 }
 
-export default AnthropicProvider;
+export default DeepseekProvider;

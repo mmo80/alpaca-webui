@@ -24,7 +24,7 @@ import { cn, removeClassesByWord } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
-import { apiServiceModelTypes, preDefinedApiServices } from '@/lib/providers/data';
+import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';
@@ -61,7 +61,7 @@ export default function Page() {
 
   const addService = (
     url: string,
-    modelListType: string,
+    apiType: string,
     serviceId: string,
     hasEmbedding: boolean,
     embeddingPath: string,
@@ -77,7 +77,7 @@ export default function Page() {
     const service: TApiSettingsSchema = {
       serviceId: serviceId,
       url: url,
-      modelListType: modelListType,
+      apiType: apiType,
       lockedModelType: lockedModelType,
       apiKey: '',
       hasEmbedding: hasEmbedding,
@@ -145,7 +145,7 @@ export default function Page() {
                     variant={as.hasEmbedding ? 'default' : 'secondary'}
                     className="cursor-pointer"
                     onClick={() =>
-                      addService(as.url, as.modelType, as.id, as.hasEmbedding, as.embeddingPath, as.lockedModelType)
+                      addService(as.url, as.apiType, as.id, as.hasEmbedding, as.embeddingPath, as.lockedModelType)
                     }
                   >
                     {as.id}
@@ -211,7 +211,7 @@ export default function Page() {
                         <FormField
                           control={form.control}
                           key={field.serviceId}
-                          name={`services.${index}.modelListType`}
+                          name={`services.${index}.apiType`}
                           render={({ field: formField }) => (
                             <FormItem className="flex flex-col">
                               <Popover
@@ -222,7 +222,7 @@ export default function Page() {
                                   <FormControl>
                                     <Button
                                       disabled={field.lockedModelType}
-                                      {...form.register(`services.${index}.modelListType`)}
+                                      {...form.register(`services.${index}.apiType`)}
                                       variant="outline"
                                       role="combobox"
                                       className={cn(
@@ -230,9 +230,9 @@ export default function Page() {
                                         !formField.value && 'text-muted-foreground'
                                       )}
                                     >
-                                      <Input type="hidden" {...form.register(`services.${index}.modelListType`)} />
+                                      <Input type="hidden" {...form.register(`services.${index}.apiType`)} />
                                       {formField.value
-                                        ? apiServiceModelTypes.find((model) => model.value === formField.value)?.label
+                                        ? apiTypes.find((model) => model.value === formField.value)?.value
                                         : 'Select'}
                                       <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
@@ -241,20 +241,22 @@ export default function Page() {
                                 <PopoverContent className="w-[200px] p-0">
                                   <Command>
                                     <CommandGroup>
-                                      {apiServiceModelTypes
+                                      {apiTypes
                                         .filter(
-                                          (m) => (!field.lockedModelType && m.value !== 'ollama') || field.lockedModelType
+                                          (m) =>
+                                            (!field.lockedModelType && m.value !== ApiTypeEnum.OLLAMA) ||
+                                            field.lockedModelType
                                         )
                                         .map((model) => (
                                           <CommandItem
-                                            value={model.label}
+                                            value={model.value}
                                             key={model.value}
                                             onSelect={() => {
-                                              form.setValue(`services.${index}.modelListType`, model.value);
+                                              form.setValue(`services.${index}.apiType`, model.value);
                                               handleOpenChange(field.id, false);
                                             }}
                                           >
-                                            {model.label}
+                                            {model.value}
                                             <CheckIcon
                                               className={cn(
                                                 'ml-auto h-4 w-4',

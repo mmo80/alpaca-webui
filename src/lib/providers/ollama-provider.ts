@@ -1,5 +1,13 @@
 import { ApiService, HttpMethod } from '../api-service';
-import { OllamaTagSchema, TApiSettingsSchema, TChatCompletionRequest, TChatMessage, TMessage, TModelSchema } from '../types';
+import {
+  OllamaTagSchema,
+  TApiSettingsSchema,
+  TChatCompletionRequest,
+  TChatCompletionResponse,
+  TChatMessage,
+  TMessage,
+  TModelSchema,
+} from '../types';
 import { ChatCompletionsResponse, Provider } from './provider';
 
 class OllamaProvider implements Provider {
@@ -37,7 +45,7 @@ class OllamaProvider implements Provider {
       return models.filter((m) => m.embedding);
     }
 
-    return models;
+    return models.filter((m) => !m.embedding);
   }
 
   public async chatCompletions(
@@ -83,6 +91,10 @@ class OllamaProvider implements Provider {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
+  };
+
+  public convertResponse = (streamData: string): TChatCompletionResponse => {
+    return JSON.parse(streamData) as TChatCompletionResponse;
   };
 }
 

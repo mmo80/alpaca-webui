@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
 import { TApiSettingsSchema, TOpenAIModelResponseSchema } from '@/lib/types';
@@ -10,6 +10,7 @@ import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { ApiTypeEnum } from '@/lib/providers/data';
 
 type ModelAltsProps = {
   selectedService: TApiSettingsSchema | null | undefined;
@@ -38,9 +39,9 @@ const ModelAlts: FC<ModelAltsProps> = ({
 }) => {
   const { services } = useSettingsStore();
 
-  const onModelChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onModelChange(e.target.value);
-  };
+  // const onModelChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   onModelChange(e.target.value);
+  // };
 
   const renderServiceMenu = () => {
     if (services.length == 0) {
@@ -136,11 +137,12 @@ const ModelAlts: FC<ModelAltsProps> = ({
       return renderServiceMenu();
     }
 
-    switch (selectedService?.modelListType) {
-      case 'manual':
-        return <Input placeholder="Modelname" className="mt-2 w-80" onChange={onModelChangeHandler} />;
-      case 'ollama':
-      case 'openai':
+    switch (selectedService?.apiType) {
+      // case 'manual':
+      //   return <Input placeholder="Modelname" className="mt-2 w-80" onChange={onModelChangeHandler} />;
+      case ApiTypeEnum.OLLAMA:
+      case ApiTypeEnum.OPENAI:
+      case ApiTypeEnum.GOOGLE:
         return renderModelMenu();
       default:
         return <span className="flex items-center px-4 pt-2">{hasHydrated ? renderConfigureSettings() : <Spinner />}</span>;

@@ -7,6 +7,7 @@ import {
   TMessage,
   TOpenAIModelResponseSchema,
   TModelSchema,
+  TChatCompletionResponse,
 } from '../types';
 import { ChatCompletionsResponse, Provider } from './provider';
 
@@ -91,6 +92,10 @@ class MistralProvider implements Provider {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
+  };
+
+  public convertResponse = (streamData: string): TChatCompletionResponse => {
+    return JSON.parse(streamData) as TChatCompletionResponse;
   };
 }
 
