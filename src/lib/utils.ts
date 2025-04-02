@@ -39,6 +39,14 @@ export const isNullOrWhitespace = (input: string | null | undefined): boolean =>
   return !input?.trim();
 };
 
+export const hasNonWhitespaceChars = (str: string | null | undefined): boolean => {
+  return !str ? false : /\S/.test(str);
+};
+
+export const isEmpty = (str: string | null | undefined): boolean => {
+  return !str || str.trim() === '';
+};
+
 // url: https://stackoverflow.com/a/18650828
 export const formatBytes = (a: number, b: number = 2) => {
   if (!+a) return '0 Bytes';

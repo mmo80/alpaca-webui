@@ -33,8 +33,6 @@ class DeepseekProvider implements Provider {
       data = [];
     }
 
-    console.log('Deepseek models:', data);
-
     const validatedModelList = await OpenAIModelsResponseSchema.safeParseAsync(data.data);
     if (!validatedModelList.success) {
       console.error(validatedModelList.error);

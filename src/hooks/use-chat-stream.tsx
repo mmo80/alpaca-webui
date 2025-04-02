@@ -1,5 +1,5 @@
 import { TChatMessage, ChatRole, TChatCompletionResponse, TCreateImageData, TMessage } from '@/lib/types';
-import { isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
+import { hasNonWhitespaceChars, isEmpty, isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
 import { useState } from 'react';
 
 export const useChatStream = () => {
@@ -8,6 +8,7 @@ export const useChatStream = () => {
 
   let assistantChatMessage = '';
   let checkFirstCharSpacing = true;
+  let hasReasoningContent = false;
 
   function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
     return (item as TChatMessage).content !== undefined;
@@ -43,14 +44,31 @@ export const useChatStream = () => {
 
     const chatCompletionResponse = convertResponse(streamData);
 
-    let chunkContent = chatCompletionResponse.choices[0].delta.content;
-    if (chunkContent == null || chunkContent == undefined) {
-      return;
+    // handle reasoning content
+    let chunkReasoningContent = chatCompletionResponse.choices[0].delta.reasoning_content;
+    if (!hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
+      hasReasoningContent = true;
+      if (isEmpty(assistantChatMessage)) {
+        assistantChatMessage = '<think>';
+      }
     }
 
-    if (checkFirstCharSpacing && /\S/.test(chunkContent)) {
+    if (hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
+      assistantChatMessage += chunkReasoningContent;
+      updateLastChatsItem('update', assistantChatMessage);
+    }
+
+    // handle normal content
+    let chunkContent = chatCompletionResponse.choices[0].delta.content;
+    if (!chunkContent) return;
+
+    if (hasReasoningContent && isEmpty(chunkReasoningContent) && hasNonWhitespaceChars(chunkContent)) {
+      assistantChatMessage += '</think>';
+      hasReasoningContent = false;
+    }
+
+    if (checkFirstCharSpacing && hasNonWhitespaceChars(chunkContent)) {
       // Remove eventual initial linebreaks and spaces
-      assistantChatMessage = '';
       chunkContent = chunkContent.trimStart();
       checkFirstCharSpacing = false;
     }
