@@ -50,7 +50,6 @@ class GoogleProvider implements Provider {
           id: m.name,
           object: 'model',
           created: 0,
-          type: null,
           embedding: m.supportedGenerationMethods.includes('embedContent'),
         }) as TModelSchema
     );

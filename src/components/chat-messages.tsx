@@ -135,7 +135,7 @@ const Code = ({
 
 const getChildClass = (children: ReactNode): string => {
   if (React.isValidElement(children)) {
-    return (children as React.ReactElement).props.className;
+    return (children as React.ReactElement<any>).props.className;
   }
   return '-';
 };

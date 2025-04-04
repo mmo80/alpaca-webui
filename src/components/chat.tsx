@@ -10,7 +10,7 @@ import { ResetIcon } from '@radix-ui/react-icons';
 interface ChatProps {
   isFetchLoading: boolean;
   chats: TMessage[];
-  mainDiv: React.RefObject<HTMLDivElement>;
+  mainDiv: React.RefObject<HTMLDivElement | null>;
   onReset: () => void;
 }
 
@@ -23,7 +23,7 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
 
   useEffect(() => {
     const scrollToBottom = () => {
-      if (mainDiv.current != null) {
+      if (mainDiv?.current != null) {
         mainDiv.current.scrollTop = mainDiv.current.scrollHeight;
         setTimerRunning(false);
       }
@@ -49,7 +49,7 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
   }, [chats]);
 
   const directScrollToBottom = () => {
-    if (mainDiv.current != null) {
+    if (mainDiv?.current != null) {
       mainDiv.current.scrollTop = mainDiv.current.scrollHeight;
     }
   };

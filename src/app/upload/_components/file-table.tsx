@@ -138,9 +138,9 @@ const FileTable: FC<FileTableProps> = ({
                     <mdb.Container value="details">
                       <Dialog>
                         <DialogContent>
-                          <div className="pb-2 text-xl">
-                            File details for <span className="font-semibold">{file.filename}</span>
-                          </div>
+                          <DialogTitle className="pb-2 text-xl">
+                          File details for <span className="font-semibold italic">{file.filename}</span>
+                          </DialogTitle>
                           <Table>
                             <TableBody>
                               <TableRow>

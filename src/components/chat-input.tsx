@@ -54,7 +54,7 @@ export const ChatInput: FC<ChatInputProps> = ({
         onKeyDown={preventEnterPress}
         placeholder={textareaPlaceholder}
         maxHeight={180}
-        className="appearance-none pr-14 outline-none"
+        className="appearance-none pr-14 outline-hidden"
         disabled={!isLlmModelActive}
       />
 

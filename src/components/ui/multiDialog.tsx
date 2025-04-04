@@ -56,7 +56,7 @@ export function MultiDialogContainer<T = unknown>({
   ...props
 }: Omit<DialogProps, 'open' | 'onOpenChange'> & {
   value: T;
-  children?: JSX.Element;
+  children?: React.JSX.Element;
 }) {
   const [open, onOpenChange] = useMultiDialog(value);
 

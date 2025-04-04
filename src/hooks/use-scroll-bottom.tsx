@@ -1,11 +1,11 @@
 import { RefObject, useEffect, useState } from 'react';
 
-export const useScrollBottom = (elementRef: RefObject<HTMLDivElement>) => {
+export const useScrollBottom = (elementRef: RefObject<HTMLDivElement | null>) => {
   const [isScrollBottom, setIsScrollBottom] = useState(true);
 
   useEffect(() => {
     const isRefAwayFromBottom = (): boolean => {
-      if (!elementRef.current) return true;
+      if (!elementRef?.current) return true;
       const bufferHeight = 50;
 
       const { scrollTop, scrollHeight, clientHeight } = elementRef.current;
@@ -19,7 +19,7 @@ export const useScrollBottom = (elementRef: RefObject<HTMLDivElement>) => {
 
     checkScroll();
 
-    const div = elementRef.current;
+    const div = elementRef?.current;
     if (div) {
       div.addEventListener('scroll', checkScroll);
     }
