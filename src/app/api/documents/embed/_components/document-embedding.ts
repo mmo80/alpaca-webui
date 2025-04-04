@@ -48,6 +48,11 @@ export class DocumentEmbedding {
       let counter = 0;
       const batchSize = 100;
 
+      if (list.length === 0) {
+        console.warn('No content extracted from document.');
+        return false;
+      }
+
       for (const data of list) {
         batcher = batcher.withObject({
           class: VectorDatabaseClassName,

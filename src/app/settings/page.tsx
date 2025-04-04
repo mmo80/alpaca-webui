@@ -184,8 +184,9 @@ export default function Page() {
                     </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>
-                      Models Api <br />
-                      <span className="text-xs font-light">(Choose how to populate model list or to enter manually)</span>
+                      Api Type
+                      {/* <br />
+                      <span className="text-xs font-light">(Choose how to populate model list or to enter manually)</span> */}
                     </TableHead>
                     <TableHead>Base Url</TableHead>
                     <TableHead>ApiKey/Token</TableHead>

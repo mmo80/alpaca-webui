@@ -27,8 +27,8 @@ class GoogleProvider implements Provider {
     };
 
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('X-goog-api-key', `${payload.apiKey}`);
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-goog-api-key', `${payload.apiKey}`);
 
     const url = `${this.service.validUrl(apiSetting.url)}/v1/models`;
 
@@ -81,8 +81,8 @@ class GoogleProvider implements Provider {
     };
 
     const headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('X-goog-api-key', `${apiKey}`);
+    headers.set('Content-Type', 'application/json');
+    headers.set('X-goog-api-key', `${apiKey}`);
 
     const url = `${this.service.validUrl(baseUrl)}/v1beta/${model}:streamGenerateContent?alt=sse`;
 

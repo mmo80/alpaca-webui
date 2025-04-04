@@ -42,7 +42,7 @@ class GroqProvider implements Provider {
     return validatedModelList.data.map((m) => ({
       id: m.id,
       object: m.object,
-      created: m.created,
+      created: m.created ? m.created : 0,
       type: m.type,
       embedding: false,
     }));

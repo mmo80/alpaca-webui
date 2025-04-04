@@ -29,10 +29,12 @@ class AnthropicProvider implements Provider {
       null,
       null
     );
+
     if (response.response == null || response.error.isError) {
       return [];
     }
-    let data = await response.response.json();
+
+    let data = (await response.response.json()) as TModelSchema[];
 
     if (embeddedOnly) {
       data = [];

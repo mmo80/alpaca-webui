@@ -38,7 +38,7 @@ export class ApiService {
     }
 
     if (apiKey != null && apiKey.length > 0) {
-      headers.append('Authorization', `Bearer ${apiKey}`);
+      headers.set('Authorization', `Bearer ${apiKey}`);
     }
 
     //console.debug(console.log(JSON.stringify(payload, null, 2)));

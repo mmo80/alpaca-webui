@@ -43,7 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<TModelSche
       ({
         id: m.id,
         object: m.display_name,
-        created: new Date(m.created_at).getTime(),
+        created: m.created_at ? new Date(m.created_at).getTime() : 0,
         type: m.type,
         embedding: false,
       }) as TModelSchema

@@ -87,7 +87,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.GOOGLE,
     url: 'https://generativelanguage.googleapis.com',
-    apiType: ApiTypeEnum.OPENAI,
+    apiType: ApiTypeEnum.GOOGLE,
     embeddingPath: '',
     hasEmbedding: true,
     lockedModelType: true,
