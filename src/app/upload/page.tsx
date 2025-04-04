@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/drawer';
 import { toast } from 'sonner';
 import { delayHighlighter } from '@/lib/utils';
-import { api } from '@/lib/api';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
@@ -87,8 +86,7 @@ export default function Page() {
       .replace(RagSystemPromptVariable.documentContent, context);
     const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM };
 
-    // TODO: Remove
-    console.debug(`systemPrompt: `, systemPrompt);
+    // console.debug(`systemPrompt: `, systemPrompt);
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 

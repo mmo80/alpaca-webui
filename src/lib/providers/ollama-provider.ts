@@ -33,13 +33,15 @@ class OllamaProvider implements Provider {
       throw validatedOllamaTag.error;
     }
 
-    const models = validatedOllamaTag.data.models.map((m) => ({
-      id: m.name,
-      object: 'model',
-      created: 0,
-      type: null,
-      embedding: m.details.family.includes('bert'),
-    }));
+    const models = validatedOllamaTag.data.models.map(
+      (m) =>
+        ({
+          id: m.name,
+          object: 'model',
+          created: 0,
+          embedding: m.details.family.includes('bert'),
+        }) as TModelSchema
+    );
 
     if (embeddedOnly) {
       return models.filter((m) => m.embedding);

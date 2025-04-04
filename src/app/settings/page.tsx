@@ -17,7 +17,7 @@ import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CaretSortIcon, CheckIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { CaretSortIcon, CheckIcon, Cross2Icon, CodeIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { cn, removeClassesByWord } from '@/lib/utils';
@@ -154,12 +154,10 @@ export default function Page() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant={'default'}>&nbsp;</Badge>
-                  <span className="text-xs font-thin">= Supports embeddings</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={'secondary'}>&nbsp;</Badge>
-                  <span className="text-xs font-thin">= Embeddings not supported</span>
+                  <Badge variant={'default'} className="px-1">
+                    <CodeIcon />
+                  </Badge>
+                  <span className="text-xs font-thin">= Embedding supported</span>
                 </div>
               </div>
             </div>
@@ -168,26 +166,9 @@ export default function Page() {
               <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild className="w-6 cursor-help px-2 py-0">
-                            <Button type="button" variant={'default'} className="h-6 text-xs font-semibold">
-                              E
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Supports Embeddings?</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>
-                      Api Type
-                      {/* <br />
-                      <span className="text-xs font-light">(Choose how to populate model list or to enter manually)</span> */}
-                    </TableHead>
+                    <TableHead></TableHead>
+                    <TableHead>Api Type</TableHead>
                     <TableHead>Base Url</TableHead>
                     <TableHead>ApiKey/Token</TableHead>
                     <TableHead className="w-4"></TableHead>
@@ -196,18 +177,25 @@ export default function Page() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
+                      <TableCell>{field.serviceId ?? field.url}</TableCell>
                       <TableCell>
-                        {field.hasEmbedding ? (
-                          <Badge variant={'default'} className="h-6 w-6 px-1">
-                            <CheckIcon />
-                          </Badge>
-                        ) : (
-                          <Badge variant={'secondary'} className="h-6 w-6 px-1">
-                            <Cross2Icon />
-                          </Badge>
+                        {field.hasEmbedding && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild className="w-6 cursor-help px-2 py-0">
+                                <Button type="button" variant={'default'} className="h-6 text-xs font-semibold">
+                                  <Badge variant={'default'} className="px-1">
+                                    <CodeIcon />
+                                  </Badge>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Embedding supported</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </TableCell>
-                      <TableCell>{field.serviceId ?? field.url}</TableCell>
                       <TableCell>
                         <FormField
                           control={form.control}

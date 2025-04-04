@@ -79,15 +79,15 @@ const OpenAIModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number().optional(),
-  type: z.string().nullable().optional(),
+  type: z.string().optional(),
 });
 
 const ModelSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number(),
-  type: z.string().nullable().optional(),
-  embedding: z.boolean().nullable(),
+  type: z.string().optional(),
+  embedding: z.boolean(),
 });
 
 export const CreateImageRequestSchema = z.object({
