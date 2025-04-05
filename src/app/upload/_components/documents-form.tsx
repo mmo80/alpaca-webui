@@ -27,12 +27,12 @@ const allowedFileTypes: string[] = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   //'application/msword',
 ] as const;
+
 const formSchema = z.object({
   file: z
-    .custom<FileList>()
+    .custom<File>()
     .transform((val) => {
       if (val instanceof File) return val;
-      if (val instanceof FileList) return val[0];
       return null;
     })
     .superRefine((file, ctx) => {
@@ -287,8 +287,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
           className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
         >
           <div className="flex-1 space-y-1">
-            <p className="mb-2 text-sm font-medium leading-none">{filename}</p>
-            <div className="text-sm text-muted-foreground">
+            <p className="mb-2 text-sm leading-none font-medium">{filename}</p>
+            <div className="text-muted-foreground text-sm">
               <Progress value={progress} className="w-full" />
               <div className="flex justify-between">
                 <p className="mt-1">{formatBytes(filesize)}</p>

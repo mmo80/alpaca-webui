@@ -1,26 +1,12 @@
 {
-  "version": "5",
+  "version": "7",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1711492427154,
-      "tag": "0000_rapid_sister_grimm",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1711971154751,
-      "tag": "0001_quiet_the_watchers",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1713006713133,
-      "tag": "0002_fresh_unus",
+      "version": "6",
+      "when": 1743850238560,
+      "tag": "0000_peaceful_alex_wilder",
       "breakpoints": true
     }
   ]

@@ -1,1 +1,0 @@
-ALTER TABLE files ADD `no_of_tokens` integer DEFAULT 0;

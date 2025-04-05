@@ -7,9 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delayHighlighter = () => {
-  setTimeout(() => {
-    setHighlighter();
-  }, 300);
+  setHighlighter();
 };
 
 const setHighlighter = () => {
@@ -20,6 +18,7 @@ const setHighlighter = () => {
   if (filteredElements) {
     filteredElements.forEach((codeBlock) => {
       if (codeBlock.dataset.highlighted !== 'yes') {
+        codeBlock.parentElement?.classList.remove('p-3');
         hljs.highlightElement(codeBlock);
       }
     });

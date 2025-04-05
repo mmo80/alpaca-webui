@@ -54,7 +54,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
       return (
         <>
           <Image src={message.url} width={500} height={500} alt="AI generated" className="pt-2" />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             <a href={message.url} target="_blank" className="underline">
               Original
             </a>{' '}
@@ -76,13 +76,13 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
             <LayersIcon className="mr-2 h-6 w-6 self-start" />
           )}
           <div
-            className={`flex w-full max-w-full flex-col overflow-x-hidden text-wrap rounded-md px-3 py-1 font-sans text-sm leading-6 ${
-              role == ChatRole.USER ? 'whitespace-pre-wrap bg-stone-700' : 'bg-stone-900'
+            className={`flex w-full max-w-full flex-col overflow-x-hidden rounded-md px-3 py-1 font-sans text-sm leading-6 text-wrap ${
+              role == ChatRole.USER ? 'bg-stone-700 whitespace-pre-wrap' : 'bg-stone-900'
             }`}
           >
             <div id={messageId}>{render()}</div>
             {isChat(message) && (
-              <span className="my-1 text-xs text-muted-foreground">
+              <span className="text-muted-foreground my-1 text-xs">
                 <button
                   className="rounded-full p-1 hover:bg-stone-950"
                   title="Copy"
@@ -123,11 +123,13 @@ const Code = ({
   className = className?.replace('react', '');
   className = className?.replace('+', '');
   return match ? (
-    <code {...rest} className={`${className} flex w-full text-wrap rounded-b-lg border border-secondary bg-stone-950 p-3`}>
-      {children}
-    </code>
+    <div className="border-secondary flex w-full rounded-b-lg border bg-[#0d1117] p-3 text-wrap">
+      <code {...rest} className={`${className} `}>
+        {children}
+      </code>
+    </div>
   ) : (
-    <code {...rest} className={`language-js border border-secondary bg-gray-950 p-1`}>
+    <code {...rest} className={`border-secondary border bg-[#0d1117] p-1`}>
       {children}
     </code>
   );
