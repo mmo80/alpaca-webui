@@ -103,7 +103,7 @@ const FileTable: FC<FileTableProps> = ({
                 {(mdb) => (
                   <>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="rounded-lg bg-secondary p-2">
+                      <DropdownMenuTrigger className="bg-secondary rounded-lg p-2">
                         <DotsVerticalIcon />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" side="right" className="rounded-lg">
@@ -138,9 +138,12 @@ const FileTable: FC<FileTableProps> = ({
                     <mdb.Container value="details">
                       <Dialog>
                         <DialogContent>
-                          <DialogTitle className="pb-2 text-xl">
-                          File details for <span className="font-semibold italic">{file.filename}</span>
-                          </DialogTitle>
+                          <DialogHeader>
+                            <DialogTitle className="pb-2 text-xl">
+                              File details for <span className="font-semibold italic">{file.filename}</span>
+                            </DialogTitle>
+                            <DialogDescription></DialogDescription>
+                          </DialogHeader>
                           <Table>
                             <TableBody>
                               <TableRow>

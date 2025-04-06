@@ -129,7 +129,7 @@ const Code = ({
       </code>
     </div>
   ) : (
-    <code {...rest} className={`border-secondary border bg-[#0d1117] p-1`}>
+    <code {...rest} className={`language-javascript border-secondary border bg-[#0d1117] p-1`}>
       {children}
     </code>
   );

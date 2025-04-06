@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerTrigger } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { toast } from 'sonner';
 import { delayHighlighter } from '@/lib/utils';
 import { useChatStream } from '@/hooks/use-chat-stream';
@@ -141,6 +150,10 @@ export default function Page() {
           <Drawer open={openDrawer} onOpenChange={setOpenDrawer}>
             <DrawerTrigger className={`${buttonVariants()} w-full`}>Documents</DrawerTrigger>
             <DrawerContent className="px-3">
+              <DrawerHeader>
+                <DrawerTitle></DrawerTitle>
+                <DrawerDescription></DrawerDescription>
+              </DrawerHeader>
               <DocumentsForm
                 setChats={setChats}
                 hasHydrated={hasHydrated}
