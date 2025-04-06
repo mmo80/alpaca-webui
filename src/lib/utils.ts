@@ -26,6 +26,7 @@ const setHighlighter = () => {
 };
 
 export const removeJunkStreamData = (data: string) => {
+  data = data.replace(': OPENROUTER PROCESSING', ''); //
   data = data.replace('data: {"type": "ping"}', ''); // Anthropic adds this in stream for some reason
   data = data.replace('data: [DONE]', '');
   return data

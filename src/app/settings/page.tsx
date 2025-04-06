@@ -16,8 +16,8 @@ import {
 import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CaretSortIcon, CheckIcon, Cross2Icon, CodeIcon } from '@radix-ui/react-icons';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { CaretSortIcon, CheckIcon, CodeIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { cn, removeClassesByWord } from '@/lib/utils';
@@ -26,16 +26,17 @@ import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
 import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { TrashIcon } from '@heroicons/react/24/outline';
 import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react';
 
 export default function Page() {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
   const { services, setServices, hasHydrated } = useSettingsStore();
   const { setModel, setService, setEmbedModel, setEmbedService } = useModelStore();
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState<{ [key: number]: boolean }>({});
 
   const form = useForm<TSettingsFormSchema>({
     resolver: zodResolver(SettingsFormSchema),
@@ -119,6 +120,13 @@ export default function Page() {
     setOpenPopovers((prev) => ({ ...prev, [id]: open }));
   };
 
+  const toggleApiKeyVisibility = (index: number) => {
+    setIsApiKeyVisible((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit, onErrors)}>
@@ -133,7 +141,7 @@ export default function Page() {
           </CardHeader>
           <CardContent className="flex flex-col space-y-8">
             <div className="flex flex-col space-y-2">
-              <p className="font-medium leading-none">
+              <p className="leading-none font-medium">
                 Add Service
                 <br />
                 <span className="text-xs font-thin">(and then add key / token)</span>
@@ -142,7 +150,7 @@ export default function Page() {
                 {preDefinedApiServices.map((as) => (
                   <Badge
                     key={as.url}
-                    variant={as.hasEmbedding ? 'default' : 'secondary'}
+                    variant={'default'}
                     className="cursor-pointer"
                     onClick={() =>
                       addService(as.url, as.apiType, as.id, as.hasEmbedding, as.embeddingPath, as.lockedModelType)
@@ -276,7 +284,7 @@ export default function Page() {
                           )}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="flex gap-2">
                         <FormField
                           control={form.control}
                           key={field.serviceId}
@@ -284,16 +292,28 @@ export default function Page() {
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Input className="w-52 xl:w-full" {...form.register(`services.${index}.apiKey`)} />
+                                <Input
+                                  type={isApiKeyVisible[index] ? 'text' : 'password'}
+                                  className="w-52 xl:w-full"
+                                  {...form.register(`services.${index}.apiKey`)}
+                                />
                               </FormControl>
                             </FormItem>
                           )}
                         />
+                        <Button
+                          type="button"
+                          onClick={() => toggleApiKeyVisibility(index)}
+                          variant={'secondary'}
+                          size={'icon'}
+                        >
+                          {isApiKeyVisible[index] ? <EyeIcon></EyeIcon> : <EyeOffIcon></EyeOffIcon>}
+                        </Button>
                       </TableCell>
                       <TableCell className="text-right">
                         <Dialog>
-                          <DialogTrigger>
-                            <TrashIcon className="h-6 w-6" title="Remove Service" />
+                          <DialogTrigger className={buttonVariants({ variant: 'secondary', size: 'icon' })}>
+                            <Trash2Icon />
                             <span className="sr-only">Remove service</span>
                           </DialogTrigger>
                           <DialogContent>
