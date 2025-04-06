@@ -12,7 +12,6 @@ export enum ApiTypeEnum {
   OPENAI = 'OpenAI',
   GOOGLE = 'Google',
 }
-
 export const apiTypes = [{ value: ApiTypeEnum.OLLAMA }, { value: ApiTypeEnum.OPENAI }, { value: ApiTypeEnum.GOOGLE }];
 
 export enum ApiServiceEnum {
@@ -25,6 +24,7 @@ export enum ApiServiceEnum {
   ANTHROPIC = 'Anthropic',
   GOOGLE = 'Google',
   DEEPSEEK = 'DeepSeek',
+  OPENROUTER = 'OpenRouter',
 }
 
 export const preDefinedApiServices: ApiServiceModel[] = [
@@ -95,6 +95,14 @@ export const preDefinedApiServices: ApiServiceModel[] = [
   {
     id: ApiServiceEnum.DEEPSEEK,
     url: 'https://api.deepseek.com',
+    apiType: ApiTypeEnum.OPENAI,
+    embeddingPath: '',
+    hasEmbedding: false,
+    lockedModelType: true,
+  },
+  {
+    id: ApiServiceEnum.OPENROUTER,
+    url: 'https://openrouter.ai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     hasEmbedding: false,

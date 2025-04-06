@@ -191,6 +191,15 @@ const GoogleChatCompletionRequestSchema = z.object({
 export type TGoogleChatCompletionRequestSchema = z.infer<typeof GoogleChatCompletionRequestSchema>;
 export type TGoogleChatCompletionResponseSchema = z.infer<typeof GoogleChatCompletionResponseSchema>;
 
+// ----- OpenRouter ----- //
+const OpenRouterModelResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  created: z.number().optional(),
+  description: z.string().optional(),
+});
+export const OpenRouterModelsResponseSchema = z.array(OpenRouterModelResponseSchema);
+
 // ----- Custom Models ----- //
 export const EmbedDocumentResponseSchema = z.object({
   success: z.boolean(),
