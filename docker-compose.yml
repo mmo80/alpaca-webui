@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     container_name: alpaca-webui
@@ -10,6 +9,7 @@ services:
       - /app
       - /app/node_modules
       - /app/.next
+      - db:/app/db
     restart: unless-stopped
     networks:
       - net
@@ -25,10 +25,12 @@ services:
       - '8080'
       - --scheme
       - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.24.7
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
     ports:
       - 8083:8080
       - 50051:50051
+    volumes:
+      - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
     networks:
       - net
@@ -39,6 +41,13 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
+
+volumes:
+  weaviate_data:
+    name: alpacawebui_weaviate_data
+  db:
+    name: alpacawebui_db
+    driver: local
 
 networks:
   net:

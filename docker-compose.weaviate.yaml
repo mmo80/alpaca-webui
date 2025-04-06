@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   weaviate:
     container_name: weaviate
@@ -9,7 +8,7 @@ services:
       - '8080'
       - --scheme
       - http
-    image: cr.weaviate.io/semitechnologies/weaviate:1.24.7
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
     ports:
       - 8080:8080
       - 50051:50051
@@ -26,4 +25,4 @@ services:
 
 volumes:
   weaviate_data:
-    name: weaviate_data
+    name: alpacawebui_weaviate_data
