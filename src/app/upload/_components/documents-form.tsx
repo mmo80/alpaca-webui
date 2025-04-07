@@ -7,7 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { DropZone } from '@/components/drop-zone';
 import { getFiles } from '@/actions/get-files';
 import { TFile } from '@/db/schema';
-import { ChatRole, TMessage } from '@/lib/types';
+import { ChatRole, defaultProvider, TCustomMessage, TMessage } from '@/lib/types';
 import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -71,7 +71,7 @@ export type SelectedDocument = {
 };
 
 type DocumentsFormProps = {
-  setChats: Dispatch<SetStateAction<TMessage[]>>;
+  setChats: Dispatch<SetStateAction<TCustomMessage[]>>;
   hasHydrated: boolean;
   systemPromptForRag: string;
   onInitDocumentConversation: (document: SelectedDocument | null) => void;
@@ -241,7 +241,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setEmbedModel(embeddingModel);
     setEmbedService(embedService);
 
-    const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM };
+    const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM, provider: defaultProvider };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
   };
 

@@ -85,7 +85,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               {isChat(message) && (
                 <span className="text-muted-foreground my-1 text-xs">
                   <button
-                    className="rounded-full p-1 hover:bg-stone-950"
+                    className="rounded-xs p-1 hover:bg-stone-950"
                     title="Copy"
                     onClick={() => copyToClipboard(messageId)}
                   >
@@ -94,9 +94,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
                 </span>
               )}
               {role == ChatRole.ASSISTANT && (
-                <span className="text-xs">
-                  Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
-                </span>
+                <>
+                  <span className="pr-1 text-stone-700">|</span>
+                  <span className="text-xs">
+                    Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
+                  </span>
+                </>
               )}
             </div>
           </div>

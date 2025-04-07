@@ -39,10 +39,6 @@ const ModelAlts: FC<ModelAltsProps> = ({
 }) => {
   const { services } = useSettingsStore();
 
-  // const onModelChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   onModelChange(e.target.value);
-  // };
-
   const renderServiceMenu = () => {
     if (services.length == 0) {
       return renderConfigureSettings();
@@ -74,11 +70,11 @@ const ModelAlts: FC<ModelAltsProps> = ({
           <TooltipTrigger asChild>
             <Button variant="secondary" size="icon" className="ms-1 shrink-0 p-2" onClick={onReset}>
               <ArrowUturnLeftIcon />
-              <span className="sr-only">Reset service and model choice</span>
+              <span className="sr-only">Switch provider and model</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Reset service and model choice</p>
+            <p>Switch provider and model</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -111,7 +107,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
                 disabled={!modelsIsSuccess}
                 className="py-3"
               />
-              <span className="rounded-b-lg bg-secondary p-1 pl-4 text-xs">{selectedService?.serviceId}</span>
+              <span className="bg-secondary rounded-b-lg p-1 pl-4 text-xs">{selectedService?.serviceId}</span>
             </div>
             {renderResetButton()}
           </>

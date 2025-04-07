@@ -18,7 +18,7 @@ import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { RagSystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
-import { ChatRole } from '@/lib/types';
+import { ChatRole, defaultProvider } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -78,7 +78,8 @@ export default function Page() {
 
     setIsFetchLoading(true);
 
-    const chatMessage = { content: chatInput, role: ChatRole.USER };
+    const provider = { provider: selectedService.serviceId, model: selectedModel };
+    const chatMessage = { content: chatInput, role: ChatRole.USER, provider: provider };
     setChats((prevArray) => [...prevArray, chatMessage]);
 
     const request: GetChunksRequest = {
@@ -93,7 +94,7 @@ export default function Page() {
     const systemPrompt = systemPromptForRagSlim
       .replace(RagSystemPromptVariable.userQuestion, chatInput)
       .replace(RagSystemPromptVariable.documentContent, context);
-    const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM };
+    const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM, provider: defaultProvider };
 
     // console.debug(`systemPrompt: `, systemPrompt);
 
@@ -113,7 +114,7 @@ export default function Page() {
       );
 
       setIsFetchLoading(false);
-      await handleStream(response.stream, providerInstance.convertResponse);
+      await handleStream(response.stream, provider, providerInstance.convertResponse);
       delayHighlighter();
     }
     setIsFetchLoading(false);
@@ -191,7 +192,6 @@ export default function Page() {
                   onReset={() => {
                     setService(null);
                     setModel(null);
-                    setChats([]);
                   }}
                 />
               </div>

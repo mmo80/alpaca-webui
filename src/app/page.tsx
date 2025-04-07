@@ -147,13 +147,11 @@ export default function Home() {
           onReset={() => {
             setService(null);
             setModel(null);
-            setChats([]);
-            setTextareaPlaceholder('Choose model...');
           }}
         />
 
         {selectedModel != null && chats.length === 1 && (
-          <h2 className="mt-10 scroll-m-20 pb-2 text-center text-3xl font-semibold tracking-tight transition-colors first:mt-0">
+          <h2 className="mt-2 scroll-m-20 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0">
             How can I help you today?
           </h2>
         )}
