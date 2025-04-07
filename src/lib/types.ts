@@ -124,8 +124,38 @@ export type TModelsResponseSchema = z.infer<typeof OpenAIModelsResponseSchema>;
 export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
 
 export type TModelSchema = z.infer<typeof ModelSchema>;
-
 export type TMessage = TChatMessage | TCreateImageData;
+
+// CUSTOM :: START
+const CustomProviderSchema = z.object({
+  provider: z.string(),
+  model: z.string(),
+});
+export type TCustomProviderSchema = z.infer<typeof CustomProviderSchema>;
+
+export const defaultProvider = {
+  provider: '',
+  model: '',
+} as TCustomProviderSchema;
+
+const CustomChatMessageSchema = z.object({
+  role: ChatRoleSchema.default(ChatRole.ASSISTANT),
+  content: z.string(),
+  reasoning_content: z.string().optional().nullable(),
+  provider: CustomProviderSchema.default(defaultProvider),
+});
+export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
+
+const CustomCreateImageDataSchema = z.object({
+  url: z.string(),
+  b64_json: z.string().optional(),
+  revised_prompt: z.string(),
+  provider: CustomProviderSchema.default(defaultProvider),
+});
+export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>;
+
+export type TCustomMessage = TCustomChatMessage | TCustomCreateImageData;
+// CUSTOM :: END
 
 // ----- Anthropic API Models ----- //
 const AnthropicModelResponseSchema = z.object({

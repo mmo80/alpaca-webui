@@ -3,7 +3,7 @@ export type ApiServiceModel = {
   url: string;
   apiType: string;
   embeddingPath: string;
-  hasEmbedding: boolean;
+  supportsEmbedding: boolean;
   lockedModelType: boolean;
 };
 
@@ -33,7 +33,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'http://localhost:11434',
     apiType: ApiTypeEnum.OLLAMA,
     embeddingPath: '/api/embeddings',
-    hasEmbedding: true,
+    supportsEmbedding: true,
     lockedModelType: true,
   },
   {
@@ -41,7 +41,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.openai.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
-    hasEmbedding: true,
+    supportsEmbedding: true,
     lockedModelType: true,
   },
   {
@@ -49,7 +49,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.together.xyz',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
-    hasEmbedding: true,
+    supportsEmbedding: true,
     lockedModelType: true,
   },
   {
@@ -57,7 +57,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.mistral.ai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
-    hasEmbedding: true,
+    supportsEmbedding: true,
     lockedModelType: true,
   },
   {
@@ -65,7 +65,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.groq.com/openai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
-    hasEmbedding: false,
+    supportsEmbedding: false,
     lockedModelType: true,
   },
   {
@@ -73,7 +73,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
-    hasEmbedding: false,
+    supportsEmbedding: false,
     lockedModelType: false,
   },
   {
@@ -81,7 +81,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.anthropic.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
-    hasEmbedding: false,
+    supportsEmbedding: false,
     lockedModelType: true,
   },
   {
@@ -89,7 +89,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://generativelanguage.googleapis.com',
     apiType: ApiTypeEnum.GOOGLE,
     embeddingPath: '',
-    hasEmbedding: true,
+    supportsEmbedding: true,
     lockedModelType: true,
   },
   {
@@ -97,7 +97,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://api.deepseek.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
-    hasEmbedding: false,
+    supportsEmbedding: false,
     lockedModelType: true,
   },
   {
@@ -105,7 +105,7 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     url: 'https://openrouter.ai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
-    hasEmbedding: false,
+    supportsEmbedding: false,
     lockedModelType: true,
   },
 ] as const;

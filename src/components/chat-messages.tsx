@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ChatRole, TChatMessage, TCreateImageData, TMessage } from '@/lib/types';
+import { ChatRole, TCustomChatMessage, TCustomCreateImageData, TCustomMessage } from '@/lib/types';
 import Markdown, { ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { PersonIcon, LayersIcon, CopyIcon, TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { visit } from 'unist-util-visit';
 
 type ChatMessagesProps = {
-  message: TMessage;
+  message: TCustomMessage;
   role: ChatRole;
 };
 
@@ -35,12 +35,12 @@ const thinkPlugin = () => {
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
   const messageId = generateGUID();
 
-  function isImage(item: TChatMessage | TCreateImageData): item is TCreateImageData {
-    return (item as TCreateImageData).url !== undefined;
+  function isImage(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData {
+    return (item as TCustomCreateImageData).url !== undefined;
   }
 
-  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
-    return (item as TChatMessage).content !== undefined;
+  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
+    return (item as TCustomChatMessage).content !== undefined;
   }
 
   const render = () => {
@@ -81,17 +81,24 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
             }`}
           >
             <div id={messageId}>{render()}</div>
-            {isChat(message) && (
-              <span className="text-muted-foreground my-1 text-xs">
-                <button
-                  className="rounded-full p-1 hover:bg-stone-950"
-                  title="Copy"
-                  onClick={() => copyToClipboard(messageId)}
-                >
-                  <CopyIcon className="h-4 w-4" />
-                </button>
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {isChat(message) && (
+                <span className="text-muted-foreground my-1 text-xs">
+                  <button
+                    className="rounded-full p-1 hover:bg-stone-950"
+                    title="Copy"
+                    onClick={() => copyToClipboard(messageId)}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </button>
+                </span>
+              )}
+              {role == ChatRole.ASSISTANT && (
+                <span className="text-xs">
+                  Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
+                </span>
+              )}
+            </div>
           </div>
         </section>
       )}

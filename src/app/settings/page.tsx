@@ -153,7 +153,7 @@ export default function Page() {
                     variant={'default'}
                     className="cursor-pointer"
                     onClick={() =>
-                      addService(as.url, as.apiType, as.id, as.hasEmbedding, as.embeddingPath, as.lockedModelType)
+                      addService(as.url, as.apiType, as.id, as.supportsEmbedding, as.embeddingPath, as.lockedModelType)
                     }
                   >
                     {as.id}

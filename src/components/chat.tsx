@@ -3,13 +3,13 @@ import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
-import { ChatRole, TChatMessage, TCreateImageData, TMessage } from '@/lib/types';
+import { ChatRole, TChatMessage, TCreateImageData, TCustomMessage } from '@/lib/types';
 import { Button } from './ui/button';
 import { ResetIcon } from '@radix-ui/react-icons';
 
 interface ChatProps {
   isFetchLoading: boolean;
-  chats: TMessage[];
+  chats: TCustomMessage[];
   mainDiv: React.RefObject<HTMLDivElement | null>;
   onReset: () => void;
 }
@@ -58,7 +58,7 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
     return (item as TChatMessage).content !== undefined;
   }
 
-  const render = (message: TMessage, index: number) => {
+  const render = (message: TCustomMessage, index: number) => {
     let role = ChatRole.ASSISTANT;
     if (isChat(message)) {
       role = message.role;
@@ -78,7 +78,7 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
       {!isScrollBottom && (
         <PageDownButton
           onClick={directScrollToBottom}
-          className="animate-bounce-short fixed bottom-24 right-9 animate-bounce rounded-full border-white hover:animate-none"
+          className="animate-bounce-short fixed right-9 bottom-24 animate-bounce rounded-full border-white hover:animate-none"
         />
       )}
     </>

@@ -1,17 +1,25 @@
-import { TChatMessage, ChatRole, TChatCompletionResponse, TCreateImageData, TMessage } from '@/lib/types';
+import {
+  ChatRole,
+  TChatCompletionResponse,
+  TCustomMessage,
+  TCustomChatMessage,
+  TCustomCreateImageData,
+  TCustomProviderSchema,
+  defaultProvider,
+} from '@/lib/types';
 import { hasNonWhitespaceChars, isEmpty, isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
 import { useState } from 'react';
 
 export const useChatStream = () => {
-  const [chats, setChats] = useState<TMessage[]>([]);
+  const [chats, setChats] = useState<TCustomMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
 
   let assistantChatMessage = '';
   let checkFirstCharSpacing = true;
   let hasReasoningContent = false;
 
-  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
-    return (item as TChatMessage).content !== undefined;
+  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
+    return (item as TCustomChatMessage).content !== undefined;
   }
 
   const updateLastChatsItem = (type: string, content: string = '') => {
@@ -90,11 +98,16 @@ export const useChatStream = () => {
 
   const handleStream = async (
     streamReader: ReadableStreamDefaultReader<Uint8Array>,
+    provider: TCustomProviderSchema,
     convertResponse: (streamData: string) => TChatCompletionResponse
   ) => {
     setIsStreamProcessing(true);
     try {
-      setChats((prevArray) => [...prevArray, { content: assistantChatMessage, role: ChatRole.ASSISTANT }]);
+      setChats((prevArray) => [
+        ...prevArray,
+        { content: assistantChatMessage, role: ChatRole.ASSISTANT, provider: provider },
+      ]);
+
       while (true) {
         const { done, value } = await streamReader.read();
         if (done) {
@@ -126,9 +139,12 @@ export const useChatStream = () => {
       }
     } catch (error) {
       if (errorType(error) === 'AbortError') {
-        setChats((prevArray) => [...prevArray, { content: 'Cancel', role: ChatRole.USER }]);
+        setChats((prevArray) => [...prevArray, { content: 'Cancel', role: ChatRole.USER, provider: defaultProvider }]);
       } else {
-        setChats((prevArray) => [...prevArray, { content: (error as any).toString(), role: ChatRole.SYSTEM }]);
+        setChats((prevArray) => [
+          ...prevArray,
+          { content: (error as any).toString(), role: ChatRole.SYSTEM, provider: defaultProvider },
+        ]);
       }
     }
     setIsStreamProcessing(false);

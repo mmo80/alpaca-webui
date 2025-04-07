@@ -30,7 +30,14 @@ export default function Home() {
 
   useEffect(() => {
     if (selectedModel != null) {
-      setChats((prevArray) => [...prevArray, { content: systemPrompt || '', role: ChatRole.SYSTEM }]);
+      setChats((prevArray) => [
+        ...prevArray,
+        {
+          content: systemPrompt || '',
+          role: ChatRole.SYSTEM,
+          provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
+        },
+      ]);
       setTextareaPlaceholder('Ask me anything...');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +65,11 @@ export default function Home() {
 
       setChatError(response.error);
       setIsFetchLoading(false);
-      await handleStream(response.stream, providerInstance.convertResponse);
+      await handleStream(
+        response.stream,
+        { provider: selectedService.serviceId, model: selectedModel },
+        providerInstance.convertResponse
+      );
     }
 
     setIsFetchLoading(false);
@@ -77,7 +88,10 @@ export default function Home() {
 
     setIsFetchLoading(true);
     const response = await api.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
-    setChats((prevArray) => [...prevArray, response.data[0]]);
+    setChats((prevArray) => [
+      ...prevArray,
+      { ...response.data[0], provider: { provider: selectedService?.serviceId ?? '', model: selectedModel } },
+    ]);
     setIsFetchLoading(false);
   };
 
@@ -88,11 +102,19 @@ export default function Home() {
 
     if (chatInput.startsWith('/image')) {
       const prompt = chatInput.replace('/image', '');
-      const chatMessage = { content: prompt, role: ChatRole.USER };
+      const chatMessage = {
+        content: prompt,
+        role: ChatRole.USER,
+        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      };
       setChats((prevArray) => [...prevArray, chatMessage]);
       await chatImage(prompt);
     } else {
-      const chatMessage = { content: chatInput, role: ChatRole.USER };
+      const chatMessage = {
+        content: chatInput,
+        role: ChatRole.USER,
+        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      };
       setChats((prevArray) => [...prevArray, chatMessage]);
       await chatStream(chatMessage);
       delayHighlighter();
