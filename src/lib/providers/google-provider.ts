@@ -1,16 +1,16 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   GoogleModelsResponseSchema,
-  TApiSettingsSchema,
-  TChatMessage,
-  TMessage,
-  TModelSchema,
-  TGoogleChatCompletionRequestSchema,
-  TChatCompletionResponse,
+  type TApiSettingsSchema,
+  type TChatMessage,
+  type TModelSchema,
+  type TGoogleChatCompletionRequestSchema,
+  type TChatCompletionResponse,
   ChatRole,
-  TGoogleChatCompletionResponseSchema,
+  type TGoogleChatCompletionResponseSchema,
+  type TCustomMessage,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class GoogleProvider implements Provider {
   service: ApiService;
@@ -63,7 +63,7 @@ class GoogleProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {
@@ -71,7 +71,7 @@ class GoogleProvider implements Provider {
     const chatStreamSignal = this.chatStreamController.signal;
 
     const payload: TGoogleChatCompletionRequestSchema = {
-      contents: messages.map((m: TMessage) => {
+      contents: messages.map((m: TCustomMessage) => {
         return {
           role: (m as TChatMessage).role == ChatRole.USER ? 'user' : 'model',
           parts: [{ text: (m as TChatMessage).content }],
@@ -120,7 +120,7 @@ class GoogleProvider implements Provider {
         return {
           index: i,
           delta: {
-            content: c.content.parts[0].text,
+            content: c.content.parts[0]!.text,
             role: c.content.role == 'model' ? ChatRole.ASSISTANT : ChatRole.USER,
           },
         };

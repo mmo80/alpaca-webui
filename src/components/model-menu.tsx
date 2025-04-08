@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
-import { TOpenAIModelResponseSchema } from '@/lib/types';
+import { type TOpenAIModelResponseSchema } from '@/lib/types';
 import { useEffect, useState } from 'react';
 
 interface ModelMenuProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

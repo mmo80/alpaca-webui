@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
 import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { OpenPopovers, SettingsFormSchema, TApiSettingsSchema, TSettingsFormSchema } from '@/lib/types';
+import { type OpenPopovers, SettingsFormSchema, type TApiSettingsSchema, type TSettingsFormSchema } from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react';

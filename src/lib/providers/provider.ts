@@ -1,5 +1,5 @@
-import { ChatError } from '../api-service';
-import { TApiSettingsSchema, TChatCompletionResponse, TMessage, TModelSchema } from '../types';
+import { type ChatError } from '../api-service';
+import { type TApiSettingsSchema, type TChatCompletionResponse, type TModelSchema, type TCustomMessage } from '../types';
 
 export type ChatCompletionsResponse = {
   stream: ReadableStreamDefaultReader<Uint8Array>;
@@ -11,7 +11,7 @@ export interface Provider {
 
   chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse>;

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
 import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
@@ -63,7 +63,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           onClick={onCancelStream}
           variant="secondary"
           size="icon"
-          className="absolute bottom-5 right-5"
+          className="absolute right-5 bottom-5"
           disabled={isFetchLoading}
         >
           <StopIcon className="h-4 w-4" />
@@ -73,7 +73,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           onClick={sendChat}
           variant="secondary"
           size="icon"
-          className="absolute bottom-5 right-5"
+          className="absolute right-5 bottom-5"
           disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
         >
           <DoubleArrowUpIcon className="h-4 w-4" />

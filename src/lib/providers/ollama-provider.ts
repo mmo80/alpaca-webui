@@ -1,14 +1,14 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OllamaTagSchema,
-  TApiSettingsSchema,
-  TChatCompletionRequest,
-  TChatCompletionResponse,
-  TChatMessage,
-  TMessage,
-  TModelSchema,
+  type TApiSettingsSchema,
+  type TChatCompletionRequest,
+  type TChatCompletionResponse,
+  type TChatMessage,
+  type TCustomMessage,
+  type TModelSchema,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class OllamaProvider implements Provider {
   service: ApiService;
@@ -52,7 +52,7 @@ class OllamaProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {

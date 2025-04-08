@@ -1,7 +1,7 @@
 import { ApiService } from '../api-service';
-import { TApiSettingsSchema } from '../types';
+import { type TApiSettingsSchema } from '../types';
 import { ApiServiceEnum } from './data';
-import { Provider } from './provider';
+import { type Provider } from './provider';
 import { providerMap } from './provider-map';
 
 export class ProviderFactory {

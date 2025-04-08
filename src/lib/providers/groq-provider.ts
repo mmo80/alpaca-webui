@@ -1,14 +1,14 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
-  TApiSettingsSchema,
-  TChatCompletionRequest,
-  TChatCompletionResponse,
-  TChatMessage,
-  TMessage,
-  TModelSchema,
+  type TApiSettingsSchema,
+  type TChatCompletionRequest,
+  type TChatCompletionResponse,
+  type TChatMessage,
+  type TCustomMessage,
+  type TModelSchema,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class GroqProvider implements Provider {
   service: ApiService;
@@ -50,7 +50,7 @@ class GroqProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {

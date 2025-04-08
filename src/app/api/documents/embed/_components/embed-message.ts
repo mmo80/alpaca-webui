@@ -1,6 +1,6 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
 import { ApiTypeEnum } from '@/lib/providers/data';
-import { TApiSettingsSchema } from '@/lib/types';
+import type { TApiSettingsSchema } from '@/lib/types';
 
 type EmbedMessageResponse = {
   embedding: number[];

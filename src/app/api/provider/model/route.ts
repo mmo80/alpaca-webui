@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiService, HttpMethod } from '@/lib/api-service';
-import { AnthropicModelsResponseSchema, TModelSchema } from '@/lib/types';
+import { AnthropicModelsResponseSchema, type TModelSchema } from '@/lib/types';
 
 type ModelsRequest = {
   apiKey: string;

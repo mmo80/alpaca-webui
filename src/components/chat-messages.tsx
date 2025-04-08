@@ -1,11 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { ChatRole, TCustomChatMessage, TCustomCreateImageData, TCustomMessage } from '@/lib/types';
-import Markdown, { ExtraProps } from 'react-markdown';
+import { ChatRole, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
+import Markdown, { type ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { PersonIcon, LayersIcon, CopyIcon, TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
-import { FC, ReactNode, useRef, useState } from 'react';
+import { type FC, type ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { visit } from 'unist-util-visit';
@@ -53,7 +53,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     } else if (isImage(message)) {
       return (
         <>
-          <Image src={message.url} width={500} height={500} alt="AI generated" className="pt-2" />
+          <Image src={message.url ?? ''} width={500} height={500} alt="AI generated" className="pt-2" />
           <span className="text-muted-foreground text-xs">
             <a href={message.url} target="_blank" className="underline">
               Original
@@ -160,7 +160,7 @@ const Pre = ({
 }: React.ClassAttributes<HTMLPreElement> & React.HTMLAttributes<HTMLPreElement> & ExtraProps) => {
   const cssClass = getChildClass(children);
   const match = /language-(\w+)/.exec(cssClass ?? '');
-  const title = match ? match[1] : '';
+  const title = match ? (match[1] ?? '') : '';
   const codeId = generateGUID();
   return (
     <>

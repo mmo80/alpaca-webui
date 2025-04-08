@@ -16,7 +16,9 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
 
     if (e.dataTransfer.files.length == 1) {
       const file = e.dataTransfer.files[0];
-      onFileSelected(file);
+      if (file) {
+        onFileSelected(file);
+      }
     }
   };
 
@@ -58,7 +60,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
             Drag and drop or <u>select document</u>
           </span>
         </div>
-        <div className="text-sm italic text-slate-500">.pdf, .txt, .docx</div>
+        <div className="text-sm text-slate-500 italic">.pdf, .txt, .docx</div>
       </div>
     </section>
   );

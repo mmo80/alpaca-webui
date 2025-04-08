@@ -1,5 +1,5 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
-import { TLocalCompletionsRequest, TChatCompletionRequest } from '@/lib/types';
+import type { TLocalCompletionsRequest, TChatCompletionRequest } from '@/lib/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

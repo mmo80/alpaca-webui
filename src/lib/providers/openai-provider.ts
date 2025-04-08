@@ -1,15 +1,15 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
-  TApiSettingsSchema,
-  TChatCompletionRequest,
-  TChatMessage,
-  TMessage,
-  TOpenAIModelResponseSchema,
-  TModelSchema,
-  TChatCompletionResponse,
+  type TApiSettingsSchema,
+  type TChatCompletionRequest,
+  type TChatMessage,
+  type TOpenAIModelResponseSchema,
+  type TModelSchema,
+  type TChatCompletionResponse,
+  type TCustomMessage,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class OpenAIProvider implements Provider {
   service: ApiService;
@@ -52,7 +52,7 @@ class OpenAIProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {

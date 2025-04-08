@@ -3,7 +3,7 @@ import { chunkTextBySentences } from 'matts-llm-tools';
 import { DocumentReader } from './document-reader';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
 import { embedMessage } from './embed-message';
-import { TApiSettingsSchema } from '@/lib/types';
+import { type TApiSettingsSchema } from '@/lib/types';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
@@ -98,10 +98,10 @@ export class DocumentEmbedding {
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
 
-      const data = await embedMessage(chunk, model, apiSetting);
+      const data = await embedMessage(chunk ?? '', model, apiSetting);
 
       const chunkjson = {
-        text: chunk,
+        text: chunk ?? '',
         file: filename,
         embedding: data.embedding,
         chunkIndex: i,

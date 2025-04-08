@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FC } from 'react';
+import { type FC } from 'react';
 import { usePathname } from 'next/navigation';
 
 const settingsMenuItems = [
@@ -27,7 +27,7 @@ export const SettingsMenu: FC = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="grid gap-2 pb-3 ps-3 text-sm text-muted-foreground">
+    <nav className="text-muted-foreground grid gap-2 ps-3 pb-3 text-sm">
       {settingsMenuItems.map((item) => (
         <Link
           key={item.title}

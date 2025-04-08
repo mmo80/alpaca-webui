@@ -1,10 +1,10 @@
 import {
   ChatRole,
-  TChatCompletionResponse,
-  TCustomMessage,
-  TCustomChatMessage,
-  TCustomCreateImageData,
-  TCustomProviderSchema,
+  type TChatCompletionResponse,
+  type TCustomMessage,
+  type TCustomChatMessage,
+  type TCustomCreateImageData,
+  type TCustomProviderSchema,
   defaultProvider,
 } from '@/lib/types';
 import { hasNonWhitespaceChars, isEmpty, isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
@@ -53,7 +53,7 @@ export const useChatStream = () => {
     const chatCompletionResponse = convertResponse(streamData);
 
     // handle reasoning content
-    let chunkReasoningContent = chatCompletionResponse.choices[0].delta.reasoning_content;
+    let chunkReasoningContent = chatCompletionResponse.choices[0]!.delta.reasoning_content;
     if (!hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
       hasReasoningContent = true;
       if (isEmpty(assistantChatMessage)) {
@@ -67,7 +67,7 @@ export const useChatStream = () => {
     }
 
     // handle normal content
-    let chunkContent = chatCompletionResponse.choices[0].delta.content;
+    let chunkContent = chatCompletionResponse.choices[0]!.delta.content;
     if (!chunkContent) return;
 
     if (hasReasoningContent && isEmpty(chunkReasoningContent) && hasNonWhitespaceChars(chunkContent)) {

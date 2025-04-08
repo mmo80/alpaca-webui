@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MultiDialog } from '@/components/ui/multiDialog';
 import { toast } from 'sonner';
-import { OpenPopovers } from '@/lib/types';
+import { type OpenPopovers } from '@/lib/types';
 import { apiService, HttpMethod } from '@/lib/api-service';
 
 type FileTableProps = {
@@ -59,14 +59,20 @@ const FileTable: FC<FileTableProps> = ({
     }
 
     const successful = await response.response.json();
-    setRemovingFile(false);
+
     if (successful) {
       toast.success('Document removed successfully.');
       handleOpenChange(documentId, false);
       reload();
+
+      setTimeout(() => {
+        setRemovingFile(false);
+      }, 400);
+
       return;
     }
     toast.success('Something went wrong when removing the document.');
+    setRemovingFile(false);
   };
 
   return (

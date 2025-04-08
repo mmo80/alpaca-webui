@@ -3,7 +3,7 @@ import { db } from '@/db/db';
 import { files } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { DocumentEmbedding } from './_components/document-embedding';
-import { TApiSettingsSchema, TEmbedDocumentResponse } from '@/lib/types';
+import type { TApiSettingsSchema, TEmbedDocumentResponse } from '@/lib/types';
 
 export async function POST(request: Request): Promise<NextResponse<TEmbedDocumentResponse>> {
   const body = await request.json();
@@ -12,7 +12,7 @@ export async function POST(request: Request): Promise<NextResponse<TEmbedDocumen
   const result = await db.select({ filename: files.filename }).from(files).where(eq(files.id, documentId));
   if (result.length > 0) {
     try {
-      const filename = result[0].filename;
+      const filename = result[0]!.filename;
       const embedModel = body.embedModel;
       const apiSetting = body.apiSetting as TApiSettingsSchema;
 

@@ -1,7 +1,7 @@
 import { ApiService } from '@/lib/api-service';
 import { useModelStore } from '@/lib/model-store';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
-import { TModelsResponseSchema } from '@/lib/types';
+import { type TModelsResponseSchema } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 
 export const useModelList = (embeddedOnly: boolean = false) => {

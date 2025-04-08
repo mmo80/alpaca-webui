@@ -1,14 +1,14 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
-  TApiSettingsSchema,
-  TChatCompletionRequest,
-  TChatMessage,
-  TMessage,
-  TModelSchema,
-  TChatCompletionResponse,
+  type TApiSettingsSchema,
+  type TChatCompletionRequest,
+  type TChatMessage,
+  type TModelSchema,
+  type TChatCompletionResponse,
+  type TCustomMessage,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class DeepseekProvider implements Provider {
   service: ApiService;
@@ -50,7 +50,7 @@ class DeepseekProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {

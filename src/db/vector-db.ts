@@ -1,4 +1,5 @@
-import weaviate, { WeaviateClient } from 'weaviate-ts-client';
+import { env } from '@/env';
+import weaviate, { type WeaviateClient } from 'weaviate-ts-client';
 
 export const VectorDatabaseClassName = 'Documents';
 
@@ -16,6 +17,6 @@ export type Additional = {
 };
 
 export const weaviateClient: WeaviateClient = weaviate.client({
-  scheme: process.env.WEAVIATE_DB_SCHEME,
-  host: process.env.WEAVIATE_DB_HOST ?? '', // localhost:8080
+  scheme: env.WEAVIATE_DB_SCHEME,
+  host: env.WEAVIATE_DB_HOST ?? '', // localhost:8080
 });

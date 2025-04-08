@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from 'react';
+import { type RefObject, useEffect, useState } from 'react';
 
 export const useScrollBottom = (elementRef: RefObject<HTMLDivElement | null>) => {
   const [isScrollBottom, setIsScrollBottom] = useState(true);

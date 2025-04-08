@@ -1,24 +1,23 @@
-import { useTransition, useEffect, useState, useRef, FC, SetStateAction, Dispatch } from 'react';
+import { useState, useRef, type FC, type SetStateAction, type Dispatch } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import throttle from 'lodash.throttle';
 import { Progress } from '@/components/ui/progress';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { DropZone } from '@/components/drop-zone';
-import { getFiles } from '@/actions/get-files';
-import { TFile } from '@/db/schema';
-import { ChatRole, defaultProvider, TCustomMessage, TMessage } from '@/lib/types';
+import { ChatRole, defaultProvider, type TCustomMessage } from '@/lib/types';
 import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { apiAction } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
 import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
 import { HttpMethod } from '@/lib/api-service';
+import { useFilesQuery } from '@/trpc/queries';
 
 const maxFileSizeMb = 50;
 const allowedFileTypes: string[] = [
@@ -86,12 +85,9 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const { selectedEmbedModel, setEmbedModel, selectedEmbedService, setEmbedService } = useModelStore();
   const { services } = useSettingsStore();
   const [progress, setProgress] = useState(0);
-  const [files, setFiles] = useState<TFile[]>([]);
   const [fileLoading, setFileLoading] = useState<boolean>(false);
-  const [filesLoading, setFilesLoading] = useState<boolean>(true);
   const [filename, setFilename] = useState<string>('');
   const [filesize, setFilesize] = useState<number>(0);
-  const [, startTransition] = useTransition();
   const [fadeOut, setFadeOut] = useState<boolean>(false);
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
   const [fileIdEmbedding, setFileIdEmbedding] = useState<number | null>(null);
@@ -100,18 +96,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const { ref: fileRef, ...fileRest } = form.register('file');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    loadFiles().catch(console.error);
-  }, [fileLoading]);
-
-  const loadFiles = async () => {
-    setFilesLoading(true);
-    startTransition(async () => {
-      const fileList = await getFiles();
-      setFiles(fileList);
-      setFilesLoading(false);
-    });
-  };
+  const { data: files, isLoading: isFilesLoading, refetch: refetchFiles } = useFilesQuery();
 
   const updateProgress = throttle(
     (percent: number) => {
@@ -161,15 +146,21 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
         description: `File: ${formFileData.file.name}`,
       });
 
-      setTimeout(() => {
-        setFadeOut(true);
-      }, 1000);
-      setTimeout(() => {
-        setFileLoading(false);
-        setFilename('');
-        setFilesize(0);
-        updateProgress(0);
-      }, 2000);
+      await reload();
+
+      setFadeOut(true);
+
+      setFileLoading(false);
+      setFilename('');
+      setFilesize(0);
+      updateProgress(0);
+
+      // setTimeout(() => {
+      //   setFileLoading(false);
+      //   setFilename('');
+      //   setFilesize(0);
+      //   updateProgress(0);
+      // }, 2000);
     }
   };
 
@@ -190,7 +181,9 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     e.preventDefault();
     if (e.target.files) {
       const file = e.target.files[0];
-      onFileSelected(file);
+      if (file) {
+        onFileSelected(file);
+      }
     }
   };
 
@@ -202,7 +195,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
     setIsEmbedding(true);
     setFileIdEmbedding(documentId);
-    const response = await api.embedDocument(documentId, selectedEmbedModel, selectedEmbedService);
+    const response = await apiAction.embedDocument(documentId, selectedEmbedModel, selectedEmbedService);
 
     if (response.success) {
       toast.success('Document embedded successfully');
@@ -211,7 +204,9 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
         description: response.errorMessage,
       });
     }
-    await loadFiles();
+
+    await reload();
+
     setIsEmbedding(false);
     setFileIdEmbedding(null);
   };
@@ -246,7 +241,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   };
 
   const reload = async () => {
-    await loadFiles();
+    const result = await refetchFiles();
+    console.log('* Refetch result: ', result);
   };
 
   return (
@@ -284,7 +280,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
       {fileLoading && (
         <div
-          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-1000 ease-in-out`}
+          className={`${fadeOut ? 'opacity-0' : 'opacity-100'} flex items-center space-x-4 rounded-md border p-4 transition-opacity duration-500 ease-in-out`}
         >
           <div className="flex-1 space-y-1">
             <p className="mb-2 text-sm leading-none font-medium">{filename}</p>
@@ -328,7 +324,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
       <FileTable
         files={files}
-        filesLoading={filesLoading}
+        filesLoading={isFilesLoading}
         isEmbedding={isEmbedding}
         fileIdEmbedding={fileIdEmbedding}
         onEmbedDocument={onEmbedDocument}

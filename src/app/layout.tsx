@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
 import './globals.css';
-import { Provider } from '@/app/provider';
+
+import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/sonner';
 import { DesktopSidemenu } from './_components/desktop-sidemenu';
-import type { ReactNode } from 'react';
 import { MobileTopmenu } from './_components/mobile-topmenu';
+import { TRPCReactProvider } from '@/trpc/react';
 
 export const metadata: Metadata = {
   title: 'Alpaca WebUI',
@@ -20,18 +20,20 @@ DIV: container mx-auto flex h-screen flex-col overflow-hidden px-4 sm:px-8
 CURRENT DIV: px-3 h-full
 */
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="flex min-h-screen bg-background font-sans antialiased">
-        <DesktopSidemenu />
-        <div className="flex w-full flex-col">
-          <div className="flex h-screen flex-col overflow-hidden">
-            <MobileTopmenu />
-            <Provider>{children}</Provider>
+    <html lang="en">
+      <body className="bg-background flex min-h-screen font-sans antialiased">
+        <TRPCReactProvider>
+          <DesktopSidemenu />
+          <div className="flex w-full flex-col">
+            <div className="flex h-screen flex-col overflow-hidden">
+              <MobileTopmenu />
+              {children}
+              {/* <Provider>{children}</Provider> */}
+            </div>
           </div>
-        </div>
-
+        </TRPCReactProvider>
         <Toaster position="bottom-center" richColors closeButton />
       </body>
     </html>

@@ -1,13 +1,13 @@
 import { ApiService, HttpMethod } from '../api-service';
-import {
+import type {
   TApiSettingsSchema,
   TChatCompletionResponse,
   TChatMessage,
+  TCustomMessage,
   TLocalCompletionsRequest,
-  TMessage,
   TModelSchema,
 } from '../types';
-import { ChatCompletionsResponse, Provider } from './provider';
+import type { ChatCompletionsResponse, Provider } from './provider';
 
 class AnthropicProvider implements Provider {
   service: ApiService;
@@ -45,7 +45,7 @@ class AnthropicProvider implements Provider {
 
   public async chatCompletions(
     model: string,
-    messages: TMessage[],
+    messages: TCustomMessage[],
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<ChatCompletionsResponse> {

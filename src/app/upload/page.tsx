@@ -17,7 +17,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { RagSystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
-import { GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
+import { type GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
 import { ChatRole, defaultProvider } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
@@ -28,7 +28,7 @@ import { DocumentsForm, type SelectedDocument } from './_components/documents-fo
 import { useModelStore } from '@/lib/model-store';
 import { ApiService } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
-import { Provider } from '@/lib/providers/provider';
+import { type Provider } from '@/lib/providers/provider';
 
 export default function Page() {
   const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();

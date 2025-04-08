@@ -1,8 +1,8 @@
 // url: https://gist.github.com/adnanalbeda/12d6fbe8a40d1a79a0ca9e772b0a3863
 
 import { Children, cloneElement, createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { Slot, SlotProps } from '@radix-ui/react-slot';
-import { DialogProps } from '@radix-ui/react-dialog';
+import { Slot, type SlotProps } from '@radix-ui/react-slot';
+import { type DialogProps } from '@radix-ui/react-dialog';
 
 type Maybe<T> = T | null | undefined;
 

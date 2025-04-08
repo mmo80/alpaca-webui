@@ -147,9 +147,9 @@ const CustomChatMessageSchema = z.object({
 export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
 
 const CustomCreateImageDataSchema = z.object({
-  url: z.string(),
+  url: z.string().optional(),
   b64_json: z.string().optional(),
-  revised_prompt: z.string(),
+  revised_prompt: z.string().optional(),
   provider: CustomProviderSchema.default(defaultProvider),
 });
 export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>;

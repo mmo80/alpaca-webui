@@ -1,6 +1,6 @@
 import { ApiService } from '../api-service';
 import { ApiServiceEnum } from './data';
-import { Provider } from './provider';
+import { type Provider } from './provider';
 import OllamaProvider from './ollama-provider';
 import OpenAIProvider from './openai-provider';
 import TogetherProvider from './together-provider';

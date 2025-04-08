@@ -1,10 +1,10 @@
 import {
-  TEmbedDocumentResponse,
+  type TEmbedDocumentResponse,
   EmbedDocumentResponseSchema,
-  TApiSettingsSchema,
-  TCreateImageRequest,
+  type TApiSettingsSchema,
+  type TCreateImageRequest,
   CreateImageRequestSchema,
-  TCreateImageResponse,
+  type TCreateImageResponse,
 } from '@/lib/types';
 import { apiService, HttpMethod } from './api-service';
 
@@ -53,7 +53,7 @@ const embedDocument = async (
   return validator.data;
 };
 
-export const api = {
+export const apiAction = {
   embedDocument,
   generateImage,
 };

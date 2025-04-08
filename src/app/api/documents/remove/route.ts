@@ -15,10 +15,10 @@ export async function POST(request: Request) {
     .from(files)
     .where(eq(files.id, documentId));
   if (dbResult.length > 0) {
-    const filename = dbResult[0].filename;
-    const isEmbedded = dbResult[0].embedded;
+    const filename = dbResult[0]!.filename;
+    const isEmbedded = dbResult[0]!.embedded;
     const deleteResult = await db.delete(files).where(eq(files.id, documentId)).returning({ id: files.id });
-    if (deleteResult.length === 1 && deleteResult[0].id == documentId) {
+    if (deleteResult.length === 1 && deleteResult[0]!.id == documentId) {
       if (isEmbedded) {
         const vResult = await deleteFromVectorDatabase(filename);
         if (!vResult) {

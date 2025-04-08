@@ -4,7 +4,7 @@ import path from 'path';
 
 // @ts-ignore
 import * as pdfjs from 'pdfjs-dist/build/pdf.mjs';
-import { TextContent, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
+import type { TextContent, TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 
 export class DocumentReader {
   private readonly filePath: string;

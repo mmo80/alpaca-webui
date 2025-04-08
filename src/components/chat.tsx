@@ -1,9 +1,9 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
-import { ChatRole, TChatMessage, TCreateImageData, TCustomMessage } from '@/lib/types';
+import { ChatRole, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
 import { Button } from './ui/button';
 import { ResetIcon } from '@radix-ui/react-icons';
 
@@ -54,8 +54,8 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
     }
   };
 
-  function isChat(item: TChatMessage | TCreateImageData): item is TChatMessage {
-    return (item as TChatMessage).content !== undefined;
+  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
+    return (item as TCustomChatMessage).content !== undefined;
   }
 
   const render = (message: TCustomMessage, index: number) => {

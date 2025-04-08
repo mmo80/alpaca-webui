@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { TApiSettingsSchema } from './types';
+import { type TApiSettingsSchema } from './types';
 
 // ---- Model Store ---- //
 interface ModelStoreState {
