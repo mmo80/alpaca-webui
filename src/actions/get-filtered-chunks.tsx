@@ -3,8 +3,8 @@
 import { embedMessage } from '@/app/api/documents/embed/_components/embed-message';
 import { db } from '@/db/db';
 import { files } from '@/db/schema';
-import { Documents, VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
-import { TApiSettingsSchema } from '@/lib/types';
+import { type Documents, VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
+import { type TApiSettingsSchema } from '@/lib/types';
 import { eq } from 'drizzle-orm';
 
 export type GetChunksRequest = {
@@ -17,7 +17,7 @@ export type GetChunksRequest = {
 export const getFilteredChunks = async (request: GetChunksRequest): Promise<Documents[]> => {
   const dbResult = await db.select({ filename: files.filename }).from(files).where(eq(files.id, request.documentId));
   if (dbResult.length > 0) {
-    const filename = dbResult[0].filename;
+    const filename = dbResult[0]!.filename;
     const data = await embedMessage(request.question, request.embedModel, request.apiSetting);
     const embeddings: number[] = data.embedding;
     const documents = await filterVectorDatabaseDocuments(filename, embeddings);
