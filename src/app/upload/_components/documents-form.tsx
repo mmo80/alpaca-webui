@@ -10,7 +10,6 @@ import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
-import { z } from 'zod';
 import { toast } from 'sonner';
 import { apiAction } from '@/lib/api';
 import { formatBytes } from '@/lib/utils';
@@ -18,51 +17,9 @@ import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
 import { HttpMethod } from '@/lib/api-service';
 import { useFilesQuery } from '@/trpc/queries';
-
-const maxFileSizeMb = 50;
-const allowedFileTypes: string[] = [
-  'application/pdf',
-  'text/plain',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  //'application/msword',
-] as const;
-
-const formSchema = z.object({
-  file: z
-    .custom<File>()
-    .transform((val) => {
-      if (val instanceof File) return val;
-      return null;
-    })
-    .superRefine((file, ctx) => {
-      if (!(file instanceof File)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          fatal: true,
-          message: 'Not a file',
-        });
-
-        return z.NEVER;
-      }
-
-      if (file.size > maxFileSizeMb * 1024 * 1024) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Max file size allowed is ${maxFileSizeMb}MB`,
-        });
-      }
-
-      if (!allowedFileTypes.includes(file.type)) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'File must be an document (pdf, txt, docx)',
-        });
-      }
-    })
-    .pipe(z.custom<File>()),
-});
-
-type TFormSchema = z.infer<typeof formSchema>;
+import { formSchema, type TFormSchema } from '../upload-types';
+import { useTRPC } from '@/trpc/react';
+import { useMutation } from '@tanstack/react-query';
 
 export type SelectedDocument = {
   documentId: number;
@@ -98,6 +55,9 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
   const { data: files, isLoading: isFilesLoading, refetch: refetchFiles } = useFilesQuery();
 
+  const trpc = useTRPC();
+  const uploadMutation = useMutation(trpc.files.upload.mutationOptions());
+
   const updateProgress = throttle(
     (percent: number) => {
       setProgress(percent);
@@ -109,7 +69,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const onSubmit = async (formFileData: TFormSchema) => {
     setFileLoading(true);
 
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append('file', formFileData.file, formFileData.file.name);
 
     setFilename(formFileData.file.name);
@@ -154,13 +114,71 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
       setFilename('');
       setFilesize(0);
       updateProgress(0);
+    }
+  };
 
-      // setTimeout(() => {
-      //   setFileLoading(false);
-      //   setFilename('');
-      //   setFilesize(0);
-      //   updateProgress(0);
-      // }, 2000);
+  const onSubmitTrpcExperimental = async (formFileData: TFormSchema) => {
+    setFileLoading(true);
+
+    setFilename(formFileData.file.name);
+    setFilesize(formFileData.file.size);
+    setFadeOut(false);
+    setProgress(0);
+
+    try {
+      // Convert file to base64
+      const fileReader = new FileReader();
+
+      fileReader.onload = async (e) => {
+        try {
+          const base64Data = e.target?.result?.toString().split(',')[1];
+
+          if (!base64Data) {
+            throw new Error('Failed to read file (base64Data)');
+          }
+
+          // Call the tRPC upload function with progress reporting
+          const payLoad = {
+            name: formFileData.file.name,
+            type: formFileData.file.type,
+            size: formFileData.file.size,
+            data: base64Data,
+          };
+
+          const res = await uploadMutation.mutateAsync(payLoad);
+
+          console.log('* res:', res);
+
+          for await (const value of res) {
+            updateProgress(value.progress);
+          }
+
+          await reload();
+
+          setFadeOut(true);
+
+          setFileLoading(false);
+          setFilename('');
+          setFilesize(0);
+          updateProgress(0);
+        } catch (error) {
+          console.error('Error in upload process:', error);
+          toast.error('Failed to upload file');
+          setFileLoading(false);
+        }
+      };
+
+      fileReader.onerror = () => {
+        toast.error('Error reading file');
+        setFileLoading(false);
+      };
+
+      // Start reading the file as data URL
+      fileReader.readAsDataURL(formFileData.file);
+    } catch (error) {
+      toast.error('Error processing file');
+      console.error('Error processing file:', error);
+      setFileLoading(false);
     }
   };
 
@@ -331,6 +349,13 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
         initConversationWithDocument={initConversationWithDocument}
         reload={reload}
       />
+
+      {/* <div className="mt-4">
+        <strong>Iterable Test</strong>
+        <div>isSuccess: {iterable.isSuccess.toString()}</div>
+        <div>{iterable.isLoading ? 'Loading...' : 'DONE'}</div>
+        <pre className="text-xs">{JSON.stringify(iterable.data, null, 2)}</pre>
+      </div> */}
     </>
   );
 };

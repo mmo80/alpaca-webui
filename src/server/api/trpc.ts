@@ -104,5 +104,3 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
-
-// export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>();

@@ -67,7 +67,7 @@ const FileTable: FC<FileTableProps> = ({
 
       setTimeout(() => {
         setRemovingFile(false);
-      }, 400);
+      }, 800);
 
       return;
     }
