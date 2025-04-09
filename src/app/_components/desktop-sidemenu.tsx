@@ -6,6 +6,7 @@ import type { FC, ReactNode } from 'react';
 import { ChatBubbleLeftIcon, Cog6ToothIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { appName } from '@/lib/providers/data';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import { ChatHistory } from './chat-history';
 
 export const menuItems = [
   {
@@ -41,7 +42,7 @@ export const Header: FC<{ children: ReactNode; isSheet?: boolean }> = ({ childre
   );
 };
 
-export const DesktopSidemenu: FC = () => {
+export function DesktopSidemenu() {
   const pathname = usePathname();
 
   return (
@@ -49,7 +50,7 @@ export const DesktopSidemenu: FC = () => {
       <div className="flex h-full max-h-screen flex-col bg-stone-800 md:w-[200px] lg:w-[260px]">
         <Header>{appName}</Header>
         <div className="flex-1">
-          <nav className="grid items-start gap-2 px-4 text-sm font-medium">
+          <nav className="mb-3 grid items-start gap-2 px-4 text-sm font-medium">
             {menuItems.map((item) => {
               const isActivePage = (pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href);
               return (
@@ -69,8 +70,9 @@ export const DesktopSidemenu: FC = () => {
               );
             })}
           </nav>
+          <ChatHistory />
         </div>
       </div>
     </div>
   );
-};
+}

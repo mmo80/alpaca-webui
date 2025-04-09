@@ -290,7 +290,7 @@ export default function Page() {
                           key={field.serviceId}
                           name={`services.${index}.apiKey`}
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="flex-1">
                               <FormControl>
                                 <Input
                                   type={isApiKeyVisible[index] ? 'text' : 'password'}
@@ -303,6 +303,7 @@ export default function Page() {
                         />
                         <Button
                           type="button"
+                          className="flex-none"
                           onClick={() => toggleApiKeyVisibility(index)}
                           variant={'secondary'}
                           size={'icon'}

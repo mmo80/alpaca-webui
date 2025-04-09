@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { appName } from '@/lib/providers/data';
 import { usePathname } from 'next/navigation';
+import { ChatHistory } from './chat-history';
 
 export const MobileTopmenu: FC = () => {
   const pathname = usePathname();
@@ -52,6 +53,8 @@ export const MobileTopmenu: FC = () => {
               );
             })}
           </nav>
+
+          <ChatHistory isSheet={true} />
         </SheetContent>
       </Sheet>
       <span className="text-xl font-semibold text-nowrap">{appName}</span>

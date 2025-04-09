@@ -254,7 +254,12 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setEmbedModel(embeddingModel);
     setEmbedService(embedService);
 
-    const ragSystemMessage = { content: systemPromptForRag || '', role: ChatRole.SYSTEM, provider: defaultProvider };
+    const ragSystemMessage = {
+      content: systemPromptForRag || '',
+      role: ChatRole.SYSTEM,
+      provider: defaultProvider,
+      streamComplete: true,
+    };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
   };
 

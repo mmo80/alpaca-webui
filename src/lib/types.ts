@@ -143,6 +143,7 @@ const CustomChatMessageSchema = z.object({
   content: z.string(),
   reasoning_content: z.string().optional().nullable(),
   provider: CustomProviderSchema.default(defaultProvider),
+  streamComplete: z.boolean(),
 });
 export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
 
@@ -151,10 +152,12 @@ const CustomCreateImageDataSchema = z.object({
   b64_json: z.string().optional(),
   revised_prompt: z.string().optional(),
   provider: CustomProviderSchema.default(defaultProvider),
+  streamComplete: z.boolean(),
 });
 export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>;
 
-export type TCustomMessage = TCustomChatMessage | TCustomCreateImageData;
+export const CustomMessageSchema = z.union([CustomChatMessageSchema, CustomCreateImageDataSchema]);
+export type TCustomMessage = z.infer<typeof CustomMessageSchema>;
 // CUSTOM :: END
 
 // ----- Anthropic API Models ----- //

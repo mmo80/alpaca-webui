@@ -7,7 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delayHighlighter = () => {
-  setHighlighter();
+  setTimeout(() => {
+    setHighlighter();
+  }, 100);
 };
 
 const setHighlighter = () => {

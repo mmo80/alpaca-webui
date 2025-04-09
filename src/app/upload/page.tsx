@@ -79,7 +79,7 @@ export default function Page() {
     setIsFetchLoading(true);
 
     const provider = { provider: selectedService.serviceId, model: selectedModel };
-    const chatMessage = { content: chatInput, role: ChatRole.USER, provider: provider };
+    const chatMessage = { content: chatInput, role: ChatRole.USER, provider: provider, streamComplete: true };
     setChats((prevArray) => [...prevArray, chatMessage]);
 
     const request: GetChunksRequest = {
@@ -94,7 +94,12 @@ export default function Page() {
     const systemPrompt = systemPromptForRagSlim
       .replace(RagSystemPromptVariable.userQuestion, chatInput)
       .replace(RagSystemPromptVariable.documentContent, context);
-    const systemPromptMessage = { content: systemPrompt, role: ChatRole.SYSTEM, provider: defaultProvider };
+    const systemPromptMessage = {
+      content: systemPrompt,
+      role: ChatRole.SYSTEM,
+      provider: defaultProvider,
+      streamComplete: true,
+    };
 
     // console.debug(`systemPrompt: `, systemPrompt);
 

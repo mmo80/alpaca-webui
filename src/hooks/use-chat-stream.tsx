@@ -27,8 +27,9 @@ export const useChatStream = () => {
       return prevArray.map((chat, index) => {
         if (isChat(chat)) {
           if (index === prevArray.length - 1) {
-            if (type === 'replace') {
+            if (type === 'finish') {
               chat.content = chat.content.replace(/[\n\s]+$/, '');
+              chat.streamComplete = true;
             } else if (type === 'update') {
               chat.content = content;
             }
@@ -105,13 +106,13 @@ export const useChatStream = () => {
     try {
       setChats((prevArray) => [
         ...prevArray,
-        { content: assistantChatMessage, role: ChatRole.ASSISTANT, provider: provider },
+        { content: assistantChatMessage, role: ChatRole.ASSISTANT, provider: provider, streamComplete: false },
       ]);
 
       while (true) {
         const { done, value } = await streamReader.read();
         if (done) {
-          updateLastChatsItem('replace');
+          updateLastChatsItem('finish');
           break;
         }
 
@@ -139,11 +140,14 @@ export const useChatStream = () => {
       }
     } catch (error) {
       if (errorType(error) === 'AbortError') {
-        setChats((prevArray) => [...prevArray, { content: 'Cancel', role: ChatRole.USER, provider: defaultProvider }]);
+        setChats((prevArray) => [
+          ...prevArray,
+          { content: 'Cancel', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
+        ]);
       } else {
         setChats((prevArray) => [
           ...prevArray,
-          { content: (error as any).toString(), role: ChatRole.SYSTEM, provider: defaultProvider },
+          { content: (error as any).toString(), role: ChatRole.SYSTEM, provider: defaultProvider, streamComplete: true },
         ]);
       }
     }
