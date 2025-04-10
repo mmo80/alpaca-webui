@@ -102,6 +102,7 @@ export const Main: FC = () => {
     };
 
     handleSaveChatHistory();
+    // eslint-disable-next-line react-hSELECT * FROM chat_historiesooks/exhaustive-deps
   }, [chats]);
 
   const chatStream = async (message: TCustomMessage) => {

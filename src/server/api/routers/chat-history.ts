@@ -26,13 +26,15 @@ export const chatHistoryRouter = createTRPCRouter({
   insertUpdate: publicProcedure.input(ChatHistoryInputSchema).mutation(async ({ ctx, input }) => {
     const { id, title, messages } = input;
 
+    const messagesString = JSON.stringify(messages);
+
     if (!id) {
       const result = await ctx.db
         .insert(chatHistories)
         .values({
           id: uuidv7(),
           title: title,
-          messages: JSON.stringify(messages),
+          messages: messagesString,
         })
         .returning({ updatedId: chatHistories.id });
 
@@ -41,7 +43,7 @@ export const chatHistoryRouter = createTRPCRouter({
 
     const result = await ctx.db
       .update(chatHistories)
-      .set({ title: title, messages: JSON.stringify(messages) })
+      .set({ title: title, messages: messagesString })
       .where(eq(chatHistories.id, id))
       .returning({ updatedId: chatHistories.id });
 
