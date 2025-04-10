@@ -19,7 +19,7 @@ import { type Provider } from '@/lib/providers/provider';
 import { queryClient, useTRPC } from '@/trpc/react';
 import { useMutation } from '@tanstack/react-query';
 import { useChatHistoryMutation } from '@/trpc/queries';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export const Main: FC = () => {
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
@@ -33,6 +33,7 @@ export const Main: FC = () => {
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
   const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string>();
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
 
@@ -63,10 +64,8 @@ export const Main: FC = () => {
             role: (msg as TCustomChatMessage).role,
             content: (msg as TCustomChatMessage).content,
             provider: (msg as TCustomChatMessage).provider,
-            reasoning_content: (msg as TCustomChatMessage).reasoning_content,
           }));
 
-          console.log(`* chatMessages from chat history: ${id}`, chatMessages);
           setChats(chatMessages);
           delayHighlighter();
         }
@@ -96,13 +95,12 @@ export const Main: FC = () => {
   useEffect(() => {
     const handleSaveChatHistory = async () => {
       if (chats && chats[chats.length - 1]?.streamComplete === true) {
-        console.log('* latest chats: ', chats);
         await saveChatHistory(chats);
       }
     };
 
     handleSaveChatHistory();
-    // eslint-disable-next-line react-hSELECT * FROM chat_historiesooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
   const chatStream = async (message: TCustomMessage) => {
@@ -196,7 +194,12 @@ export const Main: FC = () => {
       messages: messages,
     });
 
-    console.log('* updateChatHistory id:', id);
+    if (!currentChatHistoryId && id && (id?.length ?? 0) > 0) {
+      const params = new URLSearchParams(searchParams);
+      params.set('id', id);
+
+      router.push(`/?${params.toString()}`);
+    }
 
     setCurrentChatHistoryId(id);
   };

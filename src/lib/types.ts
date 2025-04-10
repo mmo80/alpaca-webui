@@ -51,6 +51,7 @@ const MessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: z.string(),
   reasoning_content: z.string().optional().nullable(),
+  reasoning: z.string().optional().nullable(),
 });
 
 const ChoiceSchema = z.object({
@@ -141,7 +142,6 @@ export const defaultProvider = {
 const CustomChatMessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: z.string(),
-  reasoning_content: z.string().optional().nullable(),
   provider: CustomProviderSchema.default(defaultProvider),
   streamComplete: z.boolean().optional().default(true),
 });

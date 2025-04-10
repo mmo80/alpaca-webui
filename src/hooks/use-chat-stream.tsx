@@ -54,7 +54,8 @@ export const useChatStream = () => {
     const chatCompletionResponse = convertResponse(streamData);
 
     // handle reasoning content
-    let chunkReasoningContent = chatCompletionResponse.choices[0]!.delta.reasoning_content;
+    let chunkReasoningContent =
+      chatCompletionResponse.choices[0]?.delta.reasoning_content ?? chatCompletionResponse.choices[0]?.delta.reasoning;
     if (!hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
       hasReasoningContent = true;
       if (isEmpty(assistantChatMessage)) {

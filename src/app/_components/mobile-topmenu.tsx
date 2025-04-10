@@ -54,13 +54,10 @@ export const MobileTopmenu: FC = () => {
             })}
           </nav>
 
-          <ChatHistory isSheet={true} />
+          <ChatHistory isSheet={true} setOpen={setOpen} />
         </SheetContent>
       </Sheet>
       <span className="text-xl font-semibold text-nowrap">{appName}</span>
-      {/* <Link href={'https://github.com/mmo80/alpaca-webui'} className="ml-auto">
-        <GitHubLogoIcon className="h-6 w-6" />
-      </Link> */}
     </header>
   );
 };

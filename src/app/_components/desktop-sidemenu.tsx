@@ -31,7 +31,7 @@ export const menuItems = [
 
 export const Header: FC<{ children: ReactNode; isSheet?: boolean }> = ({ children, isSheet = false }) => {
   return (
-    <div className={`flex items-center gap-4 ${!isSheet && 'p-6 py-4'}`}>
+    <div className={`flex items-center gap-4 ${!isSheet && 'p-4'}`}>
       <Link href="/" className={`text-2xl font-semibold`}>
         <span>{children}</span>
       </Link>
