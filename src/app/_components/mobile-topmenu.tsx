@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useState, type FC } from 'react';
 import { Header, menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
-import { Bars3Icon } from '@heroicons/react/24/outline';
+import { MenuIcon } from 'lucide-react';
 import { appName } from '@/lib/providers/data';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChatHistory } from './chat-history';
@@ -21,7 +21,7 @@ export const MobileTopmenu: FC = () => {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="secondary" size="icon" className="shrink-0 p-2">
-            <Bars3Icon className="h-6 w-6" />
+            <MenuIcon className="h-6 w-6" />
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>

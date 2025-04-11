@@ -8,7 +8,7 @@ import type { TApiSettingsSchema, TOpenAIModelResponseSchema } from '@/lib/types
 import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
-import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftRightIcon } from 'lucide-react';
 import { ApiTypeEnum } from '@/lib/providers/data';
 
 type ModelAltsProps = {
@@ -68,7 +68,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="secondary" size="icon" className="ms-1 shrink-0 p-2" onClick={onReset}>
-              <ArrowUturnLeftIcon />
+              <ArrowLeftRightIcon />
               <span className="sr-only">Switch provider and model</span>
             </Button>
           </TooltipTrigger>

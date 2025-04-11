@@ -3,26 +3,26 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
-import { ChatBubbleLeftIcon, Cog6ToothIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { MessageSquareMoreIcon, FileInputIcon, Settings2Icon } from 'lucide-react';
 import { appName } from '@/lib/providers/data';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
 import { ChatHistory } from './chat-history';
 
 export const menuItems = [
   {
-    icon: ChatBubbleLeftIcon,
+    icon: MessageSquareMoreIcon,
     title: 'New Chat',
     href: '/',
     root: true,
   },
   {
-    icon: DocumentArrowUpIcon,
+    icon: FileInputIcon,
     title: 'Upload document',
     href: '/upload',
     root: false,
   },
   {
-    icon: Cog6ToothIcon,
+    icon: Settings2Icon,
     title: 'Settings',
     href: '/settings',
     root: false,
