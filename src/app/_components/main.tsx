@@ -1,7 +1,7 @@
 'use client';
 
 import { type FC, useState, useRef, useEffect } from 'react';
-import { type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
+import { type TCustomMessage, ChatRole } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
 import { delayHighlighter } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
@@ -16,10 +16,10 @@ import { toast } from 'sonner';
 import { ApiService, type ChatError } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { type Provider } from '@/lib/providers/provider';
-import { queryClient, useTRPC } from '@/trpc/react';
 import { useMutation } from '@tanstack/react-query';
-import { useChatHistoryMutation } from '@/trpc/queries';
+import { getSingleChatHistoryById, useChatHistoryMutation } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTRPC } from '@/trpc/react';
 
 export const Main: FC = () => {
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
@@ -31,11 +31,11 @@ export const Main: FC = () => {
   const { modelList } = useModelList();
   const [provider, setProvider] = useState<Provider | undefined>(undefined);
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
-  const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string>();
+  const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string | undefined>(undefined);
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const id = searchParams.get('id');
+  const queryChatHistoryId = searchParams.get('id');
 
   const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
@@ -49,37 +49,33 @@ export const Main: FC = () => {
   );
 
   useEffect(() => {
-    if (!id) return;
+    if (!queryChatHistoryId) {
+      onResetChat();
+      setCurrentChatHistoryId(undefined);
+      return;
+    }
 
-    setCurrentChatHistoryId(id);
+    if (currentChatHistoryId && currentChatHistoryId === queryChatHistoryId) {
+      return;
+    }
 
-    const queryOptions = trpc.chatHistory.get.queryOptions({ id: id });
+    setCurrentChatHistoryId(queryChatHistoryId);
 
-    queryClient
-      .fetchQuery(queryOptions)
-      .then((result) => {
-        if (result) {
-          const parsedMessages = JSON.parse(result.messages);
-          const chatMessages = parsedMessages.map((msg: TCustomMessage) => ({
-            role: (msg as TCustomChatMessage).role,
-            content: (msg as TCustomChatMessage).content,
-            provider: (msg as TCustomChatMessage).provider,
-          }));
+    getSingleChatHistoryById(queryChatHistoryId).then((result) => {
+      if (!result.isError) {
+        setChats(result.data);
+        delayHighlighter();
+      } else {
+        console.error('Error loading chat history:', result.error);
+      }
+    });
 
-          setChats(chatMessages);
-          delayHighlighter();
-        }
-      })
-      .catch((err: Error) => {
-        console.error(err);
-      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [queryChatHistoryId]);
 
   useEffect(() => {
     if (selectedModel != null && !currentChatHistoryId) {
-      setChats((prevArray) => [
-        ...prevArray,
+      setChats([
         {
           content: systemPrompt || '',
           role: ChatRole.SYSTEM,
@@ -94,7 +90,7 @@ export const Main: FC = () => {
 
   useEffect(() => {
     const handleSaveChatHistory = async () => {
-      if (chats && chats[chats.length - 1]?.streamComplete === true) {
+      if (chats && chats[chats.length - 1]?.streamComplete === true && chats.length > 1) {
         await saveChatHistory(chats);
       }
     };
@@ -102,6 +98,15 @@ export const Main: FC = () => {
     handleSaveChatHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
+
+  useEffect(() => {
+    if (currentChatHistoryId != undefined) {
+      const params = new URLSearchParams(searchParams);
+      params.set('id', currentChatHistoryId);
+
+      router.push(`/?${params.toString()}`);
+    }
+  }, [currentChatHistoryId]);
 
   const chatStream = async (message: TCustomMessage) => {
     if (selectedModel == null || selectedService == null) {
@@ -194,14 +199,9 @@ export const Main: FC = () => {
       messages: messages,
     });
 
-    if (!currentChatHistoryId && id && (id?.length ?? 0) > 0) {
-      const params = new URLSearchParams(searchParams);
-      params.set('id', id);
-
-      router.push(`/?${params.toString()}`);
+    if (id !== currentChatHistoryId) {
+      setCurrentChatHistoryId(id);
     }
-
-    setCurrentChatHistoryId(id);
   };
 
   const onResetChat = () => {

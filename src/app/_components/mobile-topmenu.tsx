@@ -7,12 +7,14 @@ import { Header, menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import { appName } from '@/lib/providers/data';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { ChatHistory } from './chat-history';
 
 export const MobileTopmenu: FC = () => {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const idQueryParam = searchParams.get('id');
 
   return (
     <header className="bg-muted/40 flex h-14 items-center gap-4 border-b p-3 lg:hidden">
@@ -33,13 +35,14 @@ export const MobileTopmenu: FC = () => {
 
           <nav className="grid gap-1 text-base font-medium">
             {menuItems.map((item) => {
-              const isActivePage = (pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href);
+              const isActivePage =
+                ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
 
               return (
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="hover:text-foreground mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2"
+                  className={`hover:text-foreground mx-[-0.65rem] ${isActivePage && 'bg-stone-500 text-stone-950'} flex items-center gap-4 rounded-xl px-3 py-2`}
                   onClick={() => {
                     setOpen(false);
                     if (isActivePage && item.href === '/') {

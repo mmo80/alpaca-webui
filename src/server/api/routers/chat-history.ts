@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { chatHistories } from '@/db/schema';
 import { CustomMessageSchema } from '@/lib/types';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 
 export const ChatHistoryInputSchema = z.object({
@@ -17,7 +17,7 @@ export const ChatHistoryIdSchema = z.object({
 
 export const chatHistoryRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.select().from(chatHistories);
+    return await ctx.db.select().from(chatHistories).orderBy(desc(chatHistories.timestamp));
   }),
   get: publicProcedure.input(ChatHistoryIdSchema).query(async ({ ctx, input }) => {
     const result = await ctx.db.select().from(chatHistories).where(eq(chatHistories.id, input.id));
@@ -48,5 +48,9 @@ export const chatHistoryRouter = createTRPCRouter({
       .returning({ updatedId: chatHistories.id });
 
     return result?.[0]?.updatedId;
+  }),
+  remove: publicProcedure.input(ChatHistoryIdSchema).mutation(async ({ ctx, input }) => {
+    const { id } = input;
+    await ctx.db.delete(chatHistories).where(eq(chatHistories.id, id));
   }),
 });

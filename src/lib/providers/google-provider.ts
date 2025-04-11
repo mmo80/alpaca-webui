@@ -120,7 +120,7 @@ class GoogleProvider implements Provider {
         return {
           index: i,
           delta: {
-            content: c.content.parts[0]!.text,
+            content: c.content.parts[0]?.text,
             role: c.content.role == 'model' ? ChatRole.ASSISTANT : ChatRole.USER,
           },
         };

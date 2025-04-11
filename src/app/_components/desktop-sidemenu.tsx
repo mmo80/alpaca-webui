@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import type { FC, ReactNode } from 'react';
 import { ChatBubbleLeftIcon, Cog6ToothIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { appName } from '@/lib/providers/data';
@@ -44,6 +44,8 @@ export const Header: FC<{ children: ReactNode; isSheet?: boolean }> = ({ childre
 
 export function DesktopSidemenu() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const idQueryParam = searchParams.get('id');
 
   return (
     <div className="hidden lg:block">
@@ -52,7 +54,8 @@ export function DesktopSidemenu() {
         <div className="flex-1">
           <nav className="mb-3 grid items-start gap-2 px-4 text-sm font-medium">
             {menuItems.map((item) => {
-              const isActivePage = (pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href);
+              const isActivePage =
+                ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
               return (
                 <Link
                   key={item.title}

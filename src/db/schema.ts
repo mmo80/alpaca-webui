@@ -23,7 +23,7 @@ export type TFile = z.infer<typeof ZFileSchema>;
 export const chatHistories = sqliteTable('chat_histories', {
   id: text('id').primaryKey(),
   title: text('title'),
-  messages: text('messages').notNull(), // .$type<{ role: string; content: string }[]>()
+  messages: text('messages').notNull(),
   timestamp: text('timestamp')
     .default(sql`(datetime('now','localtime'))`)
     .notNull(),
@@ -40,10 +40,3 @@ export const chatHistoryGroups = sqliteTable('chat_history_groups', {
     .notNull(),
 });
 export const chatHistoryGroupsSchema = createSelectSchema(chatHistoryGroups);
-
-/*
-const chatData = await db.select().from(chatHistory).where(eq(chatHistory.id, someChatId));
-// Assuming chatData contains the serialized JSON string
-const parsedMessages = JSON.parse(chatData[0].messages);
-console.log(parsedMessages); // You now have an array of objects [{ role: 'developer', content: 'You are a helpful assistant.' }, { role: 'user', content: 'Hello!' }]
-*/

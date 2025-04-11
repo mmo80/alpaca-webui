@@ -26,7 +26,7 @@ export const useChatStream = () => {
     setChats((prevArray) => {
       return prevArray.map((chat, index) => {
         if (isChat(chat)) {
-          if (index === prevArray.length - 1) {
+          if (index === prevArray.length - 1 && chat.role === ChatRole.ASSISTANT) {
             if (type === 'finish') {
               chat.content = chat.content.replace(/[\n\s]+$/, '');
               chat.streamComplete = true;
@@ -143,7 +143,7 @@ export const useChatStream = () => {
       if (errorType(error) === 'AbortError') {
         setChats((prevArray) => [
           ...prevArray,
-          { content: 'Cancel', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
+          { content: 'User canceled', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
         ]);
       } else {
         setChats((prevArray) => [
