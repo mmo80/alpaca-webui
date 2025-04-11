@@ -3,12 +3,13 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useState, type FC } from 'react';
-import { Header, menuItems } from './desktop-sidemenu';
+import { menuItems } from './desktop-sidemenu';
 import Link from 'next/link';
 import { MenuIcon } from 'lucide-react';
 import { appName } from '@/lib/providers/data';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ChatHistory } from './chat-history';
+import { ChatHistoryList } from './chat-history-list';
+import { AppHeader } from './app-header';
 
 export const MobileTopmenu: FC = () => {
   const pathname = usePathname();
@@ -28,7 +29,7 @@ export const MobileTopmenu: FC = () => {
         <SheetContent side="left" className="flex w-[300px] flex-col">
           <SheetHeader>
             <SheetTitle>
-              <Header isSheet={true}>{appName}</Header>
+              <AppHeader isSheet={true}>{appName}</AppHeader>
             </SheetTitle>
             <SheetDescription></SheetDescription>
           </SheetHeader>
@@ -57,7 +58,7 @@ export const MobileTopmenu: FC = () => {
             })}
           </nav>
 
-          <ChatHistory isSheet={true} setOpen={setOpen} />
+          <ChatHistoryList isSheet={true} setOpen={setOpen} />
         </SheetContent>
       </Sheet>
       <span className="text-xl font-semibold text-nowrap">{appName}</span>

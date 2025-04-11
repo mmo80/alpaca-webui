@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { type TApiSettingsSchema } from './types';
 
-export const RagSystemPromptVariable = {
+export const SystemPromptVariable = {
   userQuestion: '{{UserQuestion}}',
   documentContent: '{{DocumentContent}}',
+  chatHistoryInput: '{{ChatHistoryGoesHere}}',
 } as const;
 
 // ---- Settings Store ---- //
@@ -14,6 +15,7 @@ interface SettingsStoreState {
   systemPrompt: string;
   systemPromptForRag: string;
   systemPromptForRagSlim: string;
+  systemPromptForChatTitle: string;
   embedModel: string | null;
   hasHydrated: boolean;
   setSystemPrompt: (systemPrompt: string) => void;
@@ -32,23 +34,25 @@ export const useSettingsStore = create<SettingsStoreState>()(
       systemPromptForRag: `Instructions: Carefully read and synthesize the information presented in the document section below to answer the user's question. Your response must be derived exclusively from the content found between the "### Begin Document ###" and "### End Document ###" markers. If the information within these markers does not contain sufficient details to answer the question, you must clearly state that an answer cannot be provided based on the available document/data. Aim for a concise, accurate, and relevant response to the user's query.
 
 User's Question:
-${RagSystemPromptVariable.userQuestion}
+${SystemPromptVariable.userQuestion}
 
 Relevant Document Information:
 ### Begin Document
-${RagSystemPromptVariable.documentContent}
+${SystemPromptVariable.documentContent}
 ### End Document
 
 Answer:`,
       systemPromptForRagSlim: `User's Question:
-${RagSystemPromptVariable.userQuestion}
+${SystemPromptVariable.userQuestion}
 
 Relevant Document Information:
 ### Begin Document ###
-${RagSystemPromptVariable.documentContent}
+${SystemPromptVariable.documentContent}
 ### End Document ###
 
 Answer:`,
+      systemPromptForChatTitle: `Given the following chat history, generate a short, descriptive title with no more than 10 words:
+"Chat History: ${SystemPromptVariable.chatHistoryInput}"`,
       embedModel: null,
       hasHydrated: false,
       setSystemPrompt: (systemPrompt) => set(() => ({ systemPrompt: systemPrompt })),

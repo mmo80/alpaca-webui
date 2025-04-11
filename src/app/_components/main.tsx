@@ -22,6 +22,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTRPC } from '@/trpc/react';
 
 export const Main: FC = () => {
+  const newThreadTitle = 'New Thread';
+
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
   const { systemPrompt, hasHydrated } = useSettingsStore();
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
@@ -195,7 +197,7 @@ export const Main: FC = () => {
   const saveChatHistory = async (messages: TCustomMessage[]) => {
     const id = await updateChatHistory.mutateAsync({
       id: currentChatHistoryId,
-      title: 'test chat',
+      title: newThreadTitle,
       messages: messages,
     });
 

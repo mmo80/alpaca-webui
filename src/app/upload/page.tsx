@@ -16,7 +16,7 @@ import { delayHighlighter } from '@/lib/utils';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
-import { RagSystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
+import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { type GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
 import { ChatRole, defaultProvider } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -92,8 +92,8 @@ export default function Page() {
     const documents = await getFilteredChunks(request);
     const context = documents.map((d) => d.text).join(' ');
     const systemPrompt = systemPromptForRagSlim
-      .replace(RagSystemPromptVariable.userQuestion, chatInput)
-      .replace(RagSystemPromptVariable.documentContent, context);
+      .replace(SystemPromptVariable.userQuestion, chatInput)
+      .replace(SystemPromptVariable.documentContent, context);
     const systemPromptMessage = {
       content: systemPrompt,
       role: ChatRole.SYSTEM,

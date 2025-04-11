@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import type { FC, ReactNode } from 'react';
 import { MessageSquareMoreIcon, FileInputIcon, Settings2Icon } from 'lucide-react';
 import { appName } from '@/lib/providers/data';
-import { GitHubLogoIcon } from '@radix-ui/react-icons';
-import { ChatHistory } from './chat-history';
+import { ChatHistoryList } from './chat-history-list';
+import { AppHeader } from './app-header';
 
 export const menuItems = [
   {
@@ -29,19 +28,6 @@ export const menuItems = [
   },
 ] as const;
 
-export const Header: FC<{ children: ReactNode; isSheet?: boolean }> = ({ children, isSheet = false }) => {
-  return (
-    <div className={`flex items-center gap-4 ${!isSheet && 'p-4'}`}>
-      <Link href="/" className={`text-2xl font-semibold`}>
-        <span>{children}</span>
-      </Link>
-      <Link href={'https://github.com/mmo80/alpaca-webui'} title={`Visit the GitHub ${appName} Repository`}>
-        <GitHubLogoIcon className="h-6 w-6" />
-      </Link>
-    </div>
-  );
-};
-
 export function DesktopSidemenu() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,7 +36,7 @@ export function DesktopSidemenu() {
   return (
     <div className="hidden lg:block">
       <div className="flex h-full max-h-screen flex-col bg-stone-800 md:w-[200px] lg:w-[260px]">
-        <Header>{appName}</Header>
+        <AppHeader>{appName}</AppHeader>
         <div className="flex-1">
           <nav className="mb-3 grid items-start gap-2 px-4 text-sm font-medium">
             {menuItems.map((item) => {
@@ -73,7 +59,7 @@ export function DesktopSidemenu() {
               );
             })}
           </nav>
-          <ChatHistory />
+          <ChatHistoryList />
         </div>
       </div>
     </div>
