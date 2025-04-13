@@ -18,10 +18,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStateAction<boolean>> }> = ({
   isSheet = false,
-  setOpen = null,
+  setOpen = undefined,
 }) => {
   const { data: chatHistories, isLoading: isLoadingChatHistory } = useChatHistoryQuery();
   const router = useRouter();
@@ -72,24 +74,33 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
           {isLoadingChatHistory && <Skeleton className="h-3 rounded-full" />}
           {chatHistories.map((c) => {
             return (
-              <>
-                <Link
-                  key={c.id}
-                  href={`/?id=${c.id}`}
-                  onClick={() => {
-                    if (setOpen) setOpen(false);
-                  }}
-                  className={`group flex items-center gap-2 rounded-lg px-2 py-1 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} hover:bg-stone-700`}
-                >
-                  <span className="flex-1 text-xs">{c.title}</span>
-                  <XIcon
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleDeleteDialog(c.id, true);
-                    }}
-                    className="invisible rounded-md p-1 text-white group-hover:visible hover:bg-stone-800"
-                  />
-                </Link>
+              <React.Fragment key={c.id}>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/?id=${c.id}`}
+                        onClick={() => {
+                          if (setOpen) setOpen(false);
+                        }}
+                        className={`group relative flex items-center gap-2 rounded-lg px-2 py-1.5 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
+                      >
+                        <span className="w-full truncate text-xs">{c.title}</span>
+                        <XIcon
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleDeleteDialog(c.id, true);
+                          }}
+                          className="invisible absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 rounded-md text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
+                        />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent className="rounded-lg bg-black">
+                      <p className="w-52 text-wrap text-white">{c.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
                 <Dialog open={openDeleteDialog[c.id]} onOpenChange={(isOpen) => toggleDeleteDialog(c.id, isOpen)}>
                   <DialogContent>
                     <DialogHeader>
@@ -108,7 +119,7 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-              </>
+              </React.Fragment>
             );
           })}
         </div>
@@ -116,3 +127,31 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
     </>
   );
 };
+
+/*
+const ChatHistoryLink: FC<{
+  item: TChatHistory;
+  setOpen?: Dispatch<SetStateAction<boolean>>;
+  idQueryParam: string | null;
+  toggleDeleteDialog: (id: string, isOpen: boolean) => void;
+}> = ({ item, setOpen, idQueryParam, toggleDeleteDialog }) => {
+  return (
+    <Link
+      href={`/?id=${item.id}`}
+      onClick={() => {
+        if (setOpen) setOpen(false);
+      }}
+      className={`group relative flex items-center gap-2 rounded-lg px-2 py-1.5 ${idQueryParam === item.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
+    >
+      <span className="w-full truncate text-xs">{item.title}</span>
+      <XIcon
+        onClick={(e) => {
+          e.preventDefault();
+          toggleDeleteDialog(item.id, true);
+        }}
+        className="invisible absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 rounded-md text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
+      />
+    </Link>
+  );
+};
+*/

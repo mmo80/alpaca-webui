@@ -11,6 +11,11 @@ export const ChatHistoryInputSchema = z.object({
   messages: z.array(CustomMessageSchema),
 });
 
+export const ChatHistoryTitleInputSchema = z.object({
+  id: z.string().optional(),
+  title: z.string(),
+});
+
 export const ChatHistoryIdSchema = z.object({
   id: z.string(),
 });
@@ -44,6 +49,21 @@ export const chatHistoryRouter = createTRPCRouter({
     const result = await ctx.db
       .update(chatHistories)
       .set({ title: title, messages: messagesString })
+      .where(eq(chatHistories.id, id))
+      .returning({ updatedId: chatHistories.id });
+
+    return result?.[0]?.updatedId;
+  }),
+  updateTitle: publicProcedure.input(ChatHistoryTitleInputSchema).mutation(async ({ ctx, input }) => {
+    const { id, title } = input;
+
+    if (!id) {
+      return null;
+    }
+
+    const result = await ctx.db
+      .update(chatHistories)
+      .set({ title: title })
       .where(eq(chatHistories.id, id))
       .returning({ updatedId: chatHistories.id });
 

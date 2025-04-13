@@ -1,14 +1,14 @@
 'use client';
 
 import { type FC, useState, useRef, useEffect } from 'react';
-import { type TCustomMessage, ChatRole } from '@/lib/types';
+import { type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
-import { delayHighlighter } from '@/lib/utils';
+import { cleanString, delayHighlighter, isValidJson, removeJunkStreamData } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { useChatStream } from '@/hooks/use-chat-stream';
 import { useModelList } from '@/hooks/use-model-list';
-import { useSettingsStore } from '@/lib/settings-store';
+import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
 import { apiAction } from '@/lib/api';
@@ -34,6 +34,9 @@ export const Main: FC = () => {
   const [provider, setProvider] = useState<Provider | undefined>(undefined);
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
   const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string | undefined>(undefined);
+  const { systemPromptForChatTitle } = useSettingsStore();
+  const [chatTitle, setChatTitle] = useState<string | undefined>(undefined);
+  const [chatTitlePersisted, setChatTitlePersisted] = useState<boolean>(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -50,10 +53,20 @@ export const Main: FC = () => {
     })
   );
 
+  const updateChatHistoryTitle = useMutation(
+    trpc.chatHistory.updateTitle.mutationOptions({
+      onSuccess: async () => {
+        invalidateChatHistory();
+      },
+    })
+  );
+
   useEffect(() => {
     if (!queryChatHistoryId) {
       onResetChat();
       setCurrentChatHistoryId(undefined);
+      setChatTitle(undefined);
+      setChatTitlePersisted(false);
       return;
     }
 
@@ -65,7 +78,10 @@ export const Main: FC = () => {
 
     getSingleChatHistoryById(queryChatHistoryId).then((result) => {
       if (!result.isError) {
-        setChats(result.data);
+        if (result.title !== newThreadTitle) {
+          setChatTitlePersisted(true);
+        }
+        setChats(result.messages);
         delayHighlighter();
       } else {
         console.error('Error loading chat history:', result.error);
@@ -74,6 +90,45 @@ export const Main: FC = () => {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryChatHistoryId]);
+
+  const generateChatTitle = () => {
+    if (!chatTitle && !chatTitlePersisted) {
+      const titleChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
+      if (titleChats.length === 2 && titleChats[titleChats.length - 1]?.streamComplete === true) {
+        console.log('* generate title: ', titleChats.length);
+        const firstUserMessage = (titleChats[titleChats.length - 1] as TCustomChatMessage)?.content;
+        if (firstUserMessage.length > 1) {
+          generateTitle(firstUserMessage).catch((err) => {
+            console.error('Error generating title:', err);
+          });
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (chatTitle && currentChatHistoryId && !chatTitlePersisted) {
+      console.log(`Persist chat title: `, chatTitle);
+      updateChatHistoryTitle
+        .mutateAsync({
+          id: currentChatHistoryId,
+          title: chatTitle,
+        })
+        .then((id) => {
+          if (id === currentChatHistoryId) {
+            setChatTitlePersisted(true);
+          }
+          console.log('* Title persisted!', id);
+        })
+        .catch((err) => {
+          console.error('Error updating chat history title:', err);
+        });
+    } else {
+      console.log(
+        `* chatTitle: ${chatTitle}, currentChatHistoryId: ${currentChatHistoryId}, chatTitlePersisted: ${chatTitlePersisted.toString()}.`
+      );
+    }
+  }, [chatTitle, currentChatHistoryId, chatTitlePersisted]);
 
   useEffect(() => {
     if (selectedModel != null && !currentChatHistoryId) {
@@ -96,17 +151,22 @@ export const Main: FC = () => {
         await saveChatHistory(chats);
       }
     };
-
     handleSaveChatHistory();
+
+    generateChatTitle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
   useEffect(() => {
-    if (currentChatHistoryId != undefined) {
+    if (currentChatHistoryId && currentChatHistoryId !== queryChatHistoryId) {
       const params = new URLSearchParams(searchParams);
       params.set('id', currentChatHistoryId);
 
       router.push(`/?${params.toString()}`);
+    }
+
+    if (currentChatHistoryId && currentChatHistoryId === queryChatHistoryId) {
+      generateChatTitle();
     }
   }, [currentChatHistoryId]);
 
@@ -166,6 +226,72 @@ export const Main: FC = () => {
     setIsFetchLoading(false);
   };
 
+  const generateTitle = async (message: string) => {
+    if (selectedModel == null || selectedService == null) {
+      return;
+    }
+
+    const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
+    console.log('* The message to generate title from:', message);
+
+    const chatMessage = {
+      content: systemPrompt,
+      role: ChatRole.SYSTEM,
+      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      streamComplete: true,
+    };
+
+    const apiSrv = new ApiService();
+    const providerFactory = new ProviderFactory(apiSrv);
+
+    const providerInstance = providerFactory.getInstance(selectedService);
+    if (providerInstance) {
+      setProvider(providerInstance);
+      const response = await providerInstance.chatCompletions(
+        selectedModel,
+        [chatMessage],
+        selectedService.url,
+        selectedService.apiKey
+      );
+
+      let title = '';
+      while (true) {
+        const { done, value } = await response.stream.read();
+        if (done) break;
+
+        const text = new TextDecoder('utf-8').decode(value);
+        const objects = text.split('\n');
+        for (const obj of objects) {
+          const jsonString = removeJunkStreamData(obj);
+
+          if (jsonString.length > 0 && isValidJson(jsonString)) {
+            const responseData = providerInstance.convertResponse(jsonString);
+            title += responseData.choices[0]?.delta.content;
+          }
+        }
+      }
+
+      if (title.length > 1) {
+        title = title
+          .replace(/<think>[\s\S]*?<\/think>/g, '')
+          .replace(/^```json\n/, '')
+          .replace(/\n```$/, '');
+
+        if (isValidJson(title)) {
+          title = JSON.parse(title).title;
+        } else {
+          title = cleanString(title);
+        }
+
+        console.log('* set title: ', title);
+
+        setChatTitle(title);
+      } else {
+        console.log(`* no title? `, title);
+      }
+    }
+  };
+
   const sendChat = async (chatInput: string) => {
     if (chatInput === '') {
       return;
@@ -188,6 +314,7 @@ export const Main: FC = () => {
         provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
         streamComplete: true,
       };
+
       setChats((prevArray) => [...prevArray, chatMessage]);
       await chatStream(chatMessage);
       delayHighlighter();

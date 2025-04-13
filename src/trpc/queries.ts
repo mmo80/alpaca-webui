@@ -23,7 +23,8 @@ export const useFilesQuery = () => {
 
 class SingleChatHistoryResult<TCustomChatMessage> {
   constructor(
-    public data: TCustomChatMessage[],
+    public messages: TCustomChatMessage[],
+    public title: string | null = null,
     public error: Error | null = null
   ) {}
 
@@ -36,7 +37,7 @@ export const getSingleChatHistoryById = async (id: string): Promise<SingleChatHi
   try {
     const result = await trpc.chatHistory.get.query({ id: id }).catch((err: Error) => {
       console.error(err);
-      return new SingleChatHistoryResult([], err);
+      return new SingleChatHistoryResult([], null, err);
     });
 
     if (result instanceof SingleChatHistoryResult) {
@@ -53,17 +54,18 @@ export const getSingleChatHistoryById = async (id: string): Promise<SingleChatHi
         provider: (msg as TCustomChatMessage).provider,
       })) as TCustomChatMessage[];
 
-      return new SingleChatHistoryResult(chatMessages);
+      return new SingleChatHistoryResult(chatMessages, result.title);
     }
 
     return new SingleChatHistoryResult([]);
   } catch (err) {
     console.error(err);
     if (err instanceof Error) {
-      return new SingleChatHistoryResult([], err);
+      return new SingleChatHistoryResult([], null, err);
     }
     return new SingleChatHistoryResult(
       [],
+      null,
       new Error(err?.toString() ?? `unknown error in '${getSingleChatHistoryById.name}'`)
     );
   }

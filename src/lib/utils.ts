@@ -28,13 +28,29 @@ const setHighlighter = () => {
 };
 
 export const removeJunkStreamData = (data: string) => {
-  data = data.replace(': OPENROUTER PROCESSING', ''); //
-  data = data.replace('data: {"type": "ping"}', ''); // Anthropic adds this in stream for some reason
-  data = data.replace('data: [DONE]', '');
-  return data
-    .replace(/^data:\s*/, '')
-    .trimEnd()
-    .trimStart();
+  const cleanedData = data
+    .replace(/:\s*OPENROUTER PROCESSING/gi, '') // Why OpenRouter... why?
+    .replace(/data:\s*\{"type":"ping"\}/gi, '') // Anthropic adds this in stream for some reason
+    .replace(/data:\s*\[\s*DONE\s*\]/gi, '')
+    .replace(/^data:\s*/, '');
+  return cleanedData.trimEnd().trimStart();
+};
+
+export const isValidJson = (str: string): boolean => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+export const cleanString = (input: string): string => {
+  return input
+    .replace(/['"!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g, '') // Remove special chars
+    .replace(/\n/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 };
 
 export const isNullOrWhitespace = (input: string | null | undefined): boolean => {
