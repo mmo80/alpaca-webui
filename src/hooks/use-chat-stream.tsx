@@ -126,12 +126,13 @@ export const useChatStream = () => {
             handleStreamChunk(jsonString, convertResponse);
           } catch (error) {
             if (errorType(error) === 'SyntaxError') {
-              console.warn(`SyntaxError: Failed to parse JSON: '${jsonString}". error: ${error}`);
               const bufferComplete = handleStreamSyntaxError(jsonString);
               if (bufferComplete) {
-                console.warn('Merged json string: ', jsonFaultBuffer);
+                console.info('Merged json string from stream: ', jsonFaultBuffer);
                 handleStreamChunk(jsonFaultBuffer, convertResponse);
                 jsonFaultBuffer = '';
+              } else {
+                console.warn(`SyntaxError: Failed to parse JSON: '${jsonString}". error: ${error}`);
               }
             } else {
               console.error(`${errorType(error)}: '${jsonString}". error: ${error}`);

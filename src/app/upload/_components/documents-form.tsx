@@ -265,7 +265,6 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
   const reload = async () => {
     const result = await refetchFiles();
-    console.log('* Refetch result: ', result);
   };
 
   return (

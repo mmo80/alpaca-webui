@@ -20,6 +20,12 @@ import {
 import { Button } from '@/components/ui/button';
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Spinner } from '@/components/spinner';
+
+type ChatItemState = {
+  openDeleteDialog: boolean;
+  deleting: boolean;
+};
 
 export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStateAction<boolean>> }> = ({
   isSheet = false,
@@ -29,15 +35,16 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
   const router = useRouter();
   const searchParams = useSearchParams();
   const idQueryParam = searchParams.get('id');
-  const [openDeleteDialog, setOpenDeleteDialog] = useState<Record<string, boolean>>({});
+
+  const [itemState, setItemState] = useState<Record<string, ChatItemState>>({});
 
   useEffect(() => {
     if (chatHistories?.length > 0) {
-      const dialogState: Record<string, boolean> = {};
+      const itemState: Record<string, ChatItemState> = {};
       chatHistories.forEach((history) => {
-        dialogState[history.id] = false;
+        itemState[history.id] = { openDeleteDialog: false, deleting: false };
       });
-      setOpenDeleteDialog(dialogState);
+      setItemState(itemState);
     }
   }, [chatHistories]);
 
@@ -47,22 +54,33 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
   const removeChatHistory = useMutation(
     trpc.chatHistory.remove.mutationOptions({
       onSuccess: async (_, variables) => {
+        const id = variables.id;
         invalidateChatHistory();
-        if (idQueryParam === variables.id) {
+        if (idQueryParam === id) {
           router.push('/');
         }
+
+        toggleDeleteDialog(id, false);
+        setItemState((prev) => ({
+          ...prev,
+          [id]: { openDeleteDialog: prev[id]?.openDeleteDialog ?? true, deleting: false },
+        }));
       },
     })
   );
 
   const remove = async (id: string) => {
+    setItemState((prev) => ({
+      ...prev,
+      [id]: { openDeleteDialog: prev[id]?.openDeleteDialog ?? true, deleting: true },
+    }));
     await removeChatHistory.mutateAsync({ id });
   };
 
   const toggleDeleteDialog = (id: string, isOpen: boolean) => {
-    setOpenDeleteDialog((prev) => ({
+    setItemState((prev) => ({
       ...prev,
-      [id]: isOpen,
+      [id]: { openDeleteDialog: isOpen, deleting: false },
     }));
   };
 
@@ -71,7 +89,12 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
       <div className={`mb-1 ${!isSheet && 'px-4 py-2'} font-semibold`}>History</div>
       <nav className={`grid items-start gap-4 ${!isSheet && 'ps-4'} text-sm font-medium`}>
         <div className="grid gap-0.5 pr-4">
-          {isLoadingChatHistory && <Skeleton className="h-3 rounded-full" />}
+          {isLoadingChatHistory && (
+            <div className="grid gap-2">
+              <Skeleton className="h-4 rounded-lg" />
+              <Skeleton className="h-4 rounded-lg" />
+            </div>
+          )}
           {chatHistories.map((c) => {
             return (
               <React.Fragment key={c.id}>
@@ -83,7 +106,7 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                         onClick={() => {
                           if (setOpen) setOpen(false);
                         }}
-                        className={`group relative flex items-center gap-2 rounded-lg px-2 py-1.5 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
+                        className={`group relative flex items-center gap-2 rounded-lg px-1.5 py-1.5 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
                       >
                         <span className="w-full truncate text-xs">{c.title}</span>
                         <XIcon
@@ -91,17 +114,17 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                             e.preventDefault();
                             toggleDeleteDialog(c.id, true);
                           }}
-                          className="invisible absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 rounded-md text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
+                          className="invisible absolute top-1/2 right-1 -translate-y-1/2 rounded-md p-1 text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
                         />
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-lg bg-black">
+                    <TooltipContent className="rounded-lg bg-black" side="bottom">
                       <p className="w-52 text-wrap text-white">{c.title}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
-                <Dialog open={openDeleteDialog[c.id]} onOpenChange={(isOpen) => toggleDeleteDialog(c.id, isOpen)}>
+                <Dialog open={itemState[c.id]?.openDeleteDialog} onOpenChange={(isOpen) => toggleDeleteDialog(c.id, isOpen)}>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle className="pb-3">Delete Thread?</DialogTitle>
@@ -115,7 +138,15 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                           Cancel
                         </Button>
                       </DialogClose>
-                      <Button onClick={() => remove(c.id)}>Delete</Button>
+                      <Button onClick={() => remove(c.id)} disabled={itemState[c.id]?.deleting === true}>
+                        {itemState[c.id]?.deleting === true ? (
+                          <>
+                            <Spinner /> Deleting...
+                          </>
+                        ) : (
+                          'Delete'
+                        )}
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -127,31 +158,3 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
     </>
   );
 };
-
-/*
-const ChatHistoryLink: FC<{
-  item: TChatHistory;
-  setOpen?: Dispatch<SetStateAction<boolean>>;
-  idQueryParam: string | null;
-  toggleDeleteDialog: (id: string, isOpen: boolean) => void;
-}> = ({ item, setOpen, idQueryParam, toggleDeleteDialog }) => {
-  return (
-    <Link
-      href={`/?id=${item.id}`}
-      onClick={() => {
-        if (setOpen) setOpen(false);
-      }}
-      className={`group relative flex items-center gap-2 rounded-lg px-2 py-1.5 ${idQueryParam === item.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
-    >
-      <span className="w-full truncate text-xs">{item.title}</span>
-      <XIcon
-        onClick={(e) => {
-          e.preventDefault();
-          toggleDeleteDialog(item.id, true);
-        }}
-        className="invisible absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 rounded-md text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
-      />
-    </Link>
-  );
-};
-*/

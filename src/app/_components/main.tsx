@@ -42,20 +42,29 @@ export const Main: FC = () => {
   const searchParams = useSearchParams();
   const queryChatHistoryId = searchParams.get('id');
 
+  const trpc = useTRPC();
   const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
-  const trpc = useTRPC();
   const updateChatHistory = useMutation(
     trpc.chatHistory.insertUpdate.mutationOptions({
       onSuccess: async () => {
-        invalidateChatHistory();
+        if (!chatTitle) {
+          invalidateChatHistory();
+        }
       },
     })
   );
 
   const updateChatHistoryTitle = useMutation(
     trpc.chatHistory.updateTitle.mutationOptions({
-      onSuccess: async () => {
+      onSuccess: async (data) => {
+        invalidateChatHistory();
+        if (data === currentChatHistoryId) {
+          setChatTitlePersisted(true);
+        }
+      },
+      onError: async (err) => {
+        console.error('Error updating chat history title:', err);
         invalidateChatHistory();
       },
     })
@@ -78,8 +87,9 @@ export const Main: FC = () => {
 
     getSingleChatHistoryById(queryChatHistoryId).then((result) => {
       if (!result.isError) {
-        if (result.title !== newThreadTitle) {
+        if (result.title && result.title !== newThreadTitle) {
           setChatTitlePersisted(true);
+          setChatTitle(result.title);
         }
         setChats(result.messages);
         delayHighlighter();
@@ -91,42 +101,21 @@ export const Main: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryChatHistoryId]);
 
-  const generateChatTitle = () => {
-    if (!chatTitle && !chatTitlePersisted) {
-      const titleChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
-      if (titleChats.length === 2 && titleChats[titleChats.length - 1]?.streamComplete === true) {
-        console.log('* generate title: ', titleChats.length);
-        const firstUserMessage = (titleChats[titleChats.length - 1] as TCustomChatMessage)?.content;
-        if (firstUserMessage.length > 1) {
-          generateTitle(firstUserMessage).catch((err) => {
-            console.error('Error generating title:', err);
-          });
-        }
-      }
-    }
-  };
-
   useEffect(() => {
+    if (currentChatHistoryId && currentChatHistoryId !== queryChatHistoryId) {
+      const params = new URLSearchParams(searchParams);
+      params.set('id', currentChatHistoryId);
+
+      router.push(`/?${params.toString()}`);
+    }
+
+    generateChatTitle();
+
     if (chatTitle && currentChatHistoryId && !chatTitlePersisted) {
-      console.log(`Persist chat title: `, chatTitle);
-      updateChatHistoryTitle
-        .mutateAsync({
-          id: currentChatHistoryId,
-          title: chatTitle,
-        })
-        .then((id) => {
-          if (id === currentChatHistoryId) {
-            setChatTitlePersisted(true);
-          }
-          console.log('* Title persisted!', id);
-        })
-        .catch((err) => {
-          console.error('Error updating chat history title:', err);
-        });
-    } else {
-      console.log(
-        `* chatTitle: ${chatTitle}, currentChatHistoryId: ${currentChatHistoryId}, chatTitlePersisted: ${chatTitlePersisted.toString()}.`
-      );
+      updateChatHistoryTitle.mutateAsync({
+        id: currentChatHistoryId,
+        title: chatTitle,
+      });
     }
   }, [chatTitle, currentChatHistoryId, chatTitlePersisted]);
 
@@ -147,28 +136,44 @@ export const Main: FC = () => {
 
   useEffect(() => {
     const handleSaveChatHistory = async () => {
-      if (chats && chats[chats.length - 1]?.streamComplete === true && chats.length > 1) {
+      if (chats.length > 1 && chats[chats.length - 1]?.streamComplete === true) {
         await saveChatHistory(chats);
       }
     };
-    handleSaveChatHistory();
 
+    handleSaveChatHistory();
     generateChatTitle();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
-  useEffect(() => {
-    if (currentChatHistoryId && currentChatHistoryId !== queryChatHistoryId) {
-      const params = new URLSearchParams(searchParams);
-      params.set('id', currentChatHistoryId);
+  const generateChatTitle = () => {
+    if (!chatTitle && !chatTitlePersisted && chats.length > 1) {
+      const titleChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
+      const lastChat = titleChats[titleChats.length - 1];
 
-      router.push(`/?${params.toString()}`);
-    }
+      if (titleChats.length === 2 && lastChat?.streamComplete === true) {
+        const firstUserMessage = (lastChat as TCustomChatMessage)?.content;
 
-    if (currentChatHistoryId && currentChatHistoryId === queryChatHistoryId) {
-      generateChatTitle();
+        if (firstUserMessage.length > 1) {
+          generateTitle(firstUserMessage).catch((err) => {
+            console.error('Error generating title:', err);
+          });
+        }
+      }
     }
-  }, [currentChatHistoryId]);
+  };
+
+  const saveChatHistory = async (messages: TCustomMessage[]) => {
+    const id = await updateChatHistory.mutateAsync({
+      id: currentChatHistoryId,
+      title: chatTitle ?? newThreadTitle,
+      messages: messages,
+    });
+
+    if (id !== currentChatHistoryId) {
+      setCurrentChatHistoryId(id);
+    }
+  };
 
   const chatStream = async (message: TCustomMessage) => {
     if (selectedModel == null || selectedService == null) {
@@ -232,11 +237,10 @@ export const Main: FC = () => {
     }
 
     const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
-    console.log('* The message to generate title from:', message);
 
     const chatMessage = {
       content: systemPrompt,
-      role: ChatRole.SYSTEM,
+      role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       streamComplete: true,
     };
@@ -274,22 +278,46 @@ export const Main: FC = () => {
       if (title.length > 1) {
         title = title
           .replace(/<think>[\s\S]*?<\/think>/g, '')
-          .replace(/^```json\n/, '')
-          .replace(/\n```$/, '');
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .replace(/\n+$/, '')
+          .replace(/undefined/g, '');
 
         if (isValidJson(title)) {
           title = JSON.parse(title).title;
         } else {
+          console.log(`** invalid JSON: `, title);
           title = cleanString(title);
         }
 
-        console.log('* set title: ', title);
-
         setChatTitle(title);
-      } else {
-        console.log(`* no title? `, title);
       }
     }
+  };
+
+  const sendChatImage = async (chatInput: string) => {
+    const prompt = chatInput.replace('/image', '');
+    const chatMessage = {
+      content: prompt,
+      role: ChatRole.USER,
+      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      streamComplete: true,
+    };
+    setChats((prevArray) => [...prevArray, chatMessage]);
+    await chatImage(prompt);
+  };
+
+  const sendChatCompletion = async (chatInput: string) => {
+    const chatMessage = {
+      content: chatInput,
+      role: ChatRole.USER,
+      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      streamComplete: true,
+    };
+
+    setChats((prevArray) => [...prevArray, chatMessage]);
+    await chatStream(chatMessage);
+    delayHighlighter();
   };
 
   const sendChat = async (chatInput: string) => {
@@ -298,39 +326,11 @@ export const Main: FC = () => {
     }
 
     if (chatInput.startsWith('/image')) {
-      const prompt = chatInput.replace('/image', '');
-      const chatMessage = {
-        content: prompt,
-        role: ChatRole.USER,
-        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-        streamComplete: true,
-      };
-      setChats((prevArray) => [...prevArray, chatMessage]);
-      await chatImage(prompt);
-    } else {
-      const chatMessage = {
-        content: chatInput,
-        role: ChatRole.USER,
-        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-        streamComplete: true,
-      };
-
-      setChats((prevArray) => [...prevArray, chatMessage]);
-      await chatStream(chatMessage);
-      delayHighlighter();
+      await sendChatImage(chatInput);
+      return;
     }
-  };
 
-  const saveChatHistory = async (messages: TCustomMessage[]) => {
-    const id = await updateChatHistory.mutateAsync({
-      id: currentChatHistoryId,
-      title: newThreadTitle,
-      messages: messages,
-    });
-
-    if (id !== currentChatHistoryId) {
-      setCurrentChatHistoryId(id);
-    }
+    await sendChatCompletion(chatInput);
   };
 
   const onResetChat = () => {
