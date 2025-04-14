@@ -21,6 +21,8 @@ import { Button } from '@/components/ui/button';
 import React from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Spinner } from '@/components/spinner';
+import type { TChatHistory } from '@/db/schema';
+import { format, isThisYear, isToday, subDays } from 'date-fns';
 
 type ChatItemState = {
   openDeleteDialog: boolean;
@@ -37,16 +39,59 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
   const idQueryParam = searchParams.get('id');
 
   const [itemState, setItemState] = useState<Record<string, ChatItemState>>({});
+  const [chatGroup, setChatGroup] = useState<Record<string, TChatHistory[]>>({});
+
+  const now = new Date();
+  const last7DaysDate = subDays(now, 7);
+  const last30DaysDate = subDays(now, 30);
+
+  const todaysChats: TChatHistory[] = [];
+  const last7Days: TChatHistory[] = [];
+  const last30Days: TChatHistory[] = [];
+  const previousMonths: Record<string, TChatHistory[]> = {};
 
   useEffect(() => {
     if (chatHistories?.length > 0) {
       const itemState: Record<string, ChatItemState> = {};
-      chatHistories.forEach((history) => {
-        itemState[history.id] = { openDeleteDialog: false, deleting: false };
+      chatHistories.forEach((chat) => {
+        itemState[chat.id] = { openDeleteDialog: false, deleting: false };
+        handleGrouping(chat, now);
       });
       setItemState(itemState);
+
+      setChatGroup((prev) => ({ ...prev, ['Today']: todaysChats }));
+      setChatGroup((prev) => ({ ...prev, ['Last 7 Days']: last7Days }));
+      setChatGroup((prev) => ({ ...prev, ['Last 30 Days']: last30Days }));
+
+      Object.entries(previousMonths).forEach(([monthYear, chats]) => {
+        console.log(`Processing ${monthYear}`);
+        setChatGroup((prev) => ({ ...prev, [`${monthYear}`]: chats }));
+      });
     }
   }, [chatHistories]);
+
+  const handleGrouping = (chat: TChatHistory, now: Date) => {
+    const chatDate = new Date(chat.timestamp);
+
+    if (isToday(chatDate)) {
+      todaysChats.push(chat);
+    } else if (chatDate >= last7DaysDate) {
+      last7Days.push(chat);
+    } else if (chatDate >= last30DaysDate) {
+      last30Days.push(chat);
+    } else {
+      let monthYear = format(chatDate, 'MMMM');
+      if (!isThisYear(chatDate)) {
+        monthYear = format(chatDate, 'MMMM yyyy');
+      }
+
+      console.log(`Processing ${monthYear}`);
+      if (!previousMonths[monthYear]) {
+        previousMonths[monthYear] = [];
+      }
+      previousMonths[monthYear]?.push(chat);
+    }
+  };
 
   const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
@@ -95,66 +140,82 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
               <Skeleton className="h-4 rounded-lg" />
             </div>
           )}
-          {chatHistories.map((c) => {
+          {Object.entries(chatGroup).map(([groupName, chats]) => {
             return (
-              <React.Fragment key={c.id}>
-                <TooltipProvider delayDuration={1000}>
-                  <Tooltip disableHoverableContent={true}>
-                    <TooltipTrigger asChild>
-                      <Link
-                        href={`/?id=${c.id}`}
-                        onClick={() => {
-                          if (setOpen) setOpen(false);
-                        }}
-                        className={`group relative flex items-center gap-2 rounded-lg px-1.5 py-1.5 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
-                      >
-                        <span className="w-full truncate text-xs">{c.title}</span>
-                        <XIcon
-                          onClick={(e) => {
-                            e.preventDefault();
-                            toggleDeleteDialog(c.id, true);
-                          }}
-                          className="invisible absolute top-1/2 right-1 -translate-y-1/2 rounded-md p-1 text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
-                        />
-                      </Link>
-                    </TooltipTrigger>
-                    <TooltipContent className="rounded-lg bg-black" side="bottom" hideWhenDetached={true}>
-                      <p className="w-52 text-wrap text-white">{c.title}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              chats.length > 0 && (
+                <React.Fragment key={groupName}>
+                  <div className="mb-1 text-xs font-bold text-stone-400">{groupName}</div>
+                  <div className="mb-3 grid gap-0.5">
+                    {chats.map((c) => {
+                      return (
+                        <React.Fragment key={c.id}>
+                          <TooltipProvider delayDuration={500}>
+                            <Tooltip disableHoverableContent={true}>
+                              <TooltipTrigger asChild>
+                                <Link
+                                  href={`/?id=${c.id}`}
+                                  onClick={() => {
+                                    if (setOpen) setOpen(false);
+                                  }}
+                                  className={`group relative flex items-center gap-2 rounded-lg px-1.5 py-1.5 ${idQueryParam === c.id && 'bg-stone-500 text-stone-950'} truncate hover:bg-stone-700`}
+                                >
+                                  <span className="w-full truncate text-xs">{c.title}</span>
+                                  <XIcon
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      toggleDeleteDialog(c.id, true);
+                                    }}
+                                    className="invisible absolute top-1/2 right-1 -translate-y-1/2 rounded-md p-1 text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
+                                  />
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent className="rounded-lg bg-black" side="bottom" hideWhenDetached={true}>
+                                <p className="w-52 text-wrap text-white">{c.title}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
 
-                <Dialog open={itemState[c.id]?.openDeleteDialog} onOpenChange={(isOpen) => toggleDeleteDialog(c.id, isOpen)}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle className="pb-3">Delete Thread?</DialogTitle>
-                      <DialogDescription>
-                        This will permanetly delete the chat &quot;
-                        <strong>
-                          {c.title && (c.title?.length ?? 0) > 100 ? c.title.substring(0, 100) + '...' : (c.title ?? '-')}
-                        </strong>
-                        &quot;. Are you sure?
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button type="button" variant="secondary">
-                          Cancel
-                        </Button>
-                      </DialogClose>
-                      <Button onClick={() => remove(c.id)} disabled={itemState[c.id]?.deleting === true}>
-                        {itemState[c.id]?.deleting === true ? (
-                          <>
-                            <Spinner /> Deleting...
-                          </>
-                        ) : (
-                          'Delete'
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </React.Fragment>
+                          <Dialog
+                            open={itemState[c.id]?.openDeleteDialog}
+                            onOpenChange={(isOpen) => toggleDeleteDialog(c.id, isOpen)}
+                          >
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle className="pb-3">Delete Thread?</DialogTitle>
+                                <DialogDescription>
+                                  This will permanetly delete the chat &quot;
+                                  <strong>
+                                    {c.title && (c.title?.length ?? 0) > 100
+                                      ? c.title.substring(0, 100) + '...'
+                                      : (c.title ?? '-')}
+                                  </strong>
+                                  &quot;. Are you sure?
+                                </DialogDescription>
+                              </DialogHeader>
+                              <DialogFooter>
+                                <DialogClose asChild>
+                                  <Button type="button" variant="secondary">
+                                    Cancel
+                                  </Button>
+                                </DialogClose>
+                                <Button onClick={() => remove(c.id)} disabled={itemState[c.id]?.deleting === true}>
+                                  {itemState[c.id]?.deleting === true ? (
+                                    <>
+                                      <Spinner /> Deleting...
+                                    </>
+                                  ) : (
+                                    'Delete'
+                                  )}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </React.Fragment>
+              )
             );
           })}
         </div>
