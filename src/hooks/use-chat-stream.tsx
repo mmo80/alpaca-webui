@@ -14,7 +14,7 @@ export const useChatStream = () => {
   const [chats, setChats] = useState<TCustomMessage[]>([]);
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
 
-  let assistantChatMessage = '';
+  const chatMessageChunks: string[] = [];
   let checkFirstCharSpacing = true;
   let hasReasoningContent = false;
 
@@ -58,14 +58,14 @@ export const useChatStream = () => {
       chatCompletionResponse.choices[0]?.delta.reasoning_content ?? chatCompletionResponse.choices[0]?.delta.reasoning;
     if (!hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
       hasReasoningContent = true;
-      if (isEmpty(assistantChatMessage)) {
-        assistantChatMessage = '<think>';
+      if (chatMessageChunks.length === 0) {
+        chatMessageChunks.push('<think>');
       }
     }
 
     if (hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
-      assistantChatMessage += chunkReasoningContent;
-      updateLastChatsItem('update', assistantChatMessage);
+      chatMessageChunks.push(chunkReasoningContent ?? '');
+      updateLastChatsItem('update', chatMessageChunks.join(''));
     }
 
     // handle normal content
@@ -73,7 +73,7 @@ export const useChatStream = () => {
     if (!chunkContent) return;
 
     if (hasReasoningContent && isEmpty(chunkReasoningContent) && hasNonWhitespaceChars(chunkContent)) {
-      assistantChatMessage += '</think>';
+      chatMessageChunks.push('</think>');
       hasReasoningContent = false;
     }
 
@@ -83,8 +83,8 @@ export const useChatStream = () => {
       checkFirstCharSpacing = false;
     }
 
-    assistantChatMessage += chunkContent;
-    updateLastChatsItem('update', assistantChatMessage);
+    chatMessageChunks.push(chunkContent);
+    updateLastChatsItem('update', chatMessageChunks.join(''));
   };
 
   let jsonFaultBuffer: string = '';
@@ -102,12 +102,14 @@ export const useChatStream = () => {
     streamReader: ReadableStreamDefaultReader<Uint8Array>,
     provider: TCustomProviderSchema,
     convertResponse: (streamData: string) => TChatCompletionResponse
-  ) => {
+  ): Promise<void> => {
     setIsStreamProcessing(true);
+    const decoder = new TextDecoder('utf-8');
+
     try {
       setChats((prevArray) => [
         ...prevArray,
-        { content: assistantChatMessage, role: ChatRole.ASSISTANT, provider: provider, streamComplete: false },
+        { content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false },
       ]);
 
       while (true) {
@@ -117,11 +119,14 @@ export const useChatStream = () => {
           break;
         }
 
-        const text = new TextDecoder('utf-8').decode(value);
+        const text = decoder.decode(value, { stream: true });
         const objects = text.split('\n');
+
         for (const obj of objects) {
           if (obj == null || obj.length === 0 || obj === '') continue;
+
           const jsonString = removeJunkStreamData(obj);
+
           try {
             handleStreamChunk(jsonString, convertResponse);
           } catch (error) {
@@ -152,7 +157,11 @@ export const useChatStream = () => {
           { content: (error as any).toString(), role: ChatRole.SYSTEM, provider: defaultProvider, streamComplete: true },
         ]);
       }
+    } finally {
+      // Flush the decoder when done
+      decoder.decode(new Uint8Array(0), { stream: false });
     }
+
     setIsStreamProcessing(false);
   };
 

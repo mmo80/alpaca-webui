@@ -58,6 +58,7 @@ export const Main: FC = () => {
   const updateChatHistoryTitle = useMutation(
     trpc.chatHistory.updateTitle.mutationOptions({
       onSuccess: async (data) => {
+        console.log('** Title persisted: ', chatTitle);
         invalidateChatHistory();
         if (data === currentChatHistoryId) {
           setChatTitlePersisted(true);
@@ -117,6 +118,7 @@ export const Main: FC = () => {
         title: chatTitle,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatTitle, currentChatHistoryId, chatTitlePersisted]);
 
   useEffect(() => {
@@ -258,23 +260,32 @@ export const Main: FC = () => {
         selectedService.apiKey
       );
 
-      let title = '';
-      while (true) {
-        const { done, value } = await response.stream.read();
-        if (done) break;
+      const decoder = new TextDecoder('utf-8');
+      const titleChunks = [];
 
-        const text = new TextDecoder('utf-8').decode(value);
-        const objects = text.split('\n');
-        for (const obj of objects) {
-          const jsonString = removeJunkStreamData(obj);
+      try {
+        while (true) {
+          const { done, value } = await response.stream.read();
+          if (done) break;
 
-          if (jsonString.length > 0 && isValidJson(jsonString)) {
-            const responseData = providerInstance.convertResponse(jsonString);
-            title += responseData.choices[0]?.delta.content;
+          const text = decoder.decode(value, { stream: true });
+          const objects = text.split('\n');
+
+          for (const obj of objects) {
+            const jsonString = removeJunkStreamData(obj);
+
+            if (jsonString.length > 0 && isValidJson(jsonString)) {
+              const responseData = providerInstance.convertResponse(jsonString);
+              titleChunks.push(responseData.choices[0]?.delta.content);
+            }
           }
         }
+      } finally {
+        // Flush the decoder when done
+        decoder.decode(new Uint8Array(0), { stream: false });
       }
 
+      let title = titleChunks.join('');
       if (title.length > 1) {
         title = title
           .replace(/<think>[\s\S]*?<\/think>/g, '')
@@ -290,6 +301,7 @@ export const Main: FC = () => {
           title = cleanString(title);
         }
 
+        console.log('** Set title: ', title);
         setChatTitle(title);
       }
     }
