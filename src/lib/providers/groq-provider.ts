@@ -24,6 +24,9 @@ class GroqProvider implements Provider {
     const response = await this.service.executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
 
     if (response.response == null || response.error.isError) {
+      if (response.error.isError) {
+        throw Error(response.error.errorMessage);
+      }
       return [];
     }
 

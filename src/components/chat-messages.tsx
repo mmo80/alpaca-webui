@@ -76,7 +76,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
             <LayersIcon className="mr-2 h-6 w-6 self-start" />
           )}
           <div
-            className={`flex w-full max-w-full flex-col overflow-x-hidden rounded-md px-3 py-1 font-sans text-sm leading-6 text-wrap ${
+            className={`flex w-full max-w-full flex-col overflow-x-hidden rounded-md px-3 py-1 text-sm leading-6 text-wrap ${
               role == ChatRole.USER ? 'bg-stone-700 whitespace-pre-wrap' : 'bg-stone-900'
             }`}
           >

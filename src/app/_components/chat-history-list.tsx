@@ -98,8 +98,8 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
           {chatHistories.map((c) => {
             return (
               <React.Fragment key={c.id}>
-                <TooltipProvider>
-                  <Tooltip>
+                <TooltipProvider delayDuration={1000}>
+                  <Tooltip disableHoverableContent={true}>
                     <TooltipTrigger asChild>
                       <Link
                         href={`/?id=${c.id}`}
@@ -118,7 +118,7 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                         />
                       </Link>
                     </TooltipTrigger>
-                    <TooltipContent className="rounded-lg bg-black" side="bottom">
+                    <TooltipContent className="rounded-lg bg-black" side="bottom" hideWhenDetached={true}>
                       <p className="w-52 text-wrap text-white">{c.title}</p>
                     </TooltipContent>
                   </Tooltip>
@@ -129,7 +129,11 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
                     <DialogHeader>
                       <DialogTitle className="pb-3">Delete Thread?</DialogTitle>
                       <DialogDescription>
-                        This will permanetly delete the chat "<strong>{c.title}</strong>". Are you sure?
+                        This will permanetly delete the chat &quot;
+                        <strong>
+                          {c.title && (c.title?.length ?? 0) > 100 ? c.title.substring(0, 100) + '...' : (c.title ?? '-')}
+                        </strong>
+                        &quot;. Are you sure?
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

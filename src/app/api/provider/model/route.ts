@@ -2,14 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiService, HttpMethod } from '@/lib/api-service';
 import { AnthropicModelsResponseSchema, type TModelSchema } from '@/lib/types';
 
-type ModelsRequest = {
-  apiKey: string;
-  baseUrl: string;
-};
-
 export async function GET(request: NextRequest): Promise<NextResponse<TModelSchema[]>> {
-  const urlParams = new URLSearchParams(request.url.split('?')[1]);
-  const { apiKey, baseUrl } = Object.fromEntries(urlParams.entries()) as ModelsRequest;
+  const apiKey = request.nextUrl.searchParams.get('apiKey');
+  const baseUrl = request.nextUrl.searchParams.get('baseUrl');
 
   if (!apiKey || !baseUrl) {
     return NextResponse.json([], { status: 400 });

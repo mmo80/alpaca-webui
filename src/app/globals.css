@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* --font-poppins: var(--font-poppins), 'sans-serif'; */
+  /* --font-robotflex: var(--font-robotflex), 'sans-serif'; */
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));

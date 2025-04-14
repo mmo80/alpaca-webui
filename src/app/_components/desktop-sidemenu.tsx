@@ -6,6 +6,7 @@ import { MessageSquareMoreIcon, FileInputIcon, Settings2Icon } from 'lucide-reac
 import { appName } from '@/lib/providers/data';
 import { ChatHistoryList } from './chat-history-list';
 import { AppHeader } from './app-header';
+import type { FC } from 'react';
 
 export const menuItems = [
   {
@@ -28,7 +29,7 @@ export const menuItems = [
   },
 ] as const;
 
-export function DesktopSidemenu() {
+export const DesktopSidemenu: FC = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const idQueryParam = searchParams.get('id');
@@ -64,4 +65,4 @@ export function DesktopSidemenu() {
       </div>
     </div>
   );
-}
+};

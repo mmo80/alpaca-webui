@@ -65,25 +65,6 @@ export const queryClient = getQueryClient();
 export function TRPCReactProvider(props: Readonly<{ children: React.ReactNode }>) {
   const trpcClient = trpc;
 
-  // const [trpcClient] = useState(() =>
-  //   createTRPCClient<AppRouter>({
-  //     links: [
-  //       loggerLink({
-  //         enabled: (op) => process.env.NODE_ENV === 'development' || (op.direction === 'down' && op.result instanceof Error),
-  //       }),
-  //       httpBatchStreamLink({
-  //         transformer: SuperJSON,
-  //         url: getBaseUrl() + '/api/trpc',
-  //         headers() {
-  //           const headers = new Headers();
-  //           headers.set('x-trpc-source', 'nextjs-react');
-  //           return headers;
-  //         },
-  //       }),
-  //     ],
-  //   })
-  // );
-
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
