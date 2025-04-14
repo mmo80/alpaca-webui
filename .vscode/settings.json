@@ -31,4 +31,13 @@
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "sqltools.useNodeRuntime": true,
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "database": "${workspaceFolder:alpaca-webui}/db/local.db",
+      "name": "Alpaca WebUI SQLite"
+    }
+  ]
 }

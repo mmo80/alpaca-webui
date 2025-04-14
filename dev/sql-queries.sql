@@ -1,29 +1,6 @@
--- SQLite
-
-SELECT *
-FROM files
+UPDATE chat_histories SET timestamp = '2025-04-02 23:43:50'
+WHERE id = '01962e42-48bd-72d9-8e96-699a3c207cd8';
 
 
-/*
-SELECT no_of_tokens FROM files
+SELECT * FROM chat_histories ORDER BY timestamp desc;
 
-DELETE FROM files
-
-SELECT CURRENT_TIMESTAMP, CURRENT_DATE, CURRENT_TIME
-SELECT date('now'), datetime('now'), datetime('now','localtime');
-
-CREATE TABLE `files` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`filename` text NOT NULL,
-	`file_size` integer,
-	`timestamp` text DEFAULT (datetime('now','localtime')) NOT NULL,
-	`is_embedded` integer DEFAULT false NOT NULL,
-	`embed_model` text DEFAULT '',
-	`embed_api_service_name` text DEFAULT '',
-	`text_character_count` integer DEFAULT 0,
-	`no_of_chunks` integer DEFAULT 0,
-	`no_of_tokens` integer DEFAULT 0
-);
-
-DROP TABLE files;
-*/
