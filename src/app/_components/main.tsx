@@ -372,19 +372,6 @@ export const Main: FC = () => {
     setChats([]);
   };
 
-  const onFilesAttached = (files: FileInfo[]) => {
-    console.log('onFilesAttached (Main): ', files);
-
-    setAttachments((prevFiles) => [...prevFiles, ...files]);
-  };
-
-  const onFileRemove = (fileId: string) => {
-    console.log('onFileRemove (Main): ', fileId);
-
-    const newFiles = attachments.filter((f) => f.id !== fileId);
-    setAttachments(newFiles);
-  };
-
   return (
     <>
       <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
@@ -423,8 +410,8 @@ export const Main: FC = () => {
         <ChatInput
           onSendInput={sendChat}
           onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
-          onFilesAttached={onFilesAttached}
-          onFileRemove={onFileRemove}
+          files={attachments}
+          setFiles={setAttachments}
           chatInputPlaceholder={textareaPlaceholder}
           isStreamProcessing={isStreamProcessing}
           isFetchLoading={isFetchLoading}

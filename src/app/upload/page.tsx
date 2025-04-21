@@ -37,6 +37,7 @@ export default function Page() {
   const { modelList } = useModelList();
   const [selectedDocument, setSelectedDocument] = useState<SelectedDocument | null>(null);
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [attachments, setAttachments] = useState<FileInfo[]>([]);
 
   // ---- Chats ----
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
@@ -141,14 +142,6 @@ export default function Page() {
     setChats([]);
   };
 
-  const onFilesAttached = (files: FileInfo[]) => {
-    console.log('onFilesAttached (Main): ', files);
-  };
-
-  const onFileRemove = (fileId: string) => {
-    console.log('onFileRemove (Main): ', fileId);
-  };
-
   return (
     <main className="flex h-full flex-col lg:flex-row">
       <section className="hidden basis-2/5 overflow-y-scroll px-3 sm:block">
@@ -223,8 +216,8 @@ export default function Page() {
           <ChatInput
             onSendInput={onSendChat}
             onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
-            onFilesAttached={onFilesAttached}
-            onFileRemove={onFileRemove}
+            files={attachments}
+            setFiles={setAttachments}
             chatInputPlaceholder={textareaPlaceholder}
             isStreamProcessing={isStreamProcessing}
             isFetchLoading={isFetchLoading}

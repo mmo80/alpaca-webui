@@ -10,8 +10,8 @@ import { FileBadge } from './file-badge';
 interface ChatInputProps {
   onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
-  onFilesAttached: (files: FileInfo[]) => void;
-  onFileRemove: (fileId: string) => void;
+  files: FileInfo[];
+  setFiles: (files: FileInfo[]) => void;
   chatInputPlaceholder: string;
   isStreamProcessing: boolean;
   isFetchLoading: boolean;
@@ -21,8 +21,8 @@ interface ChatInputProps {
 export const ChatInput: FC<ChatInputProps> = ({
   onSendInput,
   onCancelStream,
-  onFilesAttached,
-  onFileRemove,
+  files,
+  setFiles,
   chatInputPlaceholder,
   isStreamProcessing,
   isFetchLoading,
@@ -34,7 +34,6 @@ export const ChatInput: FC<ChatInputProps> = ({
   const fileUploadRef = useRef<FileUploadRef>(null);
 
   const [dragging, setDragging] = useState<boolean>(false);
-  const [files, setFiles] = useState<FileInfo[]>([]);
 
   const maxFileSizeMb = 10;
   const allowedFileTypes: string[] = [
@@ -79,29 +78,27 @@ export const ChatInput: FC<ChatInputProps> = ({
     console.log('onFileSubmit');
   };
 
-  const attachFiles = async (files: FileList) => {
-    const valid = await fileUploadRef.current?.validate(files);
+  const attachFiles = async (fileList: FileList) => {
+    const valid = await fileUploadRef.current?.validate(fileList);
     if (valid) {
-      const filesArray = [...files];
+      const filesArray = [...fileList];
 
-      const filePromises = filesArray.map(async (file) => {
-        const dataUrl = await convertFileToBase64(file);
-        console.log(`* dataUrl: `, dataUrl);
+      const filePromises = filesArray.map(async (f) => {
+        const dataUrl = await convertFileToBase64(f);
 
         return {
           id: uuidv7(),
-          filename: file.name,
-          sizeInBytes: file.size,
-          type: file.type,
+          filename: f.name,
+          sizeInBytes: f.size,
+          type: f.type,
           dataUrl: dataUrl,
         };
       });
 
-      const attachedFiles = await Promise.all(filePromises);
+      const attachedFiles: FileInfo[] = await Promise.all(filePromises);
 
-      setFiles((prevFiles) => [...prevFiles, ...attachedFiles]);
-
-      onFilesAttached(attachedFiles);
+      const updatedFiles = [...files, ...attachedFiles];
+      setFiles(updatedFiles);
     }
   };
 
@@ -136,8 +133,6 @@ export const ChatInput: FC<ChatInputProps> = ({
   const onRemoveAttachment = (fileId: string) => {
     const newFiles = files.filter((f) => f.id !== fileId);
     setFiles(newFiles);
-
-    onFileRemove(fileId);
   };
 
   return (
