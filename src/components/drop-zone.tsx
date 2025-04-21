@@ -1,24 +1,27 @@
-import React, { useState } from 'react';
-import { UploadIcon } from '@radix-ui/react-icons';
+import React from 'react';
 
 interface DropZoneProps {
-  onFileSelected: (file: File) => void;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFilesDropped: (files: FileList) => void;
+  children?: React.ReactNode;
+  setDragging: React.Dispatch<React.SetStateAction<boolean>>;
+  onClickZone: () => void;
+  onEnterSpaceZone: () => void;
 }
 
-export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef }) => {
-  const [dragging, setDragging] = useState(false);
-
+export const DropZone: React.FC<DropZoneProps> = ({
+  onFilesDropped,
+  children,
+  setDragging,
+  onClickZone,
+  onEnterSpaceZone,
+}) => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setDragging(false);
 
-    if (e.dataTransfer.files.length == 1) {
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        onFileSelected(file);
-      }
+    if (e.dataTransfer.files.length > 0) {
+      onFilesDropped(e.dataTransfer.files);
     }
   };
 
@@ -34,34 +37,25 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFileSelected, fileInputRef
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      fileInputRef.current?.click();
+      onEnterSpaceZone();
     }
   };
 
   const handleClick = () => {
-    fileInputRef.current?.click();
+    onClickZone();
   };
 
   return (
-    <section className="flex">
-      <div
-        role="button"
-        tabIndex={0}
-        className={`my-3 flex h-28 w-full flex-col items-center justify-center rounded-lg border p-3 ${dragging ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-700 bg-zinc-800'} hover:border-zinc-800 hover:bg-zinc-900`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onKeyDown={handleKeyDown}
-        onClick={handleClick}
-      >
-        <div className="flex flex-col items-center">
-          <UploadIcon />
-          <span className="text-center text-xl xl:text-2xl">
-            Drag and drop or <u>select document</u>
-          </span>
-        </div>
-        <div className="text-sm text-slate-500 italic">.pdf, .txt, .docx</div>
-      </div>
-    </section>
+    <div
+      role="button"
+      tabIndex={0}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onKeyDown={handleKeyDown}
+      onClick={handleClick}
+    >
+      {children}
+    </div>
   );
 };

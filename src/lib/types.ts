@@ -47,12 +47,42 @@ const UsageSchema = z.object({
   total_tokens: z.number(),
 });
 
+const ContentImageUrlSchema = z.object({
+  url: z.string(),
+});
+
+const ContentTextSchema = z.object({
+  type: z.literal('text'),
+  text: z.string(),
+});
+export type TContentText = z.infer<typeof ContentTextSchema>;
+
+const ContentImageMetaSchema = z.object({
+  filename: z.string(),
+  size: z.string(),
+});
+
+const ContentImageSchema = z.object({
+  type: z.literal('image_url'),
+  image_url: ContentImageUrlSchema,
+  meta: ContentImageMetaSchema.nullish(),
+});
+export type TContentImage = z.infer<typeof ContentImageSchema>;
+
+const contentItemSchema = z.discriminatedUnion('type', [ContentTextSchema, ContentImageSchema]);
+
+export type TContentItem = z.infer<typeof contentItemSchema>;
+
+const contentUnionSchema = z.union([z.string().nullable(), z.array(contentItemSchema)]);
+export type TContentUnion = z.infer<typeof contentUnionSchema>;
+
 const MessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
-  content: z.string(),
+  content: contentUnionSchema,
   reasoning_content: z.string().optional().nullable(),
   reasoning: z.string().optional().nullable(),
 });
+export type TChatMessage = z.infer<typeof MessageSchema>;
 
 const ChoiceSchema = z.object({
   index: z.number(),
@@ -69,12 +99,14 @@ const ChatCompletionSchema = z.object({
   choices: z.array(ChoiceSchema),
   usage: UsageSchema.or(z.nullable(UsageSchema)),
 });
+export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
 
 const ChatCompletionRequestSchema = z.object({
   model: z.string(),
   messages: z.array(MessageSchema),
   stream: z.boolean(),
 });
+export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
 
 const OpenAIModelResponseSchema = z.object({
   id: z.string(),
@@ -82,6 +114,9 @@ const OpenAIModelResponseSchema = z.object({
   created: z.number().optional(),
   type: z.string().optional(),
 });
+export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
+export const OpenAIModelsResponseSchema = z.array(OpenAIModelResponseSchema);
+export type TModelsResponseSchema = z.infer<typeof OpenAIModelsResponseSchema>;
 
 const ModelSchema = z.object({
   id: z.string(),
@@ -90,6 +125,7 @@ const ModelSchema = z.object({
   type: z.string().optional(),
   embedding: z.boolean(),
 });
+export type TModelSchema = z.infer<typeof ModelSchema>;
 
 export const CreateImageRequestSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required!'),
@@ -100,31 +136,21 @@ export const CreateImageRequestSchema = z.object({
   style: z.string().default('vivid'),
   user: z.string().optional(),
 });
+export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
 
 const CreateImageDataSchema = z.object({
   url: z.string(),
   b64_json: z.string().optional(),
   revised_prompt: z.string(),
 });
+export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
 
 const CreateImageResponseSchema = z.object({
   created: z.number(),
   data: z.array(CreateImageDataSchema),
 });
-
 export type TCreateImageResponse = z.infer<typeof CreateImageResponseSchema>;
-export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
-export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
 
-export const OpenAIModelsResponseSchema = z.array(OpenAIModelResponseSchema);
-
-export type TChatMessage = z.infer<typeof MessageSchema>;
-export type TChatCompletionResponse = z.infer<typeof ChatCompletionSchema>;
-export type TChatCompletionRequest = z.infer<typeof ChatCompletionRequestSchema>;
-export type TModelsResponseSchema = z.infer<typeof OpenAIModelsResponseSchema>;
-export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
-
-export type TModelSchema = z.infer<typeof ModelSchema>;
 export type TMessage = TChatMessage | TCreateImageData;
 
 // CUSTOM :: START
@@ -141,7 +167,7 @@ export const defaultProvider = {
 
 const CustomChatMessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
-  content: z.string(),
+  content: contentUnionSchema,
   provider: CustomProviderSchema.default(defaultProvider),
   streamComplete: z.boolean().optional().default(true),
 });

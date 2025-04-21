@@ -72,9 +72,15 @@ class GoogleProvider implements Provider {
 
     const payload: TGoogleChatCompletionRequestSchema = {
       contents: messages.map((m: TCustomMessage) => {
+        const msg = m as TChatMessage;
+        let content = '';
+        if (msg?.content) {
+          content = msg.content as string;
+        }
+
         return {
-          role: (m as TChatMessage).role == ChatRole.USER ? 'user' : 'model',
-          parts: [{ text: (m as TChatMessage).content }],
+          role: msg.role == ChatRole.USER ? 'user' : 'model',
+          parts: [{ text: content }],
         };
       }),
     };

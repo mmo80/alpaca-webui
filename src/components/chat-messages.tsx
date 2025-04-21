@@ -1,7 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import { ChatRole, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
+import {
+  ChatRole,
+  type TContentImage,
+  type TContentItem,
+  type TContentText,
+  type TContentUnion,
+  type TCustomChatMessage,
+  type TCustomCreateImageData,
+  type TCustomMessage,
+} from '@/lib/types';
 import Markdown, { type ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { PersonIcon, LayersIcon, CopyIcon, TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
@@ -35,20 +44,50 @@ const thinkPlugin = () => {
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
   const messageId = generateGUID();
 
-  function isImage(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData {
+  const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
     return (item as TCustomCreateImageData).url !== undefined;
-  }
+  };
 
-  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
+  const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
     return (item as TCustomChatMessage).content !== undefined;
-  }
+  };
+
+  const renderContent = (content: TContentUnion) => {
+    if (content && Array.isArray(content) && content.length > 0) {
+      return (content[0] as TContentText).text;
+    } else if (typeof content === 'string') {
+      return content;
+    }
+    return '';
+  };
+
+  const renderAttachments = (content: TContentUnion) => {
+    if (content && Array.isArray(content) && content.length > 0) {
+      const images = content.filter((item) => item.type === 'image_url');
+
+      const fileAttachments = images.map((image, i) => {
+        return (
+          <div key={i} className="rounded-lg bg-stone-800 p-3">
+            <Image src={image.image_url.url} width={100} height={100} alt={`Attachment: ${image.meta?.filename}`} />
+            <span className="pt-2">{image.meta?.filename}</span>
+          </div>
+        );
+      });
+
+      return <div className="flex flex-wrap gap-2 pt-3">{fileAttachments}</div>;
+    }
+    return '';
+  };
 
   const render = () => {
     if (isChat(message)) {
       return (
-        <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[thinkPlugin]}>
-          {message.content}
-        </Markdown>
+        <>
+          <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[thinkPlugin]}>
+            {renderContent(message.content)}
+          </Markdown>
+          {renderAttachments(message.content)}
+        </>
       );
     } else if (isImage(message)) {
       return (

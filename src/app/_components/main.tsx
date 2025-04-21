@@ -1,9 +1,9 @@
 'use client';
 
 import { type FC, useState, useRef, useEffect } from 'react';
-import { type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
+import { type TContentImage, type TContentText, type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
-import { cleanString, delayHighlighter, isValidJson, removeJunkStreamData } from '@/lib/utils';
+import { cleanString, delayHighlighter, formatBytes, isValidJson, removeJunkStreamData } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { useChatStream } from '@/hooks/use-chat-stream';
@@ -20,28 +20,34 @@ import { useMutation } from '@tanstack/react-query';
 import { getSingleChatHistoryById, useChatHistoryMutation } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTRPC } from '@/trpc/react';
+import type { FileInfo } from '../upload/upload-types';
 
 export const Main: FC = () => {
   const newThreadTitle = 'New Thread';
-
-  const { selectedModel, setModel, selectedService, setService } = useModelStore();
-  const { systemPrompt, hasHydrated } = useSettingsStore();
-  const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
-  const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
-  const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+
+  const { systemPrompt, hasHydrated, systemPromptForChatTitle } = useSettingsStore();
   const { modelList } = useModelList();
+  const { selectedModel, setModel, selectedService, setService } = useModelStore();
+  const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+
+  const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
+  const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
   const [provider, setProvider] = useState<Provider | undefined>(undefined);
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
+
+  // TODO: Maybe convert to useReduce
   const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string | undefined>(undefined);
-  const { systemPromptForChatTitle } = useSettingsStore();
   const [chatTitle, setChatTitle] = useState<string | undefined>(undefined);
   const [chatTitlePersisted, setChatTitlePersisted] = useState<boolean>(false);
+
+  const [attachments, setAttachments] = useState<FileInfo[]>([]);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryChatHistoryId = searchParams.get('id');
 
+  // tRPC
   const trpc = useTRPC();
   const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
@@ -154,9 +160,9 @@ export const Main: FC = () => {
       const lastChat = titleChats[titleChats.length - 1];
 
       if (titleChats.length === 2 && lastChat?.streamComplete === true) {
-        const firstUserMessage = (lastChat as TCustomChatMessage)?.content;
+        const firstUserMessage = (lastChat as TCustomChatMessage)?.content as string;
 
-        if (firstUserMessage.length > 1) {
+        if (firstUserMessage && firstUserMessage.length > 1) {
           generateTitle(firstUserMessage).catch((err) => {
             console.error('Error generating title:', err);
           });
@@ -276,7 +282,7 @@ export const Main: FC = () => {
 
             if (jsonString.length > 0 && isValidJson(jsonString)) {
               const responseData = providerInstance.convertResponse(jsonString);
-              titleChunks.push(responseData.choices[0]?.delta.content);
+              titleChunks.push(responseData.choices[0]?.delta.content as string);
             }
           }
         }
@@ -307,7 +313,7 @@ export const Main: FC = () => {
     }
   };
 
-  const sendChatImage = async (chatInput: string) => {
+  const sendChatGenerateImage = async (chatInput: string) => {
     const prompt = chatInput.replace('/image', '');
     const chatMessage = {
       content: prompt,
@@ -325,7 +331,22 @@ export const Main: FC = () => {
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       streamComplete: true,
-    };
+    } as TCustomMessage;
+
+    if (attachments && attachments.length > 0) {
+      const textContent: TContentText = { text: chatInput, type: 'text' };
+      const images: TContentImage[] = [];
+
+      attachments.forEach((file) => {
+        images.push({
+          type: 'image_url',
+          image_url: { url: file.dataUrl ?? '' },
+          meta: { filename: file.filename, size: formatBytes(file.sizeInBytes) },
+        });
+      });
+
+      (chatMessage as TCustomChatMessage).content = [textContent, ...images];
+    }
 
     setChats((prevArray) => [...prevArray, chatMessage]);
     await chatStream(chatMessage);
@@ -338,15 +359,30 @@ export const Main: FC = () => {
     }
 
     if (chatInput.startsWith('/image')) {
-      await sendChatImage(chatInput);
+      await sendChatGenerateImage(chatInput);
       return;
     }
 
     await sendChatCompletion(chatInput);
+
+    setAttachments([]);
   };
 
   const onResetChat = () => {
     setChats([]);
+  };
+
+  const onFilesAttached = (files: FileInfo[]) => {
+    console.log('onFilesAttached (Main): ', files);
+
+    setAttachments((prevFiles) => [...prevFiles, ...files]);
+  };
+
+  const onFileRemove = (fileId: string) => {
+    console.log('onFileRemove (Main): ', fileId);
+
+    const newFiles = attachments.filter((f) => f.id !== fileId);
+    setAttachments(newFiles);
   };
 
   return (
@@ -387,6 +423,8 @@ export const Main: FC = () => {
         <ChatInput
           onSendInput={sendChat}
           onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+          onFilesAttached={onFilesAttached}
+          onFileRemove={onFileRemove}
           chatInputPlaceholder={textareaPlaceholder}
           isStreamProcessing={isStreamProcessing}
           isFetchLoading={isFetchLoading}

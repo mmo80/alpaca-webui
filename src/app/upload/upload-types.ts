@@ -1,16 +1,19 @@
 import { z } from 'zod';
 
-const maxFileSizeMb = 50;
-
-const allowedFileTypes: string[] = [
+export const FILEUPLOAD_DEFAULT_MAX_FILE_SIZE_MB = 50;
+export const FILEUPLOAD_DEFAULT_ALLOWED_FILE_TYPES: string[] = [
   'application/pdf',
   'text/plain',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  //'application/msword',
 ] as const;
+export const FILEUPLOAD_DEFAULT_FILETYPE_ERROR_MESSAGE = 'File must be a document (pdf, txt, docx)';
 
-export const formSchema = z.object({
-  file: z
+const createFileValidator = (
+  maxFileSizeMb = FILEUPLOAD_DEFAULT_MAX_FILE_SIZE_MB,
+  allowedFileTypes = FILEUPLOAD_DEFAULT_ALLOWED_FILE_TYPES,
+  fileTypeErrorMessage = FILEUPLOAD_DEFAULT_FILETYPE_ERROR_MESSAGE
+) => {
+  return z
     .custom<File>()
     .transform((val) => {
       if (val instanceof File) return val;
@@ -37,24 +40,44 @@ export const formSchema = z.object({
       if (!allowedFileTypes.includes(file.type)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'File must be an document (pdf, txt, docx)',
+          message: fileTypeErrorMessage,
         });
       }
     })
-    .pipe(z.custom<File>()),
-});
-export type TFormSchema = z.infer<typeof formSchema>;
+    .pipe(z.custom<File>());
+};
 
-export const UploadResponseTestSchema = z.object({
-  index: z.number(),
-  filename: z.string(),
-  done: z.boolean(),
-});
-export type TUploadTestResponse = z.infer<typeof UploadResponseTestSchema>;
+export const createFilesUploadFormSchema = (
+  maxFileSizeMb = FILEUPLOAD_DEFAULT_MAX_FILE_SIZE_MB,
+  allowedFileTypes = FILEUPLOAD_DEFAULT_ALLOWED_FILE_TYPES,
+  fileTypeErrorMessage = FILEUPLOAD_DEFAULT_FILETYPE_ERROR_MESSAGE
+) => {
+  const fileValidator = createFileValidator(maxFileSizeMb, allowedFileTypes, fileTypeErrorMessage);
 
-export const UploadResponseSchema = z.object({
-  filename: z.string(),
-  complete: z.boolean(),
-  progress: z.number(),
-});
-export type TUploadResponse = z.infer<typeof UploadResponseSchema>;
+  return z.object({
+    files: z.array(fileValidator).nonempty({
+      message: 'At least one file must be uploaded',
+    }),
+  });
+};
+
+const filesUploadFormSchema = createFilesUploadFormSchema();
+export type TFilesUploadForm = z.infer<typeof filesUploadFormSchema>;
+
+export type FileInfo = {
+  id: string;
+  filename: string;
+  sizeInBytes: number;
+  type: string;
+  dataUrl?: string;
+};
+
+// const fileUploadFormSchema = createFileUploadFormSchema();
+// export type TFileUploadForm = z.infer<typeof fileUploadFormSchema>;
+
+// export const UploadResponseSchema = z.object({
+//   filename: z.string(),
+//   complete: z.boolean(),
+//   progress: z.number(),
+// });
+// export type TUploadResponse = z.infer<typeof UploadResponseSchema>;

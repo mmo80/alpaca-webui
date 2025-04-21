@@ -28,7 +28,7 @@ export const useChatStream = () => {
         if (isChat(chat)) {
           if (index === prevArray.length - 1 && chat.role === ChatRole.ASSISTANT) {
             if (type === 'finish') {
-              chat.content = chat.content.replace(/[\n\s]+$/, '');
+              chat.content = (chat.content as string).replace(/[\n\s]+$/, '');
               chat.streamComplete = true;
             } else if (type === 'update') {
               chat.content = content;
@@ -69,7 +69,8 @@ export const useChatStream = () => {
     }
 
     // handle normal content
-    let chunkContent = chatCompletionResponse.choices[0]!.delta.content;
+    let content = chatCompletionResponse.choices[0]!.delta.content;
+    let chunkContent = content as string;
     if (!chunkContent) return;
 
     if (hasReasoningContent && isEmpty(chunkReasoningContent) && hasNonWhitespaceChars(chunkContent)) {

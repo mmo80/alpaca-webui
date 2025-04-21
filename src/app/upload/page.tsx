@@ -29,6 +29,7 @@ import { useModelStore } from '@/lib/model-store';
 import { ApiService } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { type Provider } from '@/lib/providers/provider';
+import type { FileInfo } from './upload-types';
 
 export default function Page() {
   const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();
@@ -140,6 +141,14 @@ export default function Page() {
     setChats([]);
   };
 
+  const onFilesAttached = (files: FileInfo[]) => {
+    console.log('onFilesAttached (Main): ', files);
+  };
+
+  const onFileRemove = (fileId: string) => {
+    console.log('onFileRemove (Main): ', fileId);
+  };
+
   return (
     <main className="flex h-full flex-col lg:flex-row">
       <section className="hidden basis-2/5 overflow-y-scroll px-3 sm:block">
@@ -214,6 +223,8 @@ export default function Page() {
           <ChatInput
             onSendInput={onSendChat}
             onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+            onFilesAttached={onFilesAttached}
+            onFileRemove={onFileRemove}
             chatInputPlaceholder={textareaPlaceholder}
             isStreamProcessing={isStreamProcessing}
             isFetchLoading={isFetchLoading}

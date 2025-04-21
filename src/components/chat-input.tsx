@@ -1,11 +1,17 @@
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
-import { DoubleArrowUpIcon, StopIcon } from '@radix-ui/react-icons';
 import { AutosizeTextarea } from '@/components/ui/autosize-textarea';
+import { PaperclipIcon, ChevronsUpIcon, SquareIcon } from 'lucide-react';
+import { FileUpload, type FileUploadRef } from '@/app/upload/_components/file-upload';
+import type { FileInfo, TFilesUploadForm } from '@/app/upload/upload-types';
+import { v7 as uuidv7 } from 'uuid';
+import { FileBadge } from './file-badge';
 
 interface ChatInputProps {
   onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
+  onFilesAttached: (files: FileInfo[]) => void;
+  onFileRemove: (fileId: string) => void;
   chatInputPlaceholder: string;
   isStreamProcessing: boolean;
   isFetchLoading: boolean;
@@ -15,6 +21,8 @@ interface ChatInputProps {
 export const ChatInput: FC<ChatInputProps> = ({
   onSendInput,
   onCancelStream,
+  onFilesAttached,
+  onFileRemove,
   chatInputPlaceholder,
   isStreamProcessing,
   isFetchLoading,
@@ -22,6 +30,22 @@ export const ChatInput: FC<ChatInputProps> = ({
 }) => {
   const [chatInput, setChatInput] = useState<string>('');
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
+
+  const fileUploadRef = useRef<FileUploadRef>(null);
+
+  const [dragging, setDragging] = useState<boolean>(false);
+  const [files, setFiles] = useState<FileInfo[]>([]);
+
+  const maxFileSizeMb = 10;
+  const allowedFileTypes: string[] = [
+    'application/pdf',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ] as const;
+  const fileTypeErrorMessage = 'File must of these types (pdf, jpg, jpeg, png, gif, webp)';
 
   useEffect(() => {
     setTextareaPlaceholder(chatInputPlaceholder);
@@ -39,46 +63,147 @@ export const ChatInput: FC<ChatInputProps> = ({
     }
   };
 
-  const preventEnterPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isStreamProcessing && !isFetchLoading && isLlmModelActive) {
       e.preventDefault();
     }
   };
 
-  return (
-    <div className="px-3">
-      <AutosizeTextarea
-        value={chatInput}
-        onChange={(e) => setChatInput(e.target.value)}
-        onKeyUp={chatEnterPress}
-        onKeyDown={preventEnterPress}
-        placeholder={textareaPlaceholder}
-        maxHeight={180}
-        className="appearance-none pr-14 outline-hidden"
-        disabled={!isLlmModelActive}
-      />
+  const onAttachFile = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
 
-      {isStreamProcessing ? (
+    fileUploadRef.current?.trigger();
+  };
+
+  const onFileSubmit = async (formFileData: TFilesUploadForm) => {
+    console.log('onFileSubmit');
+  };
+
+  const attachFiles = async (files: FileList) => {
+    const valid = await fileUploadRef.current?.validate(files);
+    if (valid) {
+      const filesArray = [...files];
+
+      const filePromises = filesArray.map(async (file) => {
+        const dataUrl = await convertFileToBase64(file);
+        console.log(`* dataUrl: `, dataUrl);
+
+        return {
+          id: uuidv7(),
+          filename: file.name,
+          sizeInBytes: file.size,
+          type: file.type,
+          dataUrl: dataUrl,
+        };
+      });
+
+      const attachedFiles = await Promise.all(filePromises);
+
+      setFiles((prevFiles) => [...prevFiles, ...attachedFiles]);
+
+      onFilesAttached(attachedFiles);
+    }
+  };
+
+  const handleFileChange = async (files: FileList) => {
+    await attachFiles(files);
+  };
+
+  const onFilesDropped = async (files: FileList) => {
+    await attachFiles(files);
+  };
+
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          resolve(event.target.result as string);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error('Error reading file'));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const onRemoveAttachment = (fileId: string) => {
+    const newFiles = files.filter((f) => f.id !== fileId);
+    setFiles(newFiles);
+
+    onFileRemove(fileId);
+  };
+
+  return (
+    <FileUpload
+      onSubmit={onFileSubmit}
+      handleFileChange={handleFileChange}
+      onFilesDropped={onFilesDropped}
+      setDragging={setDragging}
+      disableClickZone={true}
+      disableEnterSpaceZone={true}
+      ref={fileUploadRef}
+      maxFileSizeMb={maxFileSizeMb}
+      allowedFileTypes={allowedFileTypes}
+      fileTypeErrorMessage={fileTypeErrorMessage}
+    >
+      {/* Dropzone :: START */}
+      <div className="flex gap-2 px-3 py-2">
+        {files.map((file) => (
+          <FileBadge key={file.id} file={file} onRemoveAttachment={onRemoveAttachment} />
+        ))}
+      </div>
+      <div className="px-3">
+        <AutosizeTextarea
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          onKeyUp={chatEnterPress}
+          onKeyDown={handleKeyPress}
+          placeholder={textareaPlaceholder}
+          maxHeight={180}
+          className={`appearance-none pr-20 outline-hidden ${dragging ? 'border-zinc-800 bg-zinc-900' : ''}`}
+          disabled={!isLlmModelActive}
+        />
+
+        {isStreamProcessing ? (
+          <Button
+            onClick={onCancelStream}
+            variant="secondary"
+            size="icon"
+            className="absolute right-5 bottom-5 cursor-pointer"
+            disabled={isFetchLoading}
+          >
+            <SquareIcon />
+          </Button>
+        ) : (
+          <Button
+            onClick={sendChat}
+            variant="secondary"
+            size="icon"
+            className="absolute right-5 bottom-5 cursor-pointer"
+            disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
+          >
+            <ChevronsUpIcon />
+          </Button>
+        )}
+
         <Button
-          onClick={onCancelStream}
           variant="secondary"
           size="icon"
-          className="absolute right-5 bottom-5"
-          disabled={isFetchLoading}
-        >
-          <StopIcon className="h-4 w-4" />
-        </Button>
-      ) : (
-        <Button
-          onClick={sendChat}
-          variant="secondary"
-          size="icon"
-          className="absolute right-5 bottom-5"
+          className="pointer absolute right-15 bottom-5 cursor-pointer"
           disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
+          onClick={onAttachFile}
         >
-          <DoubleArrowUpIcon className="h-4 w-4" />
+          <PaperclipIcon />
         </Button>
-      )}
-    </div>
+      </div>
+      {/* Dropzone :: END */}
+    </FileUpload>
   );
 };
