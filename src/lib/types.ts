@@ -112,7 +112,7 @@ const OpenAIModelResponseSchema = z.object({
   id: z.string(),
   object: z.string(),
   created: z.number().optional(),
-  type: z.string().optional(),
+  owned_by: z.string().optional(),
 });
 export type TOpenAIModelResponseSchema = z.infer<typeof OpenAIModelResponseSchema>;
 export const OpenAIModelsResponseSchema = z.array(OpenAIModelResponseSchema);
@@ -131,23 +131,24 @@ export const CreateImageRequestSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required!'),
   model: z.string(),
   n: z.number().default(1),
-  quality: z.string().default('standard'),
-  size: z.string().default('1024x1024'),
-  style: z.string().default('vivid'),
+  quality: z.string(),
+  size: z.string(),
+  style: z.string().optional(),
   user: z.string().optional(),
 });
 export type TCreateImageRequest = z.infer<typeof CreateImageRequestSchema>;
 
 const CreateImageDataSchema = z.object({
-  url: z.string(),
+  url: z.string().optional(),
   b64_json: z.string().optional(),
-  revised_prompt: z.string(),
+  revised_prompt: z.string().optional(),
 });
 export type TCreateImageData = z.infer<typeof CreateImageDataSchema>;
 
 const CreateImageResponseSchema = z.object({
   created: z.number(),
   data: z.array(CreateImageDataSchema),
+  error: z.boolean().default(false),
 });
 export type TCreateImageResponse = z.infer<typeof CreateImageResponseSchema>;
 
@@ -269,7 +270,7 @@ export type TEmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>
 
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?(\/.*)?$/;
 
-const ApiSettingsSchema = z.object({
+export const ApiSettingsSchema = z.object({
   serviceId: z.string().readonly(),
   hasEmbedding: z.boolean().readonly(),
   embeddingPath: z.string().readonly(),

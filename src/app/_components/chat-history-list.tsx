@@ -64,10 +64,10 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
       setChatGroup((prev) => ({ ...prev, ['Last 30 Days']: last30Days }));
 
       Object.entries(previousMonths).forEach(([monthYear, chats]) => {
-        // console.log(`Processing ${monthYear}`);
         setChatGroup((prev) => ({ ...prev, [`${monthYear}`]: chats }));
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatHistories]);
 
   const handleGrouping = (chat: TChatHistory, now: Date) => {
@@ -85,10 +85,7 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
         monthYear = format(chatDate, 'MMMM yyyy');
       }
 
-      //console.log(`Processing ${monthYear}`);
-      if (!previousMonths[monthYear]) {
-        previousMonths[monthYear] = [];
-      }
+      previousMonths[monthYear] ??= [];
       previousMonths[monthYear]?.push(chat);
     }
   };

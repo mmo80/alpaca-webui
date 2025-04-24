@@ -18,7 +18,7 @@ The app lets you easily try out different AI models from various services to fin
 - [x] Code Syntax Highlighting
 - [x] List available models for services supporting OpenAI API model endpoint (and listing of Ollama models)
 - [x] Mobile-Friendly and Desktop-Friendly Layout
-- [x] Generate images with OpenAI dall-e-3 and dall-e-2 models _(write **/image** followed by prompt in chat)_
+- [x] Generate images with OpenAI dall-e-3, dall-e-2 and gpt-image-1 models _(write **/image** followed by prompt in chat)_
 
 **Pending Implementation**
 

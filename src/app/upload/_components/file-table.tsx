@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { MultiDialog } from '@/components/ui/multiDialog';
 import { toast } from 'sonner';
 import { type OpenPopovers } from '@/lib/types';
-import { apiService, HttpMethod } from '@/lib/api-service';
+import { useTRPC } from '@/trpc/react';
+import { useMutation } from '@tanstack/react-query';
 
 type FileTableProps = {
   files: TFile[];
@@ -44,35 +45,34 @@ const FileTable: FC<FileTableProps> = ({
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
   const [removingFile, setRemovingFile] = useState<boolean>();
 
+  const trpc = useTRPC();
+  const removeDocumentMutation = useMutation(
+    trpc.document.remove.mutationOptions({
+      onSuccess: async (data, variables) => {
+        const { documentId } = variables;
+
+        toast.success('Document removed successfully.');
+
+        handleOpenChange(documentId, false);
+        reload();
+        setTimeout(() => {
+          setRemovingFile(false);
+        }, 800);
+      },
+      onError: (error) => {
+        toast.error(`Error deleting document: ${error.message}`);
+        setRemovingFile(false);
+      },
+    })
+  );
+
   const handleOpenChange = (id: number, open: boolean) => {
     setOpenPopovers((prev) => ({ ...prev, [id.toString()]: open }));
   };
 
   const removeDocument = async (documentId: number) => {
     setRemovingFile(true);
-    const payload = { documentId };
-    const response = await apiService.executeFetch(`/api/documents/remove`, HttpMethod.POST, null, payload);
-
-    if (response.response == null || response.error.isError) {
-      console.error(response.error.errorMessage);
-      return;
-    }
-
-    const successful = await response.response.json();
-
-    if (successful) {
-      toast.success('Document removed successfully.');
-      handleOpenChange(documentId, false);
-      reload();
-
-      setTimeout(() => {
-        setRemovingFile(false);
-      }, 800);
-
-      return;
-    }
-    toast.success('Something went wrong when removing the document.');
-    setRemovingFile(false);
+    removeDocumentMutation.mutate({ documentId });
   };
 
   return (

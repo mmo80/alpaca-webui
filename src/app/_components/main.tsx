@@ -1,6 +1,6 @@
 'use client';
 
-import { type FC, useState, useRef, useEffect } from 'react';
+import { type FC, useState, useRef, useEffect, useMemo } from 'react';
 import { type TContentImage, type TContentText, type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
 import { cleanString, delayHighlighter, formatBytes, isValidJson, removeJunkStreamData } from '@/lib/utils';
@@ -11,7 +11,6 @@ import { useModelList } from '@/hooks/use-model-list';
 import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
-import { apiAction } from '@/lib/api';
 import { toast } from 'sonner';
 import { ApiService, type ChatError } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
@@ -47,6 +46,9 @@ export const Main: FC = () => {
   const searchParams = useSearchParams();
   const queryChatHistoryId = searchParams.get('id');
 
+  const apiService = useMemo(() => new ApiService(), []);
+  const providerFactory = useMemo(() => new ProviderFactory(apiService), [apiService]);
+
   // tRPC
   const trpc = useTRPC();
   const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
@@ -64,7 +66,6 @@ export const Main: FC = () => {
   const updateChatHistoryTitle = useMutation(
     trpc.chatHistory.updateTitle.mutationOptions({
       onSuccess: async (data) => {
-        console.log('** Title persisted: ', chatTitle);
         invalidateChatHistory();
         if (data === currentChatHistoryId) {
           setChatTitlePersisted(true);
@@ -101,6 +102,9 @@ export const Main: FC = () => {
         setChats(result.messages);
         delayHighlighter();
       } else {
+        toast.error('Error loading chat history', {
+          description: result.error?.message,
+        });
         console.error('Error loading chat history:', result.error);
       }
     });
@@ -190,27 +194,28 @@ export const Main: FC = () => {
 
     setIsFetchLoading(true);
 
-    const apiSrv = new ApiService();
-    const providerFactory = new ProviderFactory(apiSrv);
-
     const providerInstance = providerFactory.getInstance(selectedService);
-    if (providerInstance) {
-      setProvider(providerInstance);
-      const response = await providerInstance.chatCompletions(
-        selectedModel,
-        [...chats, message],
-        selectedService.url,
-        selectedService.apiKey
-      );
-
-      setChatError(response.error);
-      setIsFetchLoading(false);
-      await handleStream(
-        response.stream,
-        { provider: selectedService.serviceId, model: selectedModel },
-        providerInstance.convertResponse
-      );
+    if (!providerInstance) {
+      toast.error('Provider not found');
+      return;
     }
+
+    setProvider(providerInstance);
+
+    const response = await providerInstance.chatCompletions(
+      selectedModel,
+      [...chats, message],
+      selectedService.url,
+      selectedService.apiKey
+    );
+
+    setChatError(response.error);
+    setIsFetchLoading(false);
+    await handleStream(
+      response.stream,
+      { provider: selectedService.serviceId, model: selectedModel },
+      providerInstance.convertResponse
+    );
 
     setIsFetchLoading(false);
   };
@@ -219,15 +224,28 @@ export const Main: FC = () => {
     if (selectedModel == null || selectedService == null) {
       return;
     }
-    if (!selectedModel.startsWith('dall-e')) {
-      toast.warning(
-        'Can only generate image with OpenAI <strong><u>dall-e-3</u></strong> or <strong><u>dall-e-2</u></strong> models'
-      );
+
+    const providerInstance = providerFactory.getInstance(selectedService);
+    if (!providerInstance) {
+      toast.error('Provider not found');
       return;
     }
 
+    setProvider(providerInstance);
+
     setIsFetchLoading(true);
-    const response = await apiAction.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
+    const response = await providerInstance.generateImage(
+      prompt,
+      selectedModel,
+      selectedService.url,
+      selectedService.apiKey
+    );
+
+    if (response.error) {
+      setIsFetchLoading(false);
+      return;
+    }
+
     setChats((prevArray) => [
       ...prevArray,
       {

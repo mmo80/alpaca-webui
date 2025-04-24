@@ -5,7 +5,6 @@ import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { toast } from 'sonner';
-import { apiAction } from '@/lib/api';
 import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
 import { useFilesQuery } from '@/trpc/queries';
@@ -16,6 +15,8 @@ import throttle from 'lodash.throttle';
 import { HttpMethod } from '@/lib/api-service';
 import type { FileInfo, TFilesUploadForm } from '../upload-types';
 import { v7 as uuidv7 } from 'uuid';
+import { useTRPC } from '@/trpc/react';
+import { useMutation } from '@tanstack/react-query';
 
 export type SelectedDocument = {
   documentId: number;
@@ -38,16 +39,38 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const { services } = useSettingsStore();
   const { selectedEmbedModel, setEmbedModel, selectedEmbedService, setEmbedService } = useModelStore();
   const { modelList: embeddedModelList } = useModelList(true);
+
   const fileUploadRef = useRef<FileUploadRef>(null);
+
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
   const [fileIdEmbedding, setFileIdEmbedding] = useState<number | null>(null);
   const [dragging, setDragging] = useState<boolean>(false);
-
   const [uploadFiles, setUploadFiles] = useState<FileInfo[]>([]);
-
   const [fileUploadState, setFileUploadState] = useState<Record<string, { progress: number; fadeOut: boolean }>>({});
 
   const { data: files, isLoading: isFilesLoading, refetch: refetchFiles } = useFilesQuery();
+
+  const trpc = useTRPC();
+  const embedDocumentMutation = useMutation(
+    trpc.document.embed.mutationOptions({
+      onSuccess: async () => {
+        toast.success('Document embedded successfully');
+
+        await reload();
+
+        setIsEmbedding(false);
+        setFileIdEmbedding(null);
+      },
+      onError: (error) => {
+        toast.error('Failed to embed document', {
+          description: error.message,
+        });
+
+        setIsEmbedding(false);
+        setFileIdEmbedding(null);
+      },
+    })
+  );
 
   const createFileProgressUpdater = (fileId: string) => {
     return throttle(
@@ -70,20 +93,12 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
 
     setIsEmbedding(true);
     setFileIdEmbedding(documentId);
-    const response = await apiAction.embedDocument(documentId, selectedEmbedModel, selectedEmbedService);
 
-    if (response.success) {
-      toast.success('Document embedded successfully');
-    } else {
-      toast.error('Failed to embed document', {
-        description: response.errorMessage,
-      });
-    }
-
-    await reload();
-
-    setIsEmbedding(false);
-    setFileIdEmbedding(null);
+    embedDocumentMutation.mutate({
+      documentId: documentId,
+      embedModel: selectedEmbedModel,
+      apiSetting: selectedEmbedService,
+    });
   };
 
   const initConversationWithDocument = async (

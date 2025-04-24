@@ -1,8 +1,10 @@
+import { toast } from 'sonner';
 import { ApiService, HttpMethod } from '../api-service';
 import type {
   TApiSettingsSchema,
   TChatCompletionResponse,
   TChatMessage,
+  TCreateImageResponse,
   TCustomMessage,
   TLocalCompletionsRequest,
   TModelSchema,
@@ -24,7 +26,7 @@ class AnthropicProvider implements Provider {
     };
 
     const response = await this.service.executeFetch(
-      `/api/provider/model?apiKey=${payload.apiKey}&baseUrl=${payload.baseUrl}`,
+      `/api/provider/anthropic/model?apiKey=${payload.apiKey}&baseUrl=${payload.baseUrl}`,
       HttpMethod.GET,
       null,
       null
@@ -60,7 +62,7 @@ class AnthropicProvider implements Provider {
     };
 
     const response = await this.service.executeFetch(
-      `/api/provider/chat/completions`,
+      `/api/provider/anthropic/chat/completions`,
       HttpMethod.POST,
       null,
       payload,
@@ -87,15 +89,27 @@ class AnthropicProvider implements Provider {
     return { stream: response.response.body.getReader(), error: response.error };
   }
 
-  public cancelChatCompletionStream = () => {
+  public cancelChatCompletionStream() {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
-  };
+  }
 
-  public convertResponse = (streamData: string): TChatCompletionResponse => {
+  public convertResponse(streamData: string): TChatCompletionResponse {
     return JSON.parse(streamData) as TChatCompletionResponse;
-  };
+  }
+
+  public async generateImage(
+    prompt: string,
+    model: string,
+    baseUrl: string | null,
+    apiKey: string | null | undefined
+  ): Promise<TCreateImageResponse> {
+    toast.warning(
+      'generateImage is not implemented for this provider. Please use a different provider or implement the generateImage method in your provider class.'
+    );
+    return { created: -1, data: [], error: true };
+  }
 }
 
 export default AnthropicProvider;

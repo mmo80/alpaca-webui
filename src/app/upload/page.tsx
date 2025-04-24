@@ -17,7 +17,6 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
-import { type GetChunksRequest, getFilteredChunks } from '@/actions/get-filtered-chunks';
 import { ChatRole, defaultProvider } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
@@ -30,6 +29,7 @@ import { ApiService } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { type Provider } from '@/lib/providers/provider';
 import type { FileInfo } from './upload-types';
+import { getDocumentChunks } from '@/trpc/queries';
 
 export default function Page() {
   const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();
@@ -84,18 +84,18 @@ export default function Page() {
     const chatMessage = { content: chatInput, role: ChatRole.USER, provider: provider, streamComplete: true };
     setChats((prevArray) => [...prevArray, chatMessage]);
 
-    const request: GetChunksRequest = {
+    const documents = await getDocumentChunks({
       question: chatInput,
       documentId: selectedDocument.documentId,
       embedModel: selectedEmbedModel,
       apiSetting: selectedEmbedService,
-    };
+    });
 
-    const documents = await getFilteredChunks(request);
-    const context = documents.map((d) => d.text).join(' ');
+    const context = documents.map((doc) => doc.text).join(' ');
     const systemPrompt = systemPromptForRagSlim
       .replace(SystemPromptVariable.userQuestion, chatInput)
       .replace(SystemPromptVariable.documentContent, context);
+
     const systemPromptMessage = {
       content: systemPrompt,
       role: ChatRole.SYSTEM,

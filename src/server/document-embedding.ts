@@ -114,27 +114,46 @@ export class DocumentEmbedding {
     return documentVectors;
   }
 
-  private readonly getFileContent = async (): Promise<string> => {
+  private async getFileContent(): Promise<string> {
     const reader = new DocumentReader(this.filePath);
     return await reader.getFileContent();
-  };
+  }
 
   async EmbedAndPersistDocument(embedModel: string, apiSetting: TApiSettingsSchema): Promise<DocumentEmbeddingRespopnse> {
-    const fileContent = await this.getFileContent();
-    const documentChunks = chunkTextBySentences(fileContent, 8, 0);
-    console.log(`Document has ${documentChunks.length} chunks.`);
-    console.log(`Start embedding document: ${this.filename}`);
-    const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, apiSetting);
-    console.log(`Finished embedding document: ${this.filename}`);
-    const success = await this.batchVectorsToDatabase(documentVectors);
-    console.log(`success: ${success.toString()}`);
-    return {
-      success: success,
-      errorMessage: '',
-      embedModel: embedModel,
-      textCharacterCount: fileContent.length,
-      noOfChunks: documentChunks.length,
-      totalDocumentTokens: documentVectors.reduce((a, b) => (b.totalTokens == undefined ? 0 : a + b.totalTokens), 0),
-    };
+    try {
+      // Step 1: Get file content
+      const fileContent = await this.getFileContent();
+
+      // Step 2: Create document chunks
+      const documentChunks = chunkTextBySentences(fileContent, 8, 0);
+      console.log(`Start embedding document: ${this.filename}`);
+      console.log(`Document has ${documentChunks.length} chunks.`);
+
+      // Step 3: Embed chunks
+      const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, apiSetting);
+      console.log(`Finished embedding document: ${this.filename}`);
+
+      // Step 4: Store in database
+      const success = await this.batchVectorsToDatabase(documentVectors);
+      console.log(`success: ${success.toString()}`);
+
+      return {
+        success,
+        errorMessage: '',
+        embedModel,
+        textCharacterCount: fileContent.length,
+        noOfChunks: documentChunks.length,
+        totalDocumentTokens: documentVectors.reduce((a, b) => (b.totalTokens == undefined ? 0 : a + b.totalTokens), 0),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error during document embedding',
+        embedModel,
+        textCharacterCount: 0,
+        noOfChunks: 0,
+        totalDocumentTokens: 0,
+      };
+    }
   }
 }

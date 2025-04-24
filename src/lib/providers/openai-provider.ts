@@ -1,4 +1,5 @@
-import { ApiService, HttpMethod } from '../api-service';
+import { toast } from 'sonner';
+import { apiService, ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
   type TApiSettingsSchema,
@@ -8,6 +9,9 @@ import {
   type TModelSchema,
   type TChatCompletionResponse,
   type TCustomMessage,
+  type TCreateImageResponse,
+  type TCreateImageRequest,
+  CreateImageRequestSchema,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
 
@@ -41,11 +45,20 @@ class OpenAIProvider implements Provider {
       throw validatedModelList.error;
     }
 
+    if (!validatedModelList.data.some((m) => m.id === 'gpt-image-1')) {
+      validatedModelList.data.push({
+        id: 'gpt-image-1',
+        object: 'model',
+        created: 0,
+        owned_by: 'system',
+      });
+    }
+
     return validatedModelList.data.map((m) => ({
       id: m.id,
       object: m.object,
-      created: m.created ? m.created : 0,
-      type: m.type,
+      created: m.created ?? 0,
+      type: m.owned_by,
       embedding: m.id.includes('embedding'),
     }));
   }
@@ -89,15 +102,48 @@ class OpenAIProvider implements Provider {
     return { stream: response.response.body.getReader(), error: response.error };
   }
 
-  public cancelChatCompletionStream = () => {
+  public cancelChatCompletionStream() {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
-  };
+  }
 
-  public convertResponse = (streamData: string): TChatCompletionResponse => {
+  public convertResponse(streamData: string): TChatCompletionResponse {
     return JSON.parse(streamData) as TChatCompletionResponse;
-  };
+  }
+
+  public async generateImage(
+    prompt: string,
+    model: string,
+    baseUrl: string | null,
+    apiKey: string | null | undefined
+  ): Promise<TCreateImageResponse> {
+    let gptImage1 = false;
+    if (model.startsWith('gpt-image')) {
+      gptImage1 = true;
+    }
+    if (!model.startsWith('dall-e') && !gptImage1) {
+      toast.warning('Can only generate image with dall-e-3, dall-e-2 or gpt-image-1 models');
+      return { created: -1, data: [], error: true };
+    }
+
+    const url = `${apiService.validUrl(baseUrl)}/v1/images/generations`;
+    const values: Partial<TCreateImageRequest> = {
+      prompt: prompt,
+      model: model,
+      quality: gptImage1 ? 'high' : 'standard',
+      size: '1024x1024',
+    };
+    const payload = CreateImageRequestSchema.parse(values);
+
+    const fetchResponse = await apiService.executeFetch(url, HttpMethod.POST, apiKey, payload);
+    if (fetchResponse.response == null || fetchResponse.error.isError) {
+      toast.error(fetchResponse.error.errorMessage ?? 'Error generating image');
+      return { created: -1, data: [], error: true };
+    }
+
+    return (await fetchResponse.response.json()) as TCreateImageResponse;
+  }
 }
 
 export default OpenAIProvider;

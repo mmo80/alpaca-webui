@@ -8,6 +8,7 @@ import {
   type TModelSchema,
   type TChatCompletionResponse,
   type TCustomMessage,
+  type TCreateImageResponse,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
 
@@ -31,7 +32,7 @@ class TogetherProvider implements Provider {
     let data = await response.response.json();
 
     if (embeddedOnly) {
-      data = data.filter((model: TOpenAIModelResponseSchema) => model.type === 'embedding');
+      data = data.filter((model: TOpenAIModelResponseSchema) => model.owned_by === 'embedding');
     }
 
     const validatedModelList = await OpenAIModelsResponseSchema.safeParseAsync(data);
@@ -44,8 +45,8 @@ class TogetherProvider implements Provider {
       id: m.id,
       object: m.object,
       created: m.created ? m.created : 0,
-      type: m.type,
-      embedding: m.type === 'embedding',
+      type: m.owned_by,
+      embedding: m.owned_by === 'embedding',
     }));
   }
 
@@ -88,15 +89,27 @@ class TogetherProvider implements Provider {
     return { stream: response.response.body.getReader(), error: response.error };
   }
 
-  public cancelChatCompletionStream = () => {
+  public cancelChatCompletionStream() {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
-  };
+  }
 
-  public convertResponse = (streamData: string): TChatCompletionResponse => {
+  public convertResponse(streamData: string): TChatCompletionResponse {
     return JSON.parse(streamData) as TChatCompletionResponse;
-  };
+  }
+
+  public async generateImage(
+    prompt: string,
+    model: string,
+    baseUrl: string | null,
+    apiKey: string | null | undefined
+  ): Promise<TCreateImageResponse> {
+    console.warn(
+      'generateImage is not implemented for this provider. Please use a different provider or implement the generateImage method in your provider class.'
+    );
+    return { created: -1, data: [], error: true };
+  }
 }
 
 export default TogetherProvider;

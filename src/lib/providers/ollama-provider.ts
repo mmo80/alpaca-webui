@@ -5,6 +5,7 @@ import {
   type TChatCompletionRequest,
   type TChatCompletionResponse,
   type TChatMessage,
+  type TCreateImageResponse,
   type TCustomMessage,
   type TModelSchema,
 } from '../types';
@@ -89,15 +90,27 @@ class OllamaProvider implements Provider {
     return { stream: response.response.body.getReader(), error: response.error };
   }
 
-  public cancelChatCompletionStream = () => {
+  public cancelChatCompletionStream() {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
-  };
+  }
 
-  public convertResponse = (streamData: string): TChatCompletionResponse => {
+  public convertResponse(streamData: string): TChatCompletionResponse {
     return JSON.parse(streamData) as TChatCompletionResponse;
-  };
+  }
+
+  public async generateImage(
+    prompt: string,
+    model: string,
+    baseUrl: string | null,
+    apiKey: string | null | undefined
+  ): Promise<TCreateImageResponse> {
+    console.warn(
+      'generateImage is not implemented for this provider. Please use a different provider or implement the generateImage method in your provider class.'
+    );
+    return { created: -1, data: [], error: true };
+  }
 }
 
 export default OllamaProvider;

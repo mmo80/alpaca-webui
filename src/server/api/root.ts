@@ -1,5 +1,6 @@
 import { chatHistoryRouter } from './routers/chat-history';
-import { filesRouter } from './routers/files';
+import { documentRouter } from './routers/document';
+import { fileRouter } from './routers/file';
 import { createCallerFactory, createTRPCRouter } from './trpc';
 
 /**
@@ -9,7 +10,8 @@ import { createCallerFactory, createTRPCRouter } from './trpc';
  */
 export const appRouter = createTRPCRouter({
   chatHistory: chatHistoryRouter,
-  files: filesRouter,
+  file: fileRouter,
+  document: documentRouter,
 });
 
 // export type definition of API

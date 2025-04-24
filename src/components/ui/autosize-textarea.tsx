@@ -38,6 +38,7 @@ export const useAutosizeTextArea = ({
         textAreaRef.style.height = `${scrollHeight + offsetBorder}px`;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [textAreaRef, triggerAutoSize]);
 };
 
@@ -85,6 +86,7 @@ export const AutosizeTextarea = React.forwardRef<AutosizeTextAreaRef, AutosizeTe
       if (value || props?.defaultValue) {
         setTriggerAutoSize(value as string);
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value || props?.defaultValue]);
 
     return (

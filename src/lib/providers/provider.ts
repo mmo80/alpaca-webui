@@ -1,5 +1,11 @@
 import { type ChatError } from '../api-service';
-import { type TApiSettingsSchema, type TChatCompletionResponse, type TModelSchema, type TCustomMessage } from '../types';
+import {
+  type TApiSettingsSchema,
+  type TChatCompletionResponse,
+  type TModelSchema,
+  type TCustomMessage,
+  type TCreateImageResponse,
+} from '../types';
 
 export type ChatCompletionsResponse = {
   stream: ReadableStreamDefaultReader<Uint8Array>;
@@ -19,4 +25,11 @@ export interface Provider {
   cancelChatCompletionStream(): void;
 
   convertResponse(streamData: string): TChatCompletionResponse;
+
+  generateImage(
+    prompt: string,
+    model: string,
+    baseUrl: string | null,
+    apiKey: string | null | undefined
+  ): Promise<TCreateImageResponse>;
 }

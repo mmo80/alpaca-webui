@@ -3,8 +3,6 @@
 import * as React from 'react';
 import {
   ChatRole,
-  type TContentImage,
-  type TContentItem,
   type TContentText,
   type TContentUnion,
   type TCustomChatMessage,
@@ -45,7 +43,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
   const messageId = generateGUID();
 
   const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
-    return (item as TCustomCreateImageData).url !== undefined;
+    return (item as TCustomCreateImageData).url !== undefined || (item as TCustomCreateImageData).b64_json !== undefined;
   };
 
   const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
@@ -90,15 +88,28 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
         </>
       );
     } else if (isImage(message)) {
+      const imgMessage = message as TCustomCreateImageData;
       return (
         <>
-          <Image src={message.url ?? ''} width={500} height={500} alt="AI generated" className="pt-2" />
-          <span className="text-muted-foreground text-xs">
-            <a href={message.url} target="_blank" className="underline">
-              Original
-            </a>{' '}
-            (only valid 1 hour)
-          </span>
+          {imgMessage.url != null ? (
+            <>
+              <Image src={message.url ?? ''} width={500} height={500} alt="AI generated" className="pt-2" />
+              <span className="text-muted-foreground text-xs">
+                <a href={message.url} target="_blank" className="underline">
+                  Original
+                </a>{' '}
+                (only valid 1 hour)
+              </span>
+            </>
+          ) : (
+            <Image
+              src={`data:image/png;base64,${message.b64_json}`}
+              width={500}
+              height={500}
+              alt="AI generated"
+              className="pt-2"
+            />
+          )}
         </>
       );
     }
