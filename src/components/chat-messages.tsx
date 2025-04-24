@@ -88,10 +88,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
         </>
       );
     } else if (isImage(message)) {
-      const imgMessage = message as TCustomCreateImageData;
       return (
         <>
-          {imgMessage.url != null ? (
+          {message.url != null ? (
             <>
               <Image src={message.url ?? ''} width={500} height={500} alt="AI generated" className="pt-2" />
               <span className="text-muted-foreground text-xs">
@@ -102,13 +101,25 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               </span>
             </>
           ) : (
-            <Image
-              src={`data:image/png;base64,${message.b64_json}`}
-              width={500}
-              height={500}
-              alt="AI generated"
-              className="pt-2"
-            />
+            <>
+              <Image
+                src={`data:image/png;base64,${message.b64_json}`}
+                width={500}
+                height={500}
+                alt="AI generated"
+                className="pt-2"
+              />
+              <span className="text-muted-foreground text-xs">
+                <a
+                  href={`data:image/png;base64,${message.b64_json}`}
+                  download="ai-generated-image.png"
+                  target="_blank"
+                  className="underline"
+                >
+                  Download Image
+                </a>
+              </span>
+            </>
           )}
         </>
       );
