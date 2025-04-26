@@ -51,7 +51,8 @@ export const getSingleChatHistoryById = async (id: string): Promise<SingleChatHi
         role: msg.role,
         content: msg.content,
         provider: msg.provider,
-      };
+        streamComplete: msg.streamComplete,
+      } as TCustomChatMessage;
     }) as TCustomChatMessage[];
 
     return new SingleChatHistoryResult(chatMessages, result.title);

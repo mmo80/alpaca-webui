@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Drawer,
   DrawerClose,
@@ -38,6 +38,9 @@ export default function Page() {
   const [selectedDocument, setSelectedDocument] = useState<SelectedDocument | null>(null);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
+
+  const apiService = useMemo(() => new ApiService(), []);
+  const providerFactory = useMemo(() => new ProviderFactory(apiService), [apiService]);
 
   // ---- Chats ----
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
@@ -106,9 +109,6 @@ export default function Page() {
     // console.debug(`systemPrompt: `, systemPrompt);
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
-
-    const apiSrv = new ApiService();
-    const providerFactory = new ProviderFactory(apiSrv);
 
     const providerInstance = providerFactory.getInstance(selectedService);
     if (providerInstance) {

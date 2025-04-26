@@ -16,6 +16,7 @@ import { type FC, type ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { visit } from 'unist-util-visit';
+import { Spinner } from './spinner';
 
 type ChatMessagesProps = {
   message: TCustomMessage;
@@ -157,6 +158,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               {role == ChatRole.ASSISTANT && (
                 <>
                   <span className="pr-1 text-stone-700">|</span>
+                  <span>{!message.streamComplete && <Spinner />}</span>
                   <span className="text-xs">
                     Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
                   </span>

@@ -3,12 +3,16 @@ import { useModelStore } from '@/lib/model-store';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { type TModelsResponseSchema } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 export const useModelList = (embeddedOnly: boolean = false) => {
   const { selectedService, selectedEmbedService } = useModelStore();
 
   const keyName = embeddedOnly ? 'embed-models' : 'models';
-  const apiService = embeddedOnly ? selectedEmbedService : selectedService;
+  const apiSelectedService = embeddedOnly ? selectedEmbedService : selectedService;
+
+  const apiSrv = useMemo(() => new ApiService(), []);
+  const providerFactory = useMemo(() => new ProviderFactory(apiSrv), [apiSrv]);
 
   const {
     isLoading: modelsIsLoading,
@@ -17,14 +21,11 @@ export const useModelList = (embeddedOnly: boolean = false) => {
     isSuccess: modelsIsSuccess,
     isError: modelsIsError,
   } = useQuery<TModelsResponseSchema>({
-    queryKey: [keyName, apiService],
+    queryKey: [keyName, apiSelectedService],
     queryFn: async () => {
-      const apiSrv = new ApiService();
-      const providerFactory = new ProviderFactory(apiSrv);
-
-      if (apiService) {
-        const provider = providerFactory.getInstance(apiService);
-        const models = await provider?.models(apiService, embeddedOnly);
+      if (apiSelectedService) {
+        const provider = providerFactory.getInstance(apiSelectedService);
+        const models = await provider?.models(apiSelectedService, embeddedOnly);
         return models as TModelsResponseSchema;
       }
 

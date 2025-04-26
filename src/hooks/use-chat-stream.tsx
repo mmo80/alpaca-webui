@@ -148,10 +148,24 @@ export const useChatStream = () => {
       }
     } catch (error) {
       if (errorType(error) === 'AbortError') {
-        setChats((prevArray) => [
-          ...prevArray,
-          { content: 'User canceled', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
-        ]);
+        setChats((prevChats) => {
+          const updatedChats = [...prevChats];
+
+          // Mark the last message as complete if it exists
+          if (updatedChats.length > 0) {
+            const lastChat = updatedChats[updatedChats.length - 1];
+            updatedChats[updatedChats.length - 1] = {
+              ...lastChat,
+              streamComplete: true,
+            } as TCustomMessage;
+          }
+
+          // Add the user canceled message
+          return [
+            ...updatedChats,
+            { content: 'User canceled', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
+          ];
+        });
       } else {
         setChats((prevArray) => [
           ...prevArray,

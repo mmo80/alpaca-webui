@@ -144,7 +144,7 @@ export const FileUpload = forwardRef<FileUploadRef, FileUploadProps>(
                       onChange={handleChange}
                     />
                   </FormControl>
-                  <FormMessage />
+                  {/* <FormMessage /> */}
                 </FormItem>
               );
             }}
