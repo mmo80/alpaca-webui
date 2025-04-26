@@ -114,11 +114,11 @@ class GoogleProvider implements Provider {
     return { stream: response.response.body.getReader(), error: response.error };
   }
 
-  public cancelChatCompletionStream() {
+  public cancelChatCompletionStream = () => {
     if (this.chatStreamController != null && !this.chatStreamController.signal.aborted) {
       this.chatStreamController.abort();
     }
-  }
+  };
 
   public convertResponse(streamData: string): TChatCompletionResponse {
     const response = JSON.parse(streamData) as TGoogleChatCompletionResponseSchema;
