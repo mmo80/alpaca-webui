@@ -34,31 +34,35 @@ export const MobileTopmenu: FC = () => {
             <SheetDescription></SheetDescription>
           </SheetHeader>
 
-          <nav className="grid gap-1 text-base font-medium">
-            {menuItems.map((item) => {
-              const isActivePage =
-                ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
+          <nav>
+            <section className="grid gap-1 text-base font-medium">
+              {menuItems.map((item) => {
+                const isActivePage =
+                  ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
 
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className={`hover:text-foreground mx-[-0.65rem] ${isActivePage && 'bg-stone-500 text-stone-950'} flex items-center gap-4 rounded-xl px-3 py-2`}
-                  onClick={() => {
-                    setOpen(false);
-                    if (isActivePage && item.href === '/') {
-                      location.href = item.href;
-                    }
-                  }}
-                >
-                  <item.icon className="h-6 w-6" />
-                  {item.title}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className={`hover:text-foreground mx-[-0.65rem] ${isActivePage && 'bg-stone-500 text-stone-950'} flex items-center gap-4 rounded-xl px-3 py-2`}
+                    onClick={() => {
+                      setOpen(false);
+                      if (isActivePage && item.href === '/') {
+                        location.href = item.href;
+                      }
+                    }}
+                  >
+                    <item.icon className="h-6 w-6" />
+                    {item.title}
+                  </Link>
+                );
+              })}
+            </section>
+
+            <section className="h-[calc(100dvh-13rem)] overflow-auto scroll-auto">
+              <ChatHistoryList isSheet={true} setOpen={setOpen} />
+            </section>
           </nav>
-
-          <ChatHistoryList isSheet={true} setOpen={setOpen} />
         </SheetContent>
       </Sheet>
       <span className="text-xl font-semibold text-nowrap">{appName}</span>

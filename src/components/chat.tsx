@@ -1,20 +1,17 @@
-import { type FC, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
 import { ChatRole, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
-import { Button } from './ui/button';
-import { ResetIcon } from '@radix-ui/react-icons';
 
 interface ChatProps {
   isFetchLoading: boolean;
   chats: TCustomMessage[];
   mainDiv: React.RefObject<HTMLDivElement | null>;
-  onReset: () => void;
 }
 
-export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onReset }) => {
+export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) => {
   const chatsDiv = useRef<HTMLDivElement>(null);
   const { isScrollBottom } = useScrollBottom(mainDiv);
 
@@ -71,7 +68,6 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
     <>
       <div className="w-full space-y-4" ref={chatsDiv}>
         {chats.map((message, index) => render(message, index))}
-        <ResetChatButton onClick={onReset} />
         {isFetchLoading && <Spinner />}
       </div>
 
@@ -82,14 +78,5 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv, onRe
         />
       )}
     </>
-  );
-};
-
-const ResetChatButton: FC<{ onClick: () => void }> = ({ onClick }) => {
-  return (
-    <Button variant="secondary" onClick={onClick}>
-      <ResetIcon className="h-4 w-4 pe-1" />
-      Reset Chat
-    </Button>
   );
 };

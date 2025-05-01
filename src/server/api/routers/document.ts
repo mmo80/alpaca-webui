@@ -45,7 +45,7 @@ export const documentRouter = createTRPCRouter({
       return documents;
     }
 
-    console.log('Document not found', input);
+    console.warn('Document not found: ', documentId);
     return [];
   }),
   remove: publicProcedure.input(DocumentRemoveRequestSchema).mutation(async ({ ctx, input }) => {

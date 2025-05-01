@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, type Dispatch, type FC, type SetStateAction } from 'react';
-import { useChatHistoryMutation, useChatHistoryQuery } from '@/trpc/queries';
+import { useChatHistoryQuery } from '@/trpc/queries';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { XIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTRPC } from '@/trpc/react';
+import { queryClient, useTRPC } from '@/trpc/react';
 import { useMutation } from '@tanstack/react-query';
 import {
   Dialog,
@@ -41,56 +41,56 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
   const [itemState, setItemState] = useState<Record<string, ChatItemState>>({});
   const [chatGroup, setChatGroup] = useState<Record<string, TChatHistory[]>>({});
 
-  const now = new Date();
-  const last7DaysDate = subDays(now, 7);
-  const last30DaysDate = subDays(now, 30);
-
-  const todaysChats: TChatHistory[] = [];
-  const last7Days: TChatHistory[] = [];
-  const last30Days: TChatHistory[] = [];
-  const previousMonths: Record<string, TChatHistory[]> = {};
-
   useEffect(() => {
     if (chatHistories?.length > 0) {
+      // Initialize itemState
       const itemState: Record<string, ChatItemState> = {};
+
       chatHistories.forEach((chat) => {
         itemState[chat.id] = { openDeleteDialog: false, deleting: false };
-        handleGrouping(chat, now);
       });
       setItemState(itemState);
 
-      setChatGroup((prev) => ({ ...prev, ['Today']: todaysChats }));
-      setChatGroup((prev) => ({ ...prev, ['Last 7 Days']: last7Days }));
-      setChatGroup((prev) => ({ ...prev, ['Last 30 Days']: last30Days }));
+      // Group chats
+      const now = new Date();
+      const last7DaysDate = subDays(now, 7);
+      const last30DaysDate = subDays(now, 30);
 
-      Object.entries(previousMonths).forEach(([monthYear, chats]) => {
-        setChatGroup((prev) => ({ ...prev, [`${monthYear}`]: chats }));
+      const newGroups: Record<string, TChatHistory[]> = {
+        Today: [],
+        'Last 7 Days': [],
+        'Last 30 Days': [],
+      };
+
+      // Group the chats
+      chatHistories.forEach((chat) => {
+        const chatDate = new Date(chat.timestamp);
+
+        if (isToday(chatDate)) {
+          newGroups['Today']!.push(chat);
+        } else if (chatDate >= last7DaysDate) {
+          newGroups['Last 7 Days']!.push(chat);
+        } else if (chatDate >= last30DaysDate) {
+          newGroups['Last 30 Days']!.push(chat);
+        } else {
+          let monthYear = format(chatDate, 'MMMM');
+          if (!isThisYear(chatDate)) {
+            monthYear = format(chatDate, 'MMMM yyyy');
+          }
+
+          newGroups[monthYear] ??= [];
+          newGroups[monthYear]!.push(chat);
+        }
       });
+
+      setChatGroup(newGroups);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatHistories]);
 
-  const handleGrouping = (chat: TChatHistory, now: Date) => {
-    const chatDate = new Date(chat.timestamp);
-
-    if (isToday(chatDate)) {
-      todaysChats.push(chat);
-    } else if (chatDate >= last7DaysDate) {
-      last7Days.push(chat);
-    } else if (chatDate >= last30DaysDate) {
-      last30Days.push(chat);
-    } else {
-      let monthYear = format(chatDate, 'MMMM');
-      if (!isThisYear(chatDate)) {
-        monthYear = format(chatDate, 'MMMM yyyy');
-      }
-
-      previousMonths[monthYear] ??= [];
-      previousMonths[monthYear]?.push(chat);
-    }
+  const invalidateChatHistory = () => {
+    queryClient.invalidateQueries({ queryKey: trpc.chatHistory.all.queryKey() });
   };
-
-  const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
   const trpc = useTRPC();
   const removeChatHistory = useMutation(
@@ -140,12 +140,12 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
           {Object.entries(chatGroup).map(([groupName, chats]) => {
             return (
               chats.length > 0 && (
-                <React.Fragment key={groupName}>
+                <React.Fragment key={`g-${groupName}`}>
                   <div className="mb-1 text-xs font-bold text-stone-400">{groupName}</div>
                   <div className="mb-3 grid gap-0.5">
                     {chats.map((c) => {
                       return (
-                        <React.Fragment key={c.id}>
+                        <React.Fragment key={`${isSheet ? 'm' : 'd'}-${c.id}`}>
                           <TooltipProvider delayDuration={500}>
                             <Tooltip disableHoverableContent={true}>
                               <TooltipTrigger asChild>

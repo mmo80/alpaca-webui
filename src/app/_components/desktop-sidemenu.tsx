@@ -36,33 +36,33 @@ export const DesktopSidemenu: FC = () => {
 
   return (
     <div className="hidden lg:block">
-      <div className="flex h-full max-h-screen flex-col bg-stone-800 md:w-[200px] lg:w-[260px]">
+      <nav className="flex h-full max-h-screen flex-col bg-stone-800 md:w-[200px] lg:w-[260px]">
         <AppHeader>{appName}</AppHeader>
-        <div className="flex-1">
-          <nav className="mb-3 grid items-start gap-2 px-4 text-sm font-medium">
-            {menuItems.map((item) => {
-              const isActivePage =
-                ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
-              return (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  onClick={() => {
-                    if (isActivePage && item.href === '/') {
-                      location.href = item.href;
-                    }
-                  }}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isActivePage && 'bg-stone-500 text-stone-950'} hover:bg-stone-700`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.title}
-                </Link>
-              );
-            })}
-          </nav>
+        <section className="mb-3 grid items-start gap-2 px-4 text-sm font-medium">
+          {menuItems.map((item) => {
+            const isActivePage =
+              ((pathname.includes(item.href) && !item.root) || (item.root && pathname === item.href)) && !idQueryParam;
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                onClick={() => {
+                  if (isActivePage && item.href === '/') {
+                    location.href = item.href;
+                  }
+                }}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isActivePage && 'bg-stone-500 text-stone-950'} hover:bg-stone-700`}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.title}
+              </Link>
+            );
+          })}
+        </section>
+        <section className="h-[calc(100dvh-13rem)] overflow-auto scroll-auto">
           <ChatHistoryList />
-        </div>
-      </div>
+        </section>
+      </nav>
     </div>
   );
 };

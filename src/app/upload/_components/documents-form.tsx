@@ -131,6 +131,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
       role: ChatRole.SYSTEM,
       provider: defaultProvider,
       streamComplete: true,
+      isReasoning: false,
     };
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
   };

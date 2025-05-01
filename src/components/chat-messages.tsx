@@ -11,26 +11,28 @@ import {
 } from '@/lib/types';
 import Markdown, { type ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { PersonIcon, LayersIcon, CopyIcon, TriangleDownIcon, TriangleUpIcon } from '@radix-ui/react-icons';
-import { type FC, type ReactNode, useRef, useState } from 'react';
+import { UserIcon, BrainIcon, ChevronRightIcon, ChevronDownIcon, CopyIcon } from 'lucide-react';
+import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { visit } from 'unist-util-visit';
 import { Spinner } from './spinner';
+import { v7 as uuidv7 } from 'uuid';
 
 type ChatMessagesProps = {
   message: TCustomMessage;
   role: ChatRole;
 };
 
-const thinkPlugin = () => {
+const thinkPlugin = (messageId: string) => {
   return (tree: any) => {
     visit(tree, (node) => {
       if (node.type === 'html' && node.value.includes('<think>')) {
-        const thinkId = generateGUID();
+        const thinkId = `think-${messageId}`;
+
         node.value = `<div>
-        <span className="mb-1 font-bold" data-think-id="${thinkId}">Thinking</span>
-        <div class="rounded bg-stone-950 text-stone-300 px-3 py-1 my-2" id="${thinkId}">`;
+        <span data-think-id="${thinkId}">Thinking</span>
+        <div class="text-stone-300 bg-stone-950 rounded p-3 mb-2 hidden" id="${thinkId}">`;
       }
 
       if (node.type === 'html' && node.value.includes('</think>')) {
@@ -41,7 +43,18 @@ const thinkPlugin = () => {
 };
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
-  const messageId = generateGUID();
+  const messageId = uuidv7();
+
+  useEffect(() => {
+    if (!message.isReasoning) {
+      const loaderThinkingId = `loader-think-${messageId}`;
+      const loader = document.getElementById(loaderThinkingId);
+      if (loader?.classList.contains('hidden') === false) {
+        loader.classList.add('hidden');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message, message.isReasoning]);
 
   const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
     return (item as TCustomCreateImageData).url !== undefined || (item as TCustomCreateImageData).b64_json !== undefined;
@@ -82,7 +95,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     if (isChat(message)) {
       return (
         <>
-          <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[thinkPlugin]}>
+          <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[() => thinkPlugin(messageId)]}>
             {renderContent(message.content)}
           </Markdown>
           {renderAttachments(message.content)}
@@ -133,9 +146,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
       {role != ChatRole.SYSTEM && (
         <section className="flex items-end">
           {role == ChatRole.USER ? (
-            <PersonIcon className="mr-2 h-6 w-6 self-start" />
+            <UserIcon className="mr-2 h-6 w-6 self-start" />
           ) : (
-            <LayersIcon className="mr-2 h-6 w-6 self-start" />
+            <BrainIcon className="mr-2 h-6 w-6 self-start" />
           )}
           <div
             className={`flex w-full max-w-full flex-col overflow-x-hidden rounded-md px-3 py-1 text-sm leading-6 text-wrap ${
@@ -158,7 +171,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               {role == ChatRole.ASSISTANT && (
                 <>
                   <span className="pr-1 text-stone-700">|</span>
-                  <span>{!message.streamComplete && <Spinner />}</span>
+                  <span>{!message.streamComplete && !message.isReasoning && <Spinner />}</span>
                   <span className="text-xs">
                     Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
                   </span>
@@ -224,7 +237,7 @@ const Pre = ({
   const cssClass = getChildClass(children);
   const match = /language-(\w+)/.exec(cssClass ?? '');
   const title = match ? (match[1] ?? '') : '';
-  const codeId = generateGUID();
+  const codeId = uuidv7();
   return (
     <>
       <CodeHeader title={title} codeId={codeId} />
@@ -237,7 +250,7 @@ const Pre = ({
 
 const Span = ({ node, className, children, ...props }: React.ComponentProps<'span'> & ExtraProps) => {
   const thinkId = String(node?.properties?.dataThinkId ?? '');
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
   const elementRef = useRef<HTMLElement>(null);
 
   const handleClick = () => {
@@ -251,12 +264,16 @@ const Span = ({ node, className, children, ...props }: React.ComponentProps<'spa
   return thinkId ? (
     <button
       {...props}
-      className={`${className} flex items-center gap-1`}
+      className={`${className} mt-1 mb-3 flex cursor-pointer items-center gap-1`}
       onClick={handleClick}
       type="button"
       ref={elementRef as React.RefObject<HTMLButtonElement>}
     >
-      {children} {isVisible ? <TriangleUpIcon /> : <TriangleDownIcon />}
+      <span id={`loader-${thinkId}`} className="">
+        <Spinner />
+      </span>
+      <span className="text-sm">{children}</span>
+      {isVisible ? <ChevronDownIcon className="h-4 w-4" /> : <ChevronRightIcon className="h-4 w-4" />}
     </button>
   ) : (
     <span {...props}>{children}</span>
@@ -284,12 +301,4 @@ const copyToClipboard = async (elementId: string) => {
   } catch (err) {
     console.error('Failed to copy text to clipboard', err);
   }
-};
-
-const generateGUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0,
-      v = c == 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 };

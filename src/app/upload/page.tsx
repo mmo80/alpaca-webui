@@ -17,7 +17,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
-import { ChatRole, defaultProvider } from '@/lib/types';
+import { ChatRole, defaultProvider, type TCustomMessage } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -84,7 +84,13 @@ export default function Page() {
     setIsFetchLoading(true);
 
     const provider = { provider: selectedService.serviceId, model: selectedModel };
-    const chatMessage = { content: chatInput, role: ChatRole.USER, provider: provider, streamComplete: true };
+    const chatMessage = {
+      content: chatInput,
+      role: ChatRole.USER,
+      provider: provider,
+      streamComplete: true,
+      isReasoning: false,
+    } as TCustomMessage;
     setChats((prevArray) => [...prevArray, chatMessage]);
 
     const documents = await getDocumentChunks({
@@ -104,7 +110,8 @@ export default function Page() {
       role: ChatRole.SYSTEM,
       provider: defaultProvider,
       streamComplete: true,
-    };
+      isReasoning: false,
+    } as TCustomMessage;
 
     // console.debug(`systemPrompt: `, systemPrompt);
 
@@ -210,12 +217,13 @@ export default function Page() {
             </div>
           )}
 
-          <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} onReset={onResetChat} />
+          <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
         </div>
         <div className="sticky bottom-0 py-3">
           <ChatInput
             onSendInput={onSendChat}
             onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+            onReset={onResetChat}
             files={attachments}
             setFiles={setAttachments}
             chatInputPlaceholder={textareaPlaceholder}

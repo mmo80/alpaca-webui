@@ -15,14 +15,16 @@ export const useChatStream = () => {
   const [isStreamProcessing, setIsStreamProcessing] = useState<boolean>(false);
 
   const chatMessageChunks: string[] = [];
+  const jsonStringFaultBuffers: string[] = [];
   let checkFirstCharSpacing = true;
   let hasReasoningContent = false;
+  let isReasoning = false;
 
   function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
     return (item as TCustomChatMessage).content !== undefined;
   }
 
-  const updateLastChatsItem = (type: string, content: string = '') => {
+  const updateLastChatsItem = (type: 'finish' | 'update', content: string = '', isReasoning: boolean = false) => {
     setChats((prevArray) => {
       return prevArray.map((chat, index) => {
         if (isChat(chat)) {
@@ -30,8 +32,10 @@ export const useChatStream = () => {
             if (type === 'finish') {
               chat.content = (chat.content as string).replace(/[\n\s]+$/, '');
               chat.streamComplete = true;
+              chat.isReasoning = false;
             } else if (type === 'update') {
               chat.content = content;
+              chat.isReasoning = isReasoning;
             }
           }
         }
@@ -53,9 +57,16 @@ export const useChatStream = () => {
 
     const chatCompletionResponse = convertResponse(streamData);
 
-    // handle reasoning content
+    let content = chatCompletionResponse.choices[0]!.delta.content;
     let chunkReasoningContent =
       chatCompletionResponse.choices[0]?.delta.reasoning_content ?? chatCompletionResponse.choices[0]?.delta.reasoning;
+
+    if (content == '<think>') {
+      isReasoning = true;
+    } else if (content == '</think>') {
+      isReasoning = false;
+    }
+
     if (!hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
       hasReasoningContent = true;
       if (chatMessageChunks.length === 0) {
@@ -65,11 +76,10 @@ export const useChatStream = () => {
 
     if (hasReasoningContent && hasNonWhitespaceChars(chunkReasoningContent)) {
       chatMessageChunks.push(chunkReasoningContent ?? '');
-      updateLastChatsItem('update', chatMessageChunks.join(''));
+      updateLastChatsItem('update', chatMessageChunks.join(''), true);
+      return;
     }
 
-    // handle normal content
-    let content = chatCompletionResponse.choices[0]!.delta.content;
     let chunkContent = content as string;
     if (!chunkContent) return;
 
@@ -85,18 +95,59 @@ export const useChatStream = () => {
     }
 
     chatMessageChunks.push(chunkContent);
-    updateLastChatsItem('update', chatMessageChunks.join(''));
+    updateLastChatsItem('update', chatMessageChunks.join(''), isReasoning);
   };
 
-  let jsonFaultBuffer: string = '';
   const handleStreamSyntaxError = (str: string): boolean => {
     if (str.startsWith('{"id"')) {
-      jsonFaultBuffer = str;
+      jsonStringFaultBuffers.push(str);
     } else if (str.endsWith('}')) {
-      jsonFaultBuffer += str;
+      jsonStringFaultBuffers.push(str);
       return true;
     }
     return false;
+  };
+
+  const handleIncompleteStreamAndError = async (error: unknown): Promise<void> => {
+    if (errorType(error) !== 'AbortError') {
+      setChats((prevArray) => [
+        ...prevArray,
+        {
+          content: (error as any).toString(),
+          role: ChatRole.SYSTEM,
+          provider: defaultProvider,
+          streamComplete: true,
+          isReasoning: false,
+        },
+      ]);
+      return;
+    }
+
+    setChats((prevChats) => {
+      const updatedChats = [...prevChats];
+
+      // Mark the last message as complete if it exists
+      if (updatedChats.length > 0) {
+        const lastChat = updatedChats[updatedChats.length - 1];
+        updatedChats[updatedChats.length - 1] = {
+          ...lastChat,
+          streamComplete: true,
+          isReasoning: false,
+        } as TCustomMessage;
+      }
+
+      // Add the user canceled message
+      return [
+        ...updatedChats,
+        {
+          content: 'User canceled',
+          role: ChatRole.USER,
+          provider: defaultProvider,
+          streamComplete: true,
+          isReasoning: false,
+        },
+      ];
+    });
   };
 
   const handleStream = async (
@@ -110,7 +161,7 @@ export const useChatStream = () => {
     try {
       setChats((prevArray) => [
         ...prevArray,
-        { content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false },
+        { content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false, isReasoning: false },
       ]);
 
       while (true) {
@@ -131,47 +182,25 @@ export const useChatStream = () => {
           try {
             handleStreamChunk(jsonString, convertResponse);
           } catch (error) {
-            if (errorType(error) === 'SyntaxError') {
-              const bufferComplete = handleStreamSyntaxError(jsonString);
-              if (bufferComplete) {
-                console.info('Merged json string from stream: ', jsonFaultBuffer);
-                handleStreamChunk(jsonFaultBuffer, convertResponse);
-                jsonFaultBuffer = '';
-              } else {
-                console.warn(`SyntaxError: Failed to parse JSON: '${jsonString}". error: ${error}`);
-              }
-            } else {
-              console.error(`${errorType(error)}: '${jsonString}". error: ${error}`);
+            if (errorType(error) !== 'SyntaxError') {
+              console.error(`${errorType(error)}: '${jsonString}". error: `, error);
+              throw error;
             }
+
+            const bufferComplete = handleStreamSyntaxError(jsonString);
+            if (!bufferComplete) {
+              console.warn(`SyntaxError: Failed to parse JSON: '${jsonString}". error: `, error);
+              return;
+            }
+
+            console.info('* Merged incomplete json string from stream: ', jsonStringFaultBuffers);
+            handleStreamChunk(jsonStringFaultBuffers.join(''), convertResponse);
+            jsonStringFaultBuffers.length = 0;
           }
         }
       }
     } catch (error) {
-      if (errorType(error) === 'AbortError') {
-        setChats((prevChats) => {
-          const updatedChats = [...prevChats];
-
-          // Mark the last message as complete if it exists
-          if (updatedChats.length > 0) {
-            const lastChat = updatedChats[updatedChats.length - 1];
-            updatedChats[updatedChats.length - 1] = {
-              ...lastChat,
-              streamComplete: true,
-            } as TCustomMessage;
-          }
-
-          // Add the user canceled message
-          return [
-            ...updatedChats,
-            { content: 'User canceled', role: ChatRole.USER, provider: defaultProvider, streamComplete: true },
-          ];
-        });
-      } else {
-        setChats((prevArray) => [
-          ...prevArray,
-          { content: (error as any).toString(), role: ChatRole.SYSTEM, provider: defaultProvider, streamComplete: true },
-        ]);
-      }
+      await handleIncompleteStreamAndError(error);
     } finally {
       // Flush the decoder when done
       decoder.decode(new Uint8Array(0), { stream: false });

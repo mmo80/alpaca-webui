@@ -16,19 +16,24 @@ import { ApiService, type ChatError } from '@/lib/api-service';
 import { ProviderFactory } from '@/lib/providers/provider-factory';
 import { type Provider } from '@/lib/providers/provider';
 import { useMutation } from '@tanstack/react-query';
-import { getSingleChatHistoryById, useChatHistoryMutation } from '@/trpc/queries';
+import { getSingleChatHistoryById } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTRPC } from '@/trpc/react';
+import { queryClient, useTRPC } from '@/trpc/react';
 import type { FileInfo } from '../upload/upload-types';
 
 export const Main: FC = () => {
   const newThreadTitle = 'New Thread';
   const mainDiv = useRef<HTMLDivElement>(null);
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryChatHistoryId = searchParams.get('id');
+
   const { systemPrompt, hasHydrated, systemPromptForChatTitle } = useSettingsStore();
   const { modelList } = useModelList();
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+  const trpc = useTRPC();
 
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
@@ -39,19 +44,12 @@ export const Main: FC = () => {
   const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string | undefined>(undefined);
   const [chatTitle, setChatTitle] = useState<string | undefined>(undefined);
   const [chatTitlePersisted, setChatTitlePersisted] = useState<boolean>(false);
+  const [generatingTitle, setGeneratingTitle] = useState<boolean>(false);
 
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const queryChatHistoryId = searchParams.get('id');
-
   const apiService = useMemo(() => new ApiService(), []);
   const providerFactory = useMemo(() => new ProviderFactory(apiService), [apiService]);
-
-  // tRPC
-  const trpc = useTRPC();
-  const { invalidate: invalidateChatHistory } = useChatHistoryMutation();
 
   const updateChatHistory = useMutation(
     trpc.chatHistory.insertUpdate.mutationOptions({
@@ -78,6 +76,54 @@ export const Main: FC = () => {
     })
   );
 
+  const invalidateChatHistory = () => {
+    queryClient.invalidateQueries({ queryKey: trpc.chatHistory.all.queryKey() });
+  };
+
+  const generateAndPersistChatTitle = () => {
+    if (!chatTitle && currentChatHistoryId && !chatTitlePersisted && chats.length > 1) {
+      const userChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role === ChatRole.USER);
+      if (userChats.length > 0) {
+        const lastChat = userChats[userChats.length - 1];
+        if (lastChat?.streamComplete === true) {
+          const firstUserMessage = (lastChat as TCustomChatMessage)?.content as string;
+
+          if (firstUserMessage && firstUserMessage.length > 1 && !generatingTitle) {
+            setGeneratingTitle(true);
+            generateTitle(firstUserMessage).then((title) => {
+              if (title) {
+                setChatTitle(title);
+                setGeneratingTitle(false);
+                if (currentChatHistoryId) {
+                  updateChatHistoryTitle.mutateAsync({
+                    id: currentChatHistoryId,
+                    title: title,
+                  });
+                }
+              }
+            });
+          }
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedModel != null && !currentChatHistoryId) {
+      setChats([
+        {
+          content: systemPrompt || '',
+          role: ChatRole.SYSTEM,
+          provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
+          streamComplete: true,
+          isReasoning: false,
+        },
+      ]);
+      setTextareaPlaceholder('Ask me anything...');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModel]);
+
   useEffect(() => {
     if (!queryChatHistoryId) {
       onResetChat();
@@ -96,8 +142,8 @@ export const Main: FC = () => {
     getSingleChatHistoryById(queryChatHistoryId).then((result) => {
       if (!result.isError) {
         if (result.title && result.title !== newThreadTitle) {
-          setChatTitlePersisted(true);
           setChatTitle(result.title);
+          setChatTitlePersisted(true);
         }
         setChats(result.messages);
         delayHighlighter();
@@ -120,60 +166,10 @@ export const Main: FC = () => {
       router.push(`/?${params.toString()}`);
     }
 
-    generateChatTitle();
+    generateAndPersistChatTitle();
 
-    if (chatTitle && currentChatHistoryId && !chatTitlePersisted) {
-      updateChatHistoryTitle.mutateAsync({
-        id: currentChatHistoryId,
-        title: chatTitle,
-      });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatTitle, currentChatHistoryId, chatTitlePersisted]);
-
-  useEffect(() => {
-    if (selectedModel != null && !currentChatHistoryId) {
-      setChats([
-        {
-          content: systemPrompt || '',
-          role: ChatRole.SYSTEM,
-          provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
-          streamComplete: true,
-        },
-      ]);
-      setTextareaPlaceholder('Ask me anything...');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel]);
-
-  useEffect(() => {
-    const handleSaveChatHistory = async () => {
-      if (chats.length > 1 && chats[chats.length - 1]?.streamComplete === true) {
-        await saveChatHistory(chats);
-      }
-    };
-
-    handleSaveChatHistory();
-    generateChatTitle();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chats]);
-
-  const generateChatTitle = () => {
-    if (!chatTitle && !chatTitlePersisted && chats.length > 1) {
-      const titleChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
-      const lastChat = titleChats[titleChats.length - 1];
-
-      if (titleChats.length === 2 && lastChat?.streamComplete === true) {
-        const firstUserMessage = (lastChat as TCustomChatMessage)?.content as string;
-
-        if (firstUserMessage && firstUserMessage.length > 1) {
-          generateTitle(firstUserMessage).catch((err) => {
-            console.error('Error generating title:', err);
-          });
-        }
-      }
-    }
-  };
 
   const saveChatHistory = async (messages: TCustomMessage[]) => {
     const id = await updateChatHistory.mutateAsync({
@@ -182,10 +178,22 @@ export const Main: FC = () => {
       messages: messages,
     });
 
-    if (id !== currentChatHistoryId) {
-      setCurrentChatHistoryId(id);
-    }
+    return id;
   };
+
+  useEffect(() => {
+    const nonSystemChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
+    if (nonSystemChats.length >= 1 && nonSystemChats[nonSystemChats.length - 1]?.streamComplete === true) {
+      saveChatHistory(chats).then((id) => {
+        if (id !== currentChatHistoryId) {
+          setCurrentChatHistoryId(id);
+        }
+      });
+    }
+
+    generateAndPersistChatTitle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats]);
 
   const chatStream = async (message: TCustomMessage) => {
     if (selectedModel == null || selectedService == null) {
@@ -252,14 +260,17 @@ export const Main: FC = () => {
         ...response.data[0],
         provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
         streamComplete: true,
+        isReasoning: false,
       },
     ]);
     setIsFetchLoading(false);
   };
 
-  const generateTitle = async (message: string) => {
+  const generateTitle = async (message: string): Promise<string | undefined> => {
+    let title = undefined;
+
     if (selectedModel == null || selectedService == null) {
-      return;
+      return title;
     }
 
     const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
@@ -269,66 +280,69 @@ export const Main: FC = () => {
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       streamComplete: true,
+      isReasoning: false,
     };
 
-    const apiSrv = new ApiService();
-    const providerFactory = new ProviderFactory(apiSrv);
+    try {
+      const providerInstance = providerFactory.getInstance(selectedService);
+      if (providerInstance) {
+        setProvider(providerInstance);
+        const response = await providerInstance.chatCompletions(
+          selectedModel,
+          [chatMessage],
+          selectedService.url,
+          selectedService.apiKey
+        );
 
-    const providerInstance = providerFactory.getInstance(selectedService);
-    if (providerInstance) {
-      setProvider(providerInstance);
-      const response = await providerInstance.chatCompletions(
-        selectedModel,
-        [chatMessage],
-        selectedService.url,
-        selectedService.apiKey
-      );
+        const decoder = new TextDecoder('utf-8');
+        const titleChunks = [];
 
-      const decoder = new TextDecoder('utf-8');
-      const titleChunks = [];
+        try {
+          while (true) {
+            const { done, value } = await response.stream.read();
+            if (done) break;
 
-      try {
-        while (true) {
-          const { done, value } = await response.stream.read();
-          if (done) break;
+            const text = decoder.decode(value, { stream: true });
+            const objects = text.split('\n');
 
-          const text = decoder.decode(value, { stream: true });
-          const objects = text.split('\n');
+            for (const obj of objects) {
+              const jsonString = removeJunkStreamData(obj);
 
-          for (const obj of objects) {
-            const jsonString = removeJunkStreamData(obj);
-
-            if (jsonString.length > 0 && isValidJson(jsonString)) {
-              const responseData = providerInstance.convertResponse(jsonString);
-              titleChunks.push(responseData.choices[0]?.delta.content as string);
+              if (jsonString.length > 0 && isValidJson(jsonString)) {
+                const responseData = providerInstance.convertResponse(jsonString);
+                titleChunks.push(responseData.choices[0]?.delta.content as string);
+              }
             }
           }
-        }
-      } finally {
-        // Flush the decoder when done
-        decoder.decode(new Uint8Array(0), { stream: false });
-      }
-
-      let title = titleChunks.join('');
-      if (title.length > 1) {
-        title = title
-          .replace(/<think>[\s\S]*?<\/think>/g, '')
-          .replace(/```json/g, '')
-          .replace(/```/g, '')
-          .replace(/\n+$/, '')
-          .replace(/undefined/g, '');
-
-        if (isValidJson(title)) {
-          title = JSON.parse(title).title;
-        } else {
-          console.log(`** invalid JSON: `, title);
-          title = cleanString(title);
+        } finally {
+          // Flush the decoder when done
+          decoder.decode(new Uint8Array(0), { stream: false });
         }
 
-        console.log('** Set title: ', title);
-        setChatTitle(title);
+        title = titleChunks.join('');
+        if (title.length > 1) {
+          title = title
+            .replace(/<think>[\s\S]*?<\/think>/g, '')
+            .replace(/```json/g, '')
+            .replace(/```/g, '')
+            .replace(/\n+$/, '')
+            .replace(/undefined/g, '');
+
+          if (isValidJson(title)) {
+            title = JSON.parse(title).title;
+          } else {
+            console.warn(`Invalid JSON for title: `, title);
+            title = cleanString(title);
+          }
+        }
       }
+    } catch (err) {
+      toast.error('Failed to generate title', {
+        description: typeof err === 'string' ? err : JSON.stringify(err),
+      });
     }
+
+    return title;
   };
 
   const sendChatGenerateImage = async (chatInput: string) => {
@@ -338,6 +352,7 @@ export const Main: FC = () => {
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       streamComplete: true,
+      isReasoning: false,
     };
     setChats((prevArray) => [...prevArray, chatMessage]);
     await chatImage(prompt);
@@ -349,6 +364,7 @@ export const Main: FC = () => {
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       streamComplete: true,
+      isReasoning: false,
     } as TCustomMessage;
 
     if (attachments && attachments.length > 0) {
@@ -376,12 +392,19 @@ export const Main: FC = () => {
       return;
     }
 
+    // Start timer here
+    const startTime = performance.now();
+    console.log(`-> Start timer here!`);
     if (chatInput.startsWith('/image')) {
       await sendChatGenerateImage(chatInput);
       return;
     }
 
     await sendChatCompletion(chatInput);
+    // Stop timer here
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+    console.log(`-> Chat operation took ${duration.toFixed(2)}ms`);
 
     setAttachments([]);
   };
@@ -422,12 +445,13 @@ export const Main: FC = () => {
         )}
 
         {chatError.isError && <AlertBox title="Error" description={chatError.errorMessage ?? ''} />}
-        <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} onReset={onResetChat} />
+        <Chat isFetchLoading={isFetchLoading} chats={chats} mainDiv={mainDiv} />
       </main>
       <section className="sticky top-[100vh] py-3">
         <ChatInput
           onSendInput={sendChat}
           onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+          onReset={onResetChat}
           files={attachments}
           setFiles={setAttachments}
           chatInputPlaceholder={textareaPlaceholder}
