@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { apiService, ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
-  type TApiSettingsSchema,
+  type TApiSetting,
   type TChatCompletionRequest,
   type TChatMessage,
   type TOpenAIModelResponseSchema,
@@ -14,6 +14,7 @@ import {
   CreateImageRequestSchema,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
+import { ApiServiceEnum } from './data';
 
 class OpenAIProvider implements Provider {
   service: ApiService;
@@ -23,7 +24,11 @@ class OpenAIProvider implements Provider {
     this.service = service;
   }
 
-  public async models(apiSetting: TApiSettingsSchema, embeddedOnly: boolean): Promise<TModelSchema[]> {
+  public providerId(): string {
+    return ApiServiceEnum.OPENAI;
+  }
+
+  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
     const url = `${this.service.validUrl(apiSetting.url)}/v1/models`;
 
     const response = await this.service.executeFetch(url, HttpMethod.GET, apiSetting.apiKey);

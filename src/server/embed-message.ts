@@ -1,6 +1,6 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
 import { ApiTypeEnum } from '@/lib/providers/data';
-import type { TApiSettingsSchema } from '@/lib/types';
+import type { TApiSetting } from '@/lib/types';
 
 type EmbedMessageResponse = {
   embedding: number[];
@@ -10,7 +10,7 @@ type EmbedMessageResponse = {
 export const embedMessage = async (
   message: string,
   model: string,
-  apiSetting: TApiSettingsSchema
+  apiSetting: TApiSetting
 ): Promise<EmbedMessageResponse> => {
   let payload = {};
   let embedding: number[] = [];

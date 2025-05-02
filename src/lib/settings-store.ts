@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { type TApiSettingsSchema } from './types';
+import { type TApiSetting } from './types';
 
 export const SystemPromptVariable = {
   userQuestion: '{{UserQuestion}}',
@@ -10,8 +10,8 @@ export const SystemPromptVariable = {
 
 // ---- Settings Store ---- //
 interface SettingsStoreState {
-  services: TApiSettingsSchema[];
-  setServices: (services: TApiSettingsSchema[]) => void;
+  services: TApiSetting[];
+  setServices: (services: TApiSetting[]) => void;
   systemPrompt: string;
   systemPromptForRag: string;
   systemPromptForRagSlim: string;
@@ -30,7 +30,7 @@ export const useSettingsStore = create<SettingsStoreState>()(
   persist(
     (set) => ({
       services: [],
-      setServices: (services: TApiSettingsSchema[]) => set(() => ({ services: services })),
+      setServices: (services: TApiSetting[]) => set(() => ({ services: services })),
       systemPrompt: `Hello i am a AI assistant, how can i help you?`,
       systemPromptForRag: `Instructions: Carefully read and synthesize the information presented in the document section below to answer the user's question. Your response must be derived exclusively from the content found between the "### Begin Document ###" and "### End Document ###" markers. If the information within these markers does not contain sufficient details to answer the question, you must clearly state that an answer cannot be provided based on the available document/data. Aim for a concise, accurate, and relevant response to the user's query.
 

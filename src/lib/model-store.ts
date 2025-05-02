@@ -1,25 +1,25 @@
 import { create } from 'zustand';
-import { type TApiSettingsSchema } from './types';
+import { type TApiSetting } from './types';
 
 // ---- Model Store ---- //
 interface ModelStoreState {
-  selectedService: TApiSettingsSchema | null;
-  selectedModel: string | null;
-  selectedEmbedService: TApiSettingsSchema | null;
-  selectedEmbedModel: string | null;
-  setService: (service: TApiSettingsSchema | null | undefined) => void;
-  setModel: (model: string | null) => void;
-  setEmbedService: (service: TApiSettingsSchema | null | undefined) => void;
-  setEmbedModel: (model: string | null) => void;
+  selectedService: TApiSetting | undefined;
+  selectedModel: string | undefined;
+  selectedEmbedService: TApiSetting | undefined;
+  selectedEmbedModel: string | undefined;
+  setService: (service: TApiSetting | undefined) => void;
+  setModel: (model: string | undefined) => void;
+  setEmbedService: (service: TApiSetting | undefined) => void;
+  setEmbedModel: (model: string | undefined) => void;
 }
 
 export const useModelStore = create<ModelStoreState>((set) => ({
-  selectedService: null,
-  selectedModel: null,
-  selectedEmbedService: null,
-  selectedEmbedModel: null,
-  setService: (service: TApiSettingsSchema | null | undefined) => set(() => ({ selectedService: service })),
-  setModel: (model: string | null) => set(() => ({ selectedModel: model })),
-  setEmbedService: (service: TApiSettingsSchema | null | undefined) => set(() => ({ selectedEmbedService: service })),
-  setEmbedModel: (model: string | null) => set(() => ({ selectedEmbedModel: model })),
+  selectedService: undefined,
+  selectedModel: undefined,
+  selectedEmbedService: undefined,
+  selectedEmbedModel: undefined,
+  setService: (service: TApiSetting | undefined) => set(() => ({ selectedService: service })),
+  setModel: (model: string | undefined) => set(() => ({ selectedModel: model })),
+  setEmbedService: (service: TApiSetting | undefined) => set(() => ({ selectedEmbedService: service })),
+  setEmbedModel: (model: string | undefined) => set(() => ({ selectedEmbedModel: model })),
 }));

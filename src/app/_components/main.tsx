@@ -1,6 +1,6 @@
 'use client';
 
-import { type FC, useState, useRef, useEffect, useMemo } from 'react';
+import { type FC, useState, useRef, useEffect } from 'react';
 import { type TContentImage, type TContentText, type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
 import { cleanString, delayHighlighter, formatBytes, isValidJson, removeJunkStreamData } from '@/lib/utils';
@@ -12,14 +12,13 @@ import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { useModelStore } from '@/lib/model-store';
 import ModelAlts from '@/components/model-alts';
 import { toast } from 'sonner';
-import { ApiService, type ChatError } from '@/lib/api-service';
-import { ProviderFactory } from '@/lib/providers/provider-factory';
-import { type Provider } from '@/lib/providers/provider';
+import { type ChatError } from '@/lib/api-service';
 import { useMutation } from '@tanstack/react-query';
 import { getSingleChatHistoryById } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { queryClient, useTRPC } from '@/trpc/react';
 import type { FileInfo } from '../upload/upload-types';
+import { useProvider } from '@/hooks/use-provider';
 
 export const Main: FC = () => {
   const newThreadTitle = 'New Thread';
@@ -33,11 +32,11 @@ export const Main: FC = () => {
   const { modelList } = useModelList();
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
+  const { provider } = useProvider(selectedService);
   const trpc = useTRPC();
 
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
-  const [provider, setProvider] = useState<Provider | undefined>(undefined);
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
 
   // TODO: Maybe convert to useReduce
@@ -47,9 +46,6 @@ export const Main: FC = () => {
   const [generatingTitle, setGeneratingTitle] = useState<boolean>(false);
 
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
-
-  const apiService = useMemo(() => new ApiService(), []);
-  const providerFactory = useMemo(() => new ProviderFactory(apiService), [apiService]);
 
   const updateChatHistory = useMutation(
     trpc.chatHistory.insertUpdate.mutationOptions({
@@ -202,15 +198,12 @@ export const Main: FC = () => {
 
     setIsFetchLoading(true);
 
-    const providerInstance = providerFactory.getInstance(selectedService);
-    if (!providerInstance) {
+    if (!provider) {
       toast.error('Provider not found');
       return;
     }
 
-    setProvider(providerInstance);
-
-    const response = await providerInstance.chatCompletions(
+    const response = await provider.chatCompletions(
       selectedModel,
       [...chats, message],
       selectedService.url,
@@ -222,7 +215,7 @@ export const Main: FC = () => {
     await handleStream(
       response.stream,
       { provider: selectedService.serviceId, model: selectedModel },
-      providerInstance.convertResponse
+      provider.convertResponse
     );
 
     setIsFetchLoading(false);
@@ -233,21 +226,13 @@ export const Main: FC = () => {
       return;
     }
 
-    const providerInstance = providerFactory.getInstance(selectedService);
-    if (!providerInstance) {
+    if (!provider) {
       toast.error('Provider not found');
       return;
     }
 
-    setProvider(providerInstance);
-
     setIsFetchLoading(true);
-    const response = await providerInstance.generateImage(
-      prompt,
-      selectedModel,
-      selectedService.url,
-      selectedService.apiKey
-    );
+    const response = await provider.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
 
     if (response.error) {
       setIsFetchLoading(false);
@@ -273,6 +258,11 @@ export const Main: FC = () => {
       return title;
     }
 
+    if (!provider) {
+      toast.error('Provider not found');
+      return;
+    }
+
     const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
 
     const chatMessage = {
@@ -283,63 +273,60 @@ export const Main: FC = () => {
       isReasoning: false,
     };
 
+    const decoder = new TextDecoder('utf-8');
+
     try {
-      const providerInstance = providerFactory.getInstance(selectedService);
-      if (providerInstance) {
-        setProvider(providerInstance);
-        const response = await providerInstance.chatCompletions(
-          selectedModel,
-          [chatMessage],
-          selectedService.url,
-          selectedService.apiKey
-        );
+      const response = await provider.chatCompletions(
+        selectedModel,
+        [chatMessage],
+        selectedService.url,
+        selectedService.apiKey
+      );
 
-        const decoder = new TextDecoder('utf-8');
-        const titleChunks = [];
+      const titleChunks = [];
 
-        try {
-          while (true) {
-            const { done, value } = await response.stream.read();
-            if (done) break;
+      while (true) {
+        const { done, value } = await response.stream.read();
+        if (done) break;
 
-            const text = decoder.decode(value, { stream: true });
-            const objects = text.split('\n');
+        const text = decoder.decode(value, { stream: true });
+        const objects = text.split('\n');
 
-            for (const obj of objects) {
-              const jsonString = removeJunkStreamData(obj);
+        for (const obj of objects) {
+          const jsonString = removeJunkStreamData(obj);
 
-              if (jsonString.length > 0 && isValidJson(jsonString)) {
-                const responseData = providerInstance.convertResponse(jsonString);
-                titleChunks.push(responseData.choices[0]?.delta.content as string);
-              }
-            }
-          }
-        } finally {
-          // Flush the decoder when done
-          decoder.decode(new Uint8Array(0), { stream: false });
-        }
+          if (jsonString.length <= 0 || !isValidJson(jsonString)) continue;
 
-        title = titleChunks.join('');
-        if (title.length > 1) {
-          title = title
-            .replace(/<think>[\s\S]*?<\/think>/g, '')
-            .replace(/```json/g, '')
-            .replace(/```/g, '')
-            .replace(/\n+$/, '')
-            .replace(/undefined/g, '');
-
-          if (isValidJson(title)) {
-            title = JSON.parse(title).title;
-          } else {
-            console.warn(`Invalid JSON for title: `, title);
-            title = cleanString(title);
-          }
+          const responseData = provider.convertResponse(jsonString);
+          titleChunks.push(responseData.choices[0]?.delta.content as string);
         }
       }
+
+      title = titleChunks.join('');
+      if (title.length <= 0) {
+        return title;
+      }
+
+      title = title
+        .replace(/<think>[\s\S]*?<\/think>/g, '')
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .replace(/\n+$/, '')
+        .replace(/undefined/g, '');
+
+      if (isValidJson(title)) {
+        return JSON.parse(title).title;
+      }
+
+      console.warn(`Invalid JSON for title: `, title);
+      return cleanString(title);
     } catch (err) {
       toast.error('Failed to generate title', {
         description: typeof err === 'string' ? err : JSON.stringify(err),
       });
+    } finally {
+      // Flush the decoder when done
+      decoder.decode(new Uint8Array(0), { stream: false });
     }
 
     return title;
@@ -413,6 +400,19 @@ export const Main: FC = () => {
     setChats([]);
   };
 
+  const onCancelStream = () => {
+    if (selectedService == null) {
+      return;
+    }
+
+    if (!provider) {
+      toast.error('Provider not found');
+      return;
+    }
+
+    provider.cancelChatCompletionStream();
+  };
+
   return (
     <>
       <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
@@ -430,11 +430,11 @@ export const Main: FC = () => {
           }}
           onServiceChange={(service) => {
             setService(service);
-            setModel(null);
+            setModel(undefined);
           }}
           onReset={() => {
-            setService(null);
-            setModel(null);
+            setService(undefined);
+            setModel(undefined);
           }}
         />
 
@@ -450,7 +450,7 @@ export const Main: FC = () => {
       <section className="sticky top-[100vh] py-3">
         <ChatInput
           onSendInput={sendChat}
-          onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+          onCancelStream={onCancelStream}
           onReset={onResetChat}
           files={attachments}
           setFiles={setAttachments}

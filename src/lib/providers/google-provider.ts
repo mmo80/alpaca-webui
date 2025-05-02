@@ -1,7 +1,7 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   GoogleModelsResponseSchema,
-  type TApiSettingsSchema,
+  type TApiSetting,
   type TChatMessage,
   type TModelSchema,
   type TGoogleChatCompletionRequestSchema,
@@ -11,6 +11,7 @@ import {
   type TCustomMessage,
   type TCreateImageResponse,
 } from '../types';
+import { ApiServiceEnum } from './data';
 import type { ChatCompletionsResponse, Provider } from './provider';
 
 class GoogleProvider implements Provider {
@@ -21,7 +22,11 @@ class GoogleProvider implements Provider {
     this.service = service;
   }
 
-  public async models(apiSetting: TApiSettingsSchema, embeddedOnly: boolean): Promise<TModelSchema[]> {
+  public providerId(): string {
+    return ApiServiceEnum.GOOGLE;
+  }
+
+  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
     const payload = {
       apiKey: apiSetting.apiKey ?? '',
       baseUrl: this.service.validUrl(apiSetting.url),

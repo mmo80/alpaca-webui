@@ -287,11 +287,11 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
           }}
           onServiceChange={(service) => {
             setEmbedService(service);
-            setEmbedModel(null);
+            setEmbedModel(undefined);
           }}
           onReset={() => {
-            setEmbedService(null);
-            setEmbedModel(null);
+            setEmbedService(undefined);
+            setEmbedModel(undefined);
           }}
         />
       </div>

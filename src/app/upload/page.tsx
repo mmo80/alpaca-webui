@@ -25,11 +25,9 @@ import { AlertBox } from '@/components/alert-box';
 import { buttonVariants } from '@/components/ui/button';
 import { DocumentsForm, type SelectedDocument } from './_components/documents-form';
 import { useModelStore } from '@/lib/model-store';
-import { ApiService } from '@/lib/api-service';
-import { ProviderFactory } from '@/lib/providers/provider-factory';
-import { type Provider } from '@/lib/providers/provider';
 import type { FileInfo } from './upload-types';
 import { getDocumentChunks } from '@/trpc/queries';
+import { useProvider } from '@/hooks/use-provider';
 
 export default function Page() {
   const { selectedModel, setModel, selectedEmbedModel, selectedService, setService, selectedEmbedService } = useModelStore();
@@ -38,16 +36,13 @@ export default function Page() {
   const [selectedDocument, setSelectedDocument] = useState<SelectedDocument | null>(null);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
-
-  const apiService = useMemo(() => new ApiService(), []);
-  const providerFactory = useMemo(() => new ProviderFactory(apiService), [apiService]);
+  const { provider } = useProvider(selectedService);
 
   // ---- Chats ----
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const mainDiv = useRef<HTMLDivElement>(null);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose document to interact with...');
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
-  const [provider, setProvider] = useState<Provider | undefined>(undefined);
 
   useEffect(() => {
     if (selectedDocument != null && selectedModel != null) {
@@ -83,11 +78,10 @@ export default function Page() {
 
     setIsFetchLoading(true);
 
-    const provider = { provider: selectedService.serviceId, model: selectedModel };
     const chatMessage = {
       content: chatInput,
       role: ChatRole.USER,
-      provider: provider,
+      provider: { provider: selectedService.serviceId, model: selectedModel },
       streamComplete: true,
       isReasoning: false,
     } as TCustomMessage;
@@ -117,20 +111,26 @@ export default function Page() {
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 
-    const providerInstance = providerFactory.getInstance(selectedService);
-    if (providerInstance) {
-      setProvider(providerInstance);
-      const response = await providerInstance.chatCompletions(
-        selectedModel,
-        [...chats, systemPromptMessage, chatMessage],
-        selectedService.url,
-        selectedService.apiKey
-      );
-
-      setIsFetchLoading(false);
-      await handleStream(response.stream, provider, providerInstance.convertResponse);
-      delayHighlighter();
+    if (!provider) {
+      toast.error('Provider not found');
+      return;
     }
+
+    const response = await provider.chatCompletions(
+      selectedModel,
+      [...chats, systemPromptMessage, chatMessage],
+      selectedService.url,
+      selectedService.apiKey
+    );
+
+    setIsFetchLoading(false);
+    await handleStream(
+      response.stream,
+      { provider: selectedService.serviceId, model: selectedModel },
+      provider.convertResponse
+    );
+    delayHighlighter();
+
     setIsFetchLoading(false);
   };
 
@@ -147,6 +147,17 @@ export default function Page() {
 
   const onResetChat = () => {
     setChats([]);
+  };
+
+  const onCancelStream = () => {
+    if (selectedService == null) return;
+
+    if (!provider) {
+      toast.error('Provider not found');
+      return;
+    }
+
+    provider.cancelChatCompletionStream();
   };
 
   return (
@@ -201,11 +212,11 @@ export default function Page() {
                   }}
                   onServiceChange={(service) => {
                     setService(service);
-                    setModel(null);
+                    setModel(undefined);
                   }}
                   onReset={() => {
-                    setService(null);
-                    setModel(null);
+                    setService(undefined);
+                    setModel(undefined);
                   }}
                 />
               </div>
@@ -222,7 +233,7 @@ export default function Page() {
         <div className="sticky bottom-0 py-3">
           <ChatInput
             onSendInput={onSendChat}
-            onCancelStream={provider?.cancelChatCompletionStream ?? (() => {})}
+            onCancelStream={onCancelStream}
             onReset={onResetChat}
             files={attachments}
             setFiles={setAttachments}

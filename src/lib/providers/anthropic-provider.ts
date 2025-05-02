@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import { ApiService, HttpMethod } from '../api-service';
 import type {
-  TApiSettingsSchema,
+  TApiSetting,
   TChatCompletionResponse,
   TChatMessage,
   TCreateImageResponse,
@@ -10,6 +10,7 @@ import type {
   TModelSchema,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
+import { ApiServiceEnum } from './data';
 
 class AnthropicProvider implements Provider {
   service: ApiService;
@@ -19,7 +20,11 @@ class AnthropicProvider implements Provider {
     this.service = service;
   }
 
-  public async models(apiSetting: TApiSettingsSchema, embeddedOnly: boolean): Promise<TModelSchema[]> {
+  public providerId(): string {
+    return ApiServiceEnum.ANTHROPIC;
+  }
+
+  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
     const payload = {
       apiKey: apiSetting.apiKey ?? '',
       baseUrl: this.service.validUrl(apiSetting.url),

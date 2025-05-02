@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
-import type { TApiSettingsSchema, TOpenAIModelResponseSchema } from '@/lib/types';
+import type { TApiSetting, TOpenAIModelResponseSchema } from '@/lib/types';
 import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
@@ -12,7 +12,7 @@ import { ArrowLeftRightIcon } from 'lucide-react';
 import { ApiTypeEnum } from '@/lib/providers/data';
 
 type ModelAltsProps = {
-  selectedService: TApiSettingsSchema | null | undefined;
+  selectedService: TApiSetting | null | undefined;
   selectedModel: string | null | undefined;
   models: TOpenAIModelResponseSchema[];
   modelsIsSuccess: boolean;
@@ -20,7 +20,7 @@ type ModelAltsProps = {
   hasHydrated: boolean;
   embeddingModels: boolean;
   onModelChange: (model: string) => void;
-  onServiceChange: (service: TApiSettingsSchema) => void;
+  onServiceChange: (service: TApiSetting) => void;
   onReset: () => void;
 };
 

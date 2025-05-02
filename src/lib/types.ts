@@ -282,7 +282,7 @@ export const ApiSettingsSchema = z.object({
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
 });
 
-export type TApiSettingsSchema = z.infer<typeof ApiSettingsSchema>;
+export type TApiSetting = z.infer<typeof ApiSettingsSchema>;
 
 export const SettingsFormSchema = z.object({
   services: z.array(ApiSettingsSchema),

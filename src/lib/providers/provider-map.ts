@@ -17,7 +17,7 @@ export const providerMap: Record<ApiServiceEnum, new (service: ApiService) => Pr
   [ApiServiceEnum.TOGETHER]: TogetherProvider,
   [ApiServiceEnum.MISTRAL]: MistralProvider,
   [ApiServiceEnum.GROQ]: GroqProvider,
-  [ApiServiceEnum.STANDARD]: OpenAIProvider, // <- FIX!
+  [ApiServiceEnum.STANDARD]: OpenAIProvider, // TODO: FIX or maybe REMOVE!
   [ApiServiceEnum.ANTHROPIC]: AnthropicProvider,
   [ApiServiceEnum.GOOGLE]: GoogleProvider,
   [ApiServiceEnum.DEEPSEEK]: DeepseekProvider,

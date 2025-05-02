@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 import { useSettingsStore } from '@/lib/settings-store';
 import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type OpenPopovers, SettingsFormSchema, type TApiSettingsSchema, type TSettingsFormSchema } from '@/lib/types';
+import { type OpenPopovers, SettingsFormSchema, type TApiSetting, type TSettingsFormSchema } from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react';
@@ -41,7 +41,7 @@ export default function Page() {
   const form = useForm<TSettingsFormSchema>({
     resolver: zodResolver(SettingsFormSchema),
     defaultValues: {
-      services: [] as TApiSettingsSchema[],
+      services: [] as TApiSetting[],
     },
   });
   const { fields } = useFieldArray({ name: 'services', control: form.control });
@@ -53,10 +53,10 @@ export default function Page() {
   const onSubmit = (data: TSettingsFormSchema) => {
     setServices(data.services);
     setErrorMessages([]);
-    setEmbedModel(null);
-    setEmbedService(null);
-    setModel(null);
-    setService(null);
+    setEmbedModel(undefined);
+    setEmbedService(undefined);
+    setModel(undefined);
+    setService(undefined);
     toast.success('Saved!');
   };
 
@@ -75,7 +75,7 @@ export default function Page() {
       return;
     }
 
-    const service: TApiSettingsSchema = {
+    const service: TApiSetting = {
       serviceId: serviceId,
       url: url,
       apiType: apiType,

@@ -3,7 +3,7 @@ import { chunkTextBySentences } from 'matts-llm-tools';
 import { DocumentReader } from './document-reader';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
 import { embedMessage } from './embed-message';
-import { type TApiSettingsSchema } from '@/lib/types';
+import { type TApiSetting } from '@/lib/types';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
@@ -91,7 +91,7 @@ export class DocumentEmbedding {
     chunks: string[],
     filename: string,
     model: string,
-    apiSetting: TApiSettingsSchema
+    apiSetting: TApiSetting
   ): Promise<DocumentVectorSchema[]> {
     const documentVectors: DocumentVectorSchema[] = [];
 
@@ -119,7 +119,7 @@ export class DocumentEmbedding {
     return await reader.getFileContent();
   }
 
-  async EmbedAndPersistDocument(embedModel: string, apiSetting: TApiSettingsSchema): Promise<DocumentEmbeddingRespopnse> {
+  async EmbedAndPersistDocument(embedModel: string, apiSetting: TApiSetting): Promise<DocumentEmbeddingRespopnse> {
     try {
       // Step 1: Get file content
       const fileContent = await this.getFileContent();
