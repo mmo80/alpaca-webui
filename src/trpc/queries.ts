@@ -1,5 +1,5 @@
 import type { Documents } from '@/db/vector-db';
-import type { TCustomChatMessage, TCustomMessage } from '@/lib/types';
+import { CustomMessageSchema, type TCustomChatMessage, type TCustomMessage } from '@/lib/types';
 import type { TDocumentChunkRequest } from '@/server/api/routers/document';
 import { trpc, useTRPC } from '@/trpc/react';
 import { useQuery } from '@tanstack/react-query';
@@ -40,13 +40,10 @@ export const getSingleChatHistoryById = async (id: string): Promise<SingleChatHi
     const parsedMessages = JSON.parse(result.messages);
     const chatMessages = parsedMessages.map((message: TCustomMessage) => {
       const msg = message as TCustomChatMessage;
-      return {
-        role: msg.role,
-        content: msg.content,
-        provider: msg.provider,
-        streamComplete: msg.streamComplete,
+      return CustomMessageSchema.parse({
+        ...msg,
         isReasoning: false,
-      } as TCustomChatMessage;
+      });
     }) as TCustomChatMessage[];
 
     return new SingleChatHistoryResult(chatMessages, result.title);

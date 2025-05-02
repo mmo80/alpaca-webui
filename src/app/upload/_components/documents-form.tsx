@@ -1,5 +1,5 @@
 import { useState, type FC, type SetStateAction, type Dispatch, useRef } from 'react';
-import { ChatRole, defaultProvider, type TCustomMessage } from '@/lib/types';
+import { ChatRole, CustomMessageSchema, defaultProvider, type TCustomMessage } from '@/lib/types';
 import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -126,13 +126,12 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     setEmbedModel(embeddingModel);
     setEmbedService(embedService);
 
-    const ragSystemMessage = {
+    const ragSystemMessage = CustomMessageSchema.parse({
       content: systemPromptForRag || '',
       role: ChatRole.SYSTEM,
       provider: defaultProvider,
-      streamComplete: true,
-      isReasoning: false,
-    };
+    });
+
     setChats((prevArray) => [...prevArray, ragSystemMessage]);
   };
 

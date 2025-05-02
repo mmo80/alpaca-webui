@@ -51,7 +51,7 @@ class GroqProvider implements Provider {
     return validatedModelList.data.map((m) => ({
       id: m.id,
       object: m.object,
-      created: m.created ? m.created : 0,
+      created: m.created ?? 0,
       type: m.owned_by,
       embedding: false,
     }));
@@ -61,12 +61,17 @@ class GroqProvider implements Provider {
     model: string,
     messages: TCustomMessage[],
     baseUrl: string | null,
-    apiKey: string | null | undefined
+    apiKey: string | null | undefined,
+    withAbortSignal: boolean
   ): Promise<ChatCompletionsResponse> {
     const url = `${this.service.validUrl(baseUrl)}/v1/chat/completions`;
 
-    this.chatStreamController = new AbortController();
-    const chatStreamSignal = this.chatStreamController.signal;
+    let chatStreamSignal: AbortSignal | null = null;
+
+    if (withAbortSignal) {
+      this.chatStreamController = new AbortController();
+      chatStreamSignal = this.chatStreamController.signal;
+    }
 
     const payload: TChatCompletionRequest = {
       model: model,

@@ -21,7 +21,8 @@ export interface Provider {
     model: string,
     messages: TCustomMessage[],
     baseUrl: string | null,
-    apiKey: string | null | undefined
+    apiKey: string | null | undefined,
+    withAbortSignal: boolean
   ): Promise<ChatCompletionsResponse>;
 
   cancelChatCompletionStream(): void;

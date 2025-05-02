@@ -171,7 +171,8 @@ const CustomChatMessageSchema = z.object({
   content: contentUnionSchema,
   provider: CustomProviderSchema.default(defaultProvider),
   streamComplete: z.boolean().optional().default(true),
-  isReasoning: z.boolean().default(false),
+  isReasoning: z.boolean().optional().default(false),
+  cancelled: z.boolean().optional().default(false),
 });
 export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
 
@@ -181,7 +182,8 @@ const CustomCreateImageDataSchema = z.object({
   revised_prompt: z.string().optional(),
   provider: CustomProviderSchema.default(defaultProvider),
   streamComplete: z.boolean().optional().default(true),
-  isReasoning: z.boolean().default(false),
+  isReasoning: z.boolean().optional().default(false),
+  cancelled: z.boolean().optional().default(false),
 });
 export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>;
 

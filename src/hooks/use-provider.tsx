@@ -4,7 +4,7 @@ import { ProviderFactory } from '@/lib/providers/provider-factory';
 import type { TApiSetting } from '@/lib/types';
 import { useMemo, useState } from 'react';
 
-export const useProvider = (apiSetting: TApiSetting | null | undefined) => {
+export const useProvider = (apiSetting: TApiSetting | undefined) => {
   const [provider, setProvider] = useState<Provider | undefined>(undefined);
 
   const apiService = useMemo(() => new ApiService(), []);

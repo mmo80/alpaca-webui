@@ -71,10 +71,15 @@ class GoogleProvider implements Provider {
     model: string,
     messages: TCustomMessage[],
     baseUrl: string | null,
-    apiKey: string | null | undefined
+    apiKey: string | null | undefined,
+    withAbortSignal: boolean
   ): Promise<ChatCompletionsResponse> {
-    this.chatStreamController = new AbortController();
-    const chatStreamSignal = this.chatStreamController.signal;
+    let chatStreamSignal: AbortSignal | null = null;
+
+    if (withAbortSignal) {
+      this.chatStreamController = new AbortController();
+      chatStreamSignal = this.chatStreamController.signal;
+    }
 
     const payload: TGoogleChatCompletionRequestSchema = {
       contents: messages.map((m: TCustomMessage) => {

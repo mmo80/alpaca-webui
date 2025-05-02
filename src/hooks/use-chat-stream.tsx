@@ -6,6 +6,7 @@ import {
   type TCustomCreateImageData,
   type TCustomProviderSchema,
   defaultProvider,
+  CustomMessageSchema,
 } from '@/lib/types';
 import { hasNonWhitespaceChars, isEmpty, isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
 import { useState } from 'react';
@@ -112,13 +113,11 @@ export const useChatStream = () => {
     if (errorType(error) !== 'AbortError') {
       setChats((prevArray) => [
         ...prevArray,
-        {
+        CustomMessageSchema.parse({
           content: (error as any).toString(),
           role: ChatRole.SYSTEM,
           provider: defaultProvider,
-          streamComplete: true,
-          isReasoning: false,
-        },
+        }),
       ]);
       return;
     }
@@ -126,27 +125,18 @@ export const useChatStream = () => {
     setChats((prevChats) => {
       const updatedChats = [...prevChats];
 
-      // Mark the last message as complete if it exists
+      // Mark the last message as complete and mark it as cancelled
       if (updatedChats.length > 0) {
         const lastChat = updatedChats[updatedChats.length - 1];
-        updatedChats[updatedChats.length - 1] = {
+        updatedChats[updatedChats.length - 1] = CustomMessageSchema.parse({
           ...lastChat,
           streamComplete: true,
+          cancelled: true,
           isReasoning: false,
-        } as TCustomMessage;
+        });
       }
 
-      // Add the user canceled message
-      return [
-        ...updatedChats,
-        {
-          content: 'User canceled',
-          role: ChatRole.USER,
-          provider: defaultProvider,
-          streamComplete: true,
-          isReasoning: false,
-        },
-      ];
+      return updatedChats;
     });
   };
 
@@ -161,7 +151,7 @@ export const useChatStream = () => {
     try {
       setChats((prevArray) => [
         ...prevArray,
-        { content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false, isReasoning: false },
+        CustomMessageSchema.parse({ content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false }),
       ]);
 
       while (true) {

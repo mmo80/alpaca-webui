@@ -1,7 +1,14 @@
 'use client';
 
 import { type FC, useState, useRef, useEffect } from 'react';
-import { type TContentImage, type TContentText, type TCustomChatMessage, type TCustomMessage, ChatRole } from '@/lib/types';
+import {
+  type TContentImage,
+  type TContentText,
+  type TCustomChatMessage,
+  type TCustomMessage,
+  ChatRole,
+  CustomMessageSchema,
+} from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
 import { cleanString, delayHighlighter, formatBytes, isValidJson, removeJunkStreamData } from '@/lib/utils';
 import { ChatInput } from '@/components/chat-input';
@@ -80,16 +87,14 @@ export const Main: FC = () => {
     if (!chatTitle && currentChatHistoryId && !chatTitlePersisted && chats.length > 1) {
       const userChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role === ChatRole.USER);
       if (userChats.length > 0) {
-        const lastChat = userChats[userChats.length - 1];
-        if (lastChat?.streamComplete === true) {
-          const firstUserMessage = (lastChat as TCustomChatMessage)?.content as string;
-
+        const firstUserChat = userChats[0];
+        if (firstUserChat?.streamComplete === true) {
+          const firstUserMessage = (firstUserChat as TCustomChatMessage)?.content as string;
           if (firstUserMessage && firstUserMessage.length > 1 && !generatingTitle) {
             setGeneratingTitle(true);
             generateTitle(firstUserMessage).then((title) => {
               if (title) {
                 setChatTitle(title);
-                setGeneratingTitle(false);
                 if (currentChatHistoryId) {
                   updateChatHistoryTitle.mutateAsync({
                     id: currentChatHistoryId,
@@ -107,15 +112,14 @@ export const Main: FC = () => {
   useEffect(() => {
     if (selectedModel != null && !currentChatHistoryId) {
       setChats([
-        {
+        CustomMessageSchema.parse({
           content: systemPrompt || '',
           role: ChatRole.SYSTEM,
           provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
-          streamComplete: true,
-          isReasoning: false,
-        },
+        }),
       ]);
       setTextareaPlaceholder('Ask me anything...');
+      setGeneratingTitle(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel]);
@@ -126,6 +130,7 @@ export const Main: FC = () => {
       setCurrentChatHistoryId(undefined);
       setChatTitle(undefined);
       setChatTitlePersisted(false);
+      setGeneratingTitle(false);
       return;
     }
 
@@ -140,7 +145,10 @@ export const Main: FC = () => {
         if (result.title && result.title !== newThreadTitle) {
           setChatTitle(result.title);
           setChatTitlePersisted(true);
+        } else {
+          setChatTitlePersisted(false);
         }
+        setGeneratingTitle(false);
         setChats(result.messages);
         delayHighlighter();
       } else {
@@ -207,7 +215,8 @@ export const Main: FC = () => {
       selectedModel,
       [...chats, message],
       selectedService.url,
-      selectedService.apiKey
+      selectedService.apiKey,
+      true
     );
 
     setChatError(response.error);
@@ -241,12 +250,10 @@ export const Main: FC = () => {
 
     setChats((prevArray) => [
       ...prevArray,
-      {
+      CustomMessageSchema.parse({
         ...response.data[0],
         provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-        streamComplete: true,
-        isReasoning: false,
-      },
+      }),
     ]);
     setIsFetchLoading(false);
   };
@@ -260,18 +267,16 @@ export const Main: FC = () => {
 
     if (!provider) {
       toast.error('Provider not found');
-      return;
+      return title;
     }
 
     const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
 
-    const chatMessage = {
+    const chatMessage = CustomMessageSchema.parse({
       content: systemPrompt,
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-      streamComplete: true,
-      isReasoning: false,
-    };
+    });
 
     const decoder = new TextDecoder('utf-8');
 
@@ -280,7 +285,8 @@ export const Main: FC = () => {
         selectedModel,
         [chatMessage],
         selectedService.url,
-        selectedService.apiKey
+        selectedService.apiKey,
+        false
       );
 
       const titleChunks = [];
@@ -321,12 +327,14 @@ export const Main: FC = () => {
       console.warn(`Invalid JSON for title: `, title);
       return cleanString(title);
     } catch (err) {
+      console.error('Failed to generate title: ', err);
       toast.error('Failed to generate title', {
         description: typeof err === 'string' ? err : JSON.stringify(err),
       });
     } finally {
       // Flush the decoder when done
       decoder.decode(new Uint8Array(0), { stream: false });
+      setGeneratingTitle(false);
     }
 
     return title;
@@ -334,25 +342,22 @@ export const Main: FC = () => {
 
   const sendChatGenerateImage = async (chatInput: string) => {
     const prompt = chatInput.replace('/image', '');
-    const chatMessage = {
+    const chatMessage = CustomMessageSchema.parse({
       content: prompt,
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-      streamComplete: true,
-      isReasoning: false,
-    };
+    });
+
     setChats((prevArray) => [...prevArray, chatMessage]);
     await chatImage(prompt);
   };
 
   const sendChatCompletion = async (chatInput: string) => {
-    const chatMessage = {
+    const chatMessage = CustomMessageSchema.parse({
       content: chatInput,
       role: ChatRole.USER,
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-      streamComplete: true,
-      isReasoning: false,
-    } as TCustomMessage;
+    });
 
     if (attachments && attachments.length > 0) {
       const textContent: TContentText = { text: chatInput, type: 'text' };

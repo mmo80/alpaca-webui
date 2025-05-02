@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Drawer,
   DrawerClose,
@@ -17,7 +17,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
-import { ChatRole, defaultProvider, type TCustomMessage } from '@/lib/types';
+import { ChatRole, CustomMessageSchema, defaultProvider, type TCustomMessage } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -78,13 +78,12 @@ export default function Page() {
 
     setIsFetchLoading(true);
 
-    const chatMessage = {
+    const chatMessage = CustomMessageSchema.parse({
       content: chatInput,
       role: ChatRole.USER,
       provider: { provider: selectedService.serviceId, model: selectedModel },
-      streamComplete: true,
-      isReasoning: false,
-    } as TCustomMessage;
+    });
+
     setChats((prevArray) => [...prevArray, chatMessage]);
 
     const documents = await getDocumentChunks({
@@ -99,13 +98,11 @@ export default function Page() {
       .replace(SystemPromptVariable.userQuestion, chatInput)
       .replace(SystemPromptVariable.documentContent, context);
 
-    const systemPromptMessage = {
+    const systemPromptMessage = CustomMessageSchema.parse({
       content: systemPrompt,
       role: ChatRole.SYSTEM,
       provider: defaultProvider,
-      streamComplete: true,
-      isReasoning: false,
-    } as TCustomMessage;
+    });
 
     // console.debug(`systemPrompt: `, systemPrompt);
 

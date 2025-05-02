@@ -11,13 +11,14 @@ import {
 } from '@/lib/types';
 import Markdown, { type ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { UserIcon, BrainIcon, ChevronRightIcon, ChevronDownIcon, CopyIcon } from 'lucide-react';
+import { UserIcon, BrainIcon, ChevronRightIcon, ChevronDownIcon, CopyIcon, AlertCircle } from 'lucide-react';
 import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { visit } from 'unist-util-visit';
 import { Spinner } from './spinner';
 import { v7 as uuidv7 } from 'uuid';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ChatMessagesProps = {
   message: TCustomMessage;
@@ -73,6 +74,19 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     return '';
   };
 
+  const renderCancellation = () => {
+    if (!message.cancelled) return;
+
+    return (
+      <Alert variant="destructive" className="my-3 flex items-end gap-2">
+        <span>
+          <AlertCircle className="h-4 w-4" />
+        </span>
+        <AlertDescription>Cancelled by user</AlertDescription>
+      </Alert>
+    );
+  };
+
   const renderAttachments = (content: TContentUnion) => {
     if (content && Array.isArray(content) && content.length > 0) {
       const images = content.filter((item) => item.type === 'image_url');
@@ -99,6 +113,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
             {renderContent(message.content)}
           </Markdown>
           {renderAttachments(message.content)}
+          {renderCancellation()}
         </>
       );
     } else if (isImage(message)) {
@@ -135,6 +150,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               </span>
             </>
           )}
+          {renderCancellation()}
         </>
       );
     }
