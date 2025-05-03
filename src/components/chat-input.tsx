@@ -264,7 +264,7 @@ export const ChatInput: FC<ChatInputProps> = ({
                   <DropdownMenuSubTrigger>
                     <div className="gap flex flex-col items-start pe-5">
                       <span>Documents</span>
-                      <span className="font-light">Question uploaded document</span>
+                      <span className="text-xs font-light">Question uploaded document</span>
                     </div>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
@@ -274,14 +274,14 @@ export const ChatInput: FC<ChatInputProps> = ({
                           <DropdownMenuItem key={doc.id} data-id={doc.id} onSelect={onContextMenuItemSelect}>
                             <div className="flex flex-col items-start gap-0">
                               <span>{doc.filename}</span>
-                              <span className="font-light">{formatBytes(doc.fileSize ?? 0)}</span>
+                              <span className="text-xs font-light">{formatBytes(doc.fileSize ?? 0)}</span>
                             </div>
                           </DropdownMenuItem>
                         ) : (
                           <DropdownMenuItem key={doc.id}>
                             <div className="flex flex-col items-start gap-0">
                               <span>{doc.filename}</span>
-                              <span className="font-light">Embed document first</span>
+                              <span className="text-xs font-light">Embed document first</span>
                             </div>
                           </DropdownMenuItem>
                         )
@@ -292,7 +292,13 @@ export const ChatInput: FC<ChatInputProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="secondary" size="sm" className="cursor-pointer p-2" onClick={onReset}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="cursor-pointer p-2"
+              disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
+              onClick={onReset}
+            >
               <ListRestartIcon className="h-4 w-4" />
               Reset Chat
             </Button>
