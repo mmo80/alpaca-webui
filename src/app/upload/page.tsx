@@ -117,7 +117,8 @@ export default function Page() {
       selectedModel,
       [...chats, systemPromptMessage, chatMessage],
       selectedService.url,
-      selectedService.apiKey
+      selectedService.apiKey,
+      true
     );
 
     setIsFetchLoading(false);
