@@ -154,6 +154,14 @@ class OpenAIProvider implements Provider {
 
     return (await fetchResponse.response.json()) as TCreateImageResponse;
   }
+
+  public titleGenerationModel(model: string): string {
+    if (model.startsWith('gpt-image') || model.startsWith('dall-e')) {
+      return 'gpt-4.1-nano';
+    }
+
+    return model;
+  }
 }
 
 export default OpenAIProvider;

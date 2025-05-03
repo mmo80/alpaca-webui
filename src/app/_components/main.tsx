@@ -45,14 +45,12 @@ export const Main: FC = () => {
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
   const [chatError, setChatError] = useState<ChatError>({ isError: false, errorMessage: '' });
-
-  // TODO: Maybe convert to useReduce
   const [currentChatHistoryId, setCurrentChatHistoryId] = useState<string | undefined>(undefined);
   const [chatTitle, setChatTitle] = useState<string | undefined>(undefined);
   const [chatTitlePersisted, setChatTitlePersisted] = useState<boolean>(false);
   const [generatingTitle, setGeneratingTitle] = useState<boolean>(false);
-
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
+  const [contextId, setContextId] = useState<string | undefined>(undefined);
 
   const updateChatHistory = useMutation(
     trpc.chatHistory.insertUpdate.mutationOptions({
@@ -281,8 +279,9 @@ export const Main: FC = () => {
     const decoder = new TextDecoder('utf-8');
 
     try {
+      const titleModel = provider.titleGenerationModel(selectedModel);
       const response = await provider.chatCompletions(
-        selectedModel,
+        titleModel,
         [chatMessage],
         selectedService.url,
         selectedService.apiKey,
@@ -379,6 +378,23 @@ export const Main: FC = () => {
     delayHighlighter();
   };
 
+  const endTimerAndAddToLastChat = (startTime: number) => {
+    const endTime = performance.now();
+    const duration = endTime - startTime;
+
+    setChats((prevChats) => {
+      const updatedChats = [...prevChats];
+      if (updatedChats.length > 0) {
+        const lastChat = updatedChats[updatedChats.length - 1];
+        updatedChats[updatedChats.length - 1] = CustomMessageSchema.parse({
+          ...lastChat,
+          durationInMs: duration,
+        });
+      }
+      return updatedChats;
+    });
+  };
+
   const sendChat = async (chatInput: string) => {
     if (chatInput === '') {
       return;
@@ -386,18 +402,16 @@ export const Main: FC = () => {
 
     // Start timer here
     const startTime = performance.now();
-    console.log(`-> Start timer here!`);
-    if (chatInput.startsWith('/image')) {
+
+    if (contextId === 'image') {
       await sendChatGenerateImage(chatInput);
+      endTimerAndAddToLastChat(startTime);
+      setAttachments([]);
       return;
     }
 
     await sendChatCompletion(chatInput);
-    // Stop timer here
-    const endTime = performance.now();
-    const duration = endTime - startTime;
-    console.log(`-> Chat operation took ${duration.toFixed(2)}ms`);
-
+    endTimerAndAddToLastChat(startTime);
     setAttachments([]);
   };
 
@@ -416,6 +430,10 @@ export const Main: FC = () => {
     }
 
     provider.cancelChatCompletionStream();
+  };
+
+  const onContextChange = (contextId: string | undefined) => {
+    setContextId(contextId);
   };
 
   return (
@@ -457,6 +475,7 @@ export const Main: FC = () => {
           onSendInput={sendChat}
           onCancelStream={onCancelStream}
           onReset={onResetChat}
+          onContextChange={onContextChange}
           files={attachments}
           setFiles={setAttachments}
           chatInputPlaceholder={textareaPlaceholder}

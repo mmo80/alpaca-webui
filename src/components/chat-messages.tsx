@@ -18,7 +18,8 @@ import Image from 'next/image';
 import { visit } from 'unist-util-visit';
 import { Spinner } from './spinner';
 import { v7 as uuidv7 } from 'uuid';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatTime } from '@/lib/utils';
 
 type ChatMessagesProps = {
   message: TCustomMessage;
@@ -186,11 +187,19 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               )}
               {role == ChatRole.ASSISTANT && (
                 <>
-                  <span className="pr-1 text-stone-700">|</span>
-                  <span>{!message.streamComplete && !message.isReasoning && <Spinner />}</span>
+                  <span className="text-stone-700">|</span>
+                  {!message.streamComplete && !message.isReasoning && (
+                    <span>
+                      <Spinner />
+                    </span>
+                  )}
                   <span className="text-xs">
                     Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
                   </span>
+                  <span className="text-stone-700">|</span>
+                  {message.streamComplete && (
+                    <span className="text-xs">Total Duration: {formatTime(message.durationInMs)}</span>
+                  )}
                 </>
               )}
             </div>

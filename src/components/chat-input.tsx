@@ -1,7 +1,7 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { AutosizeTextarea, type AutosizeTextAreaRef } from '@/components/ui/autosize-textarea';
-import { PaperclipIcon, ChevronsUpIcon, SquareIcon, FileTextIcon, XIcon, ListRestartIcon } from 'lucide-react';
+import { PaperclipIcon, ChevronsUpIcon, SquareIcon, FileTextIcon, XIcon, ListRestartIcon, ImageIcon } from 'lucide-react';
 import { FileUpload, type FileUploadRef } from '@/app/upload/_components/file-upload';
 import type { FileInfo, TFilesUploadForm } from '@/app/upload/upload-types';
 import { v7 as uuidv7 } from 'uuid';
@@ -18,11 +18,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from './ui/badge';
+import { useFilesQuery } from '@/trpc/queries';
+import { formatBytes } from '@/lib/utils';
 
 interface ChatInputProps {
   onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
   onReset: () => void;
+  onContextChange?: (contextId: string | undefined) => void;
   files: FileInfo[];
   setFiles: (files: FileInfo[]) => void;
   chatInputPlaceholder: string;
@@ -35,6 +38,7 @@ export const ChatInput: FC<ChatInputProps> = ({
   onSendInput,
   onCancelStream,
   onReset,
+  onContextChange,
   files,
   setFiles,
   chatInputPlaceholder,
@@ -45,7 +49,9 @@ export const ChatInput: FC<ChatInputProps> = ({
   const [chatInput, setChatInput] = useState<string>('');
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
   const [dragging, setDragging] = useState<boolean>(false);
-  const [activeContextId, setActiveContextId] = useState<string | null>(null);
+  const [activeContextId, setActiveContextId] = useState<string | undefined>(undefined);
+
+  const { data: documents, isLoading: isDocumentsLoading, refetch: refetchDocuments } = useFilesQuery();
 
   const fileUploadRef = useRef<FileUploadRef>(null);
   const textareaRef = useRef<AutosizeTextAreaRef>(null);
@@ -153,9 +159,36 @@ export const ChatInput: FC<ChatInputProps> = ({
     const dataId = target.getAttribute('data-id');
 
     if (dataId) {
-      console.log('* Data ID:', dataId);
       setActiveContextId(dataId);
+      onContextChange?.(dataId);
     }
+  };
+
+  const removeContext = () => {
+    setActiveContextId(undefined);
+    onContextChange?.(undefined);
+  };
+
+  const contextIndicator = (contextId: string): string => {
+    if (contextId === 'image') {
+      return 'Generate Image';
+    }
+
+    const docId = parseFloat(contextId);
+
+    if (docId > 0) {
+      const filename = documents.filter((doc) => doc.id === docId).map((doc) => doc.filename);
+      return `Question: ${filename[0]}`;
+    }
+
+    return contextId;
+  };
+
+  const renderContextIcon = (contextId: string) => {
+    if (contextId === 'image') {
+      return <ImageIcon className="h-4 w-4" />;
+    }
+    return <FileTextIcon className="h-4 w-4" />;
   };
 
   return (
@@ -177,13 +210,13 @@ export const ChatInput: FC<ChatInputProps> = ({
           <FileBadge key={file.id} file={file} onRemoveAttachment={onRemoveAttachment} />
         ))}
         {activeContextId && (
-          <Badge variant="default" className="group relative flex gap-2 rounded-lg p-1">
-            <FileTextIcon className="h-4 w-4" />
-            <span>Context: </span>
-            <span>{activeContextId}</span>
+          <Badge variant="secondary" className="group relative flex gap-2 rounded-lg p-1 px-3">
+            {renderContextIcon(activeContextId)}
+            <span>{contextIndicator(activeContextId)}</span>
             <XIcon
               onClick={(e) => {
                 e.preventDefault();
+                removeContext();
               }}
               className="invisible absolute right-0.5 cursor-pointer rounded-lg p-1 text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
             />
@@ -207,7 +240,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           <div className="flex gap-1.5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                {/* <Button
+                <Button
                   type="button"
                   variant="secondary"
                   size={'sm'}
@@ -215,7 +248,7 @@ export const ChatInput: FC<ChatInputProps> = ({
                   disabled={isStreamProcessing || isFetchLoading || !isLlmModelActive}
                 >
                   <FileTextIcon className="h-4 w-4" /> <span>More</span>
-                </Button> */}
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="bottom" align="start">
                 <DropdownMenuItem
@@ -224,27 +257,35 @@ export const ChatInput: FC<ChatInputProps> = ({
                   onSelect={onContextMenuItemSelect}
                 >
                   <span>Image</span>
-                  <span className="font-light">Generate an Image</span>
+                  <span className="text-xs font-light">Generate an Image</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <div className="gap flex flex-col items-start pe-5">
                       <span>Documents</span>
-                      <span className="font-light">Talk to a document</span>
+                      <span className="font-light">Question uploaded document</span>
                     </div>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuItem data-id="11" onSelect={onContextMenuItemSelect}>
-                        document.pdf
-                      </DropdownMenuItem>
-                      <DropdownMenuItem data-id="22" onSelect={onContextMenuItemSelect}>
-                        vdocument02.pdf
-                      </DropdownMenuItem>
-                      <DropdownMenuItem data-id="33" onSelect={onContextMenuItemSelect}>
-                        document04.doc
-                      </DropdownMenuItem>
+                      {documents.map((doc, index) =>
+                        doc.isEmbedded ? (
+                          <DropdownMenuItem key={doc.id} data-id={doc.id} onSelect={onContextMenuItemSelect}>
+                            <div className="flex flex-col items-start gap-0">
+                              <span>{doc.filename}</span>
+                              <span className="font-light">{formatBytes(doc.fileSize ?? 0)}</span>
+                            </div>
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem key={doc.id}>
+                            <div className="flex flex-col items-start gap-0">
+                              <span>{doc.filename}</span>
+                              <span className="font-light">Embed document first</span>
+                            </div>
+                          </DropdownMenuItem>
+                        )
+                      )}
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
@@ -258,11 +299,6 @@ export const ChatInput: FC<ChatInputProps> = ({
           </div>
 
           <div className="flex gap-1.5">
-            {/* <Button variant="secondary" size="sm" className="cursor-pointer p-2" onClick={onReset}>
-              <ListRestartIcon className="h-4 w-4" />
-              Reset Chat
-            </Button> */}
-
             <Button
               variant="secondary"
               size="sm"

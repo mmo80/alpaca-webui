@@ -120,6 +120,10 @@ class TogetherProvider implements Provider {
     );
     return { created: -1, data: [], error: true };
   }
+
+  public titleGenerationModel(model: string): string {
+    return model;
+  }
 }
 
 export default TogetherProvider;

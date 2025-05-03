@@ -35,4 +35,6 @@ export interface Provider {
     baseUrl: string | null,
     apiKey: string | null | undefined
   ): Promise<TCreateImageResponse>;
+
+  titleGenerationModel(model: string): string;
 }

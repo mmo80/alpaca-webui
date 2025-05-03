@@ -17,7 +17,7 @@ import { useChatStream } from '@/hooks/use-chat-stream';
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
-import { ChatRole, CustomMessageSchema, defaultProvider, type TCustomMessage } from '@/lib/types';
+import { ChatRole, CustomMessageSchema, defaultProvider } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
@@ -103,8 +103,6 @@ export default function Page() {
       role: ChatRole.SYSTEM,
       provider: defaultProvider,
     });
-
-    // console.debug(`systemPrompt: `, systemPrompt);
 
     setChats((prevArray) => [...prevArray, systemPromptMessage]);
 
