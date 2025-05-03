@@ -74,7 +74,7 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) =>
       {!isScrollBottom && (
         <PageDownButton
           onClick={directScrollToBottom}
-          className="animate-bounce-short fixed right-9 bottom-24 animate-bounce rounded-full border-white hover:animate-none"
+          className="animate-bounce-short fixed right-9 bottom-28 animate-bounce rounded-full border-white hover:animate-none"
         />
       )}
     </>
