@@ -183,7 +183,7 @@ export const useChatStream = () => {
               return;
             }
 
-            console.info('* Merged incomplete json string from stream: ', jsonStringFaultBuffers);
+            console.info('Merged incomplete json string from stream: ', jsonStringFaultBuffers);
             handleStreamChunk(jsonStringFaultBuffers.join(''), convertResponse);
             jsonStringFaultBuffers.length = 0;
           }

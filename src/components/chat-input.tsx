@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { useFilesQuery } from '@/trpc/queries';
+import { useDocumentsQuery } from '@/trpc/queries';
 import { formatBytes } from '@/lib/utils';
 
 interface ChatInputProps {
@@ -51,7 +51,7 @@ export const ChatInput: FC<ChatInputProps> = ({
   const [dragging, setDragging] = useState<boolean>(false);
   const [activeContextId, setActiveContextId] = useState<string | undefined>(undefined);
 
-  const { data: documents, isLoading: isDocumentsLoading, refetch: refetchDocuments } = useFilesQuery();
+  const { data: documents, isLoading: isDocumentsLoading } = useDocumentsQuery();
 
   const fileUploadRef = useRef<FileUploadRef>(null);
   const textareaRef = useRef<AutosizeTextAreaRef>(null);
@@ -175,8 +175,7 @@ export const ChatInput: FC<ChatInputProps> = ({
     }
 
     const docId = parseFloat(contextId);
-
-    if (docId > 0) {
+    if (!isNaN(docId) && docId > 0) {
       const filename = documents.filter((doc) => doc.id === docId).map((doc) => doc.filename);
       return `Question: ${filename[0]}`;
     }
@@ -264,7 +263,7 @@ export const ChatInput: FC<ChatInputProps> = ({
                   <DropdownMenuSubTrigger>
                     <div className="gap flex flex-col items-start pe-5">
                       <span>Documents</span>
-                      <span className="text-xs font-light">Question uploaded document</span>
+                      <span className="text-xs font-light">Question uploaded document (RAG)</span>
                     </div>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
@@ -279,7 +278,7 @@ export const ChatInput: FC<ChatInputProps> = ({
                           </DropdownMenuItem>
                         ) : (
                           <DropdownMenuItem key={doc.id}>
-                            <div className="flex flex-col items-start gap-0">
+                            <div className="flex flex-col items-start gap-0 text-stone-500">
                               <span>{doc.filename}</span>
                               <span className="text-xs font-light">Embed document first</span>
                             </div>

@@ -7,7 +7,7 @@ import { AlertBox } from '@/components/alert-box';
 import { toast } from 'sonner';
 import { useModelStore } from '@/lib/model-store';
 import { useSettingsStore } from '@/lib/settings-store';
-import { useFilesQuery } from '@/trpc/queries';
+import { useDocumentsQuery } from '@/trpc/queries';
 import { FileUpload, type FileUploadRef } from './file-upload';
 import { UploadIcon } from '@radix-ui/react-icons';
 import { FileProgress } from './file-progress';
@@ -48,7 +48,7 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
   const [uploadFiles, setUploadFiles] = useState<FileInfo[]>([]);
   const [fileUploadState, setFileUploadState] = useState<Record<string, { progress: number; fadeOut: boolean }>>({});
 
-  const { data: files, isLoading: isFilesLoading, refetch: refetchFiles } = useFilesQuery();
+  const { data: files, isLoading: isFilesLoading, refetch: refetchFiles } = useDocumentsQuery();
 
   const trpc = useTRPC();
   const embedDocumentMutation = useMutation(

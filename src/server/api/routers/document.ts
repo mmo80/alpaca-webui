@@ -1,6 +1,6 @@
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { promises as fs } from 'fs';
-import { files } from '@/db/schema';
+import { files, type TFile } from '@/db/schema';
 import { fileUploadFolder } from '@/lib/providers/data';
 import { ApiSettingsSchema } from '@/lib/types';
 import { eq } from 'drizzle-orm';
@@ -19,9 +19,10 @@ export const DocumentChunkRequestSchema = z.object({
 });
 export type TDocumentChunkRequest = z.infer<typeof DocumentChunkRequestSchema>;
 
-export const DocumentRemoveRequestSchema = z.object({
+export const DocumentIdRequestSchema = z.object({
   documentId: z.number(),
 });
+export type TDocumentIdRequest = z.infer<typeof DocumentIdRequestSchema>;
 
 export const DocumentEmbedRequestSchema = z.object({
   documentId: z.number(),
@@ -33,6 +34,22 @@ export type TDocumentEmbedRequest = z.infer<typeof DocumentEmbedRequestSchema>;
 const vectorDb = new VectorDatabase();
 
 export const documentRouter = createTRPCRouter({
+  all: publicProcedure.query(async ({ ctx }): Promise<TFile[]> => {
+    return await ctx.db.select().from(files);
+  }),
+  get: publicProcedure.input(DocumentIdRequestSchema).query(async ({ ctx, input }): Promise<TFile> => {
+    const { documentId } = input;
+    const dbResult = await ctx.db.select({ file: files }).from(files).where(eq(files.id, documentId));
+
+    if (dbResult.length === 0 || !dbResult[0]) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Document with ID ${documentId} not found`,
+      });
+    }
+
+    return dbResult[0].file;
+  }),
   getDocumentChunks: publicProcedure.input(DocumentChunkRequestSchema).query(async ({ ctx, input }) => {
     const { question, documentId, embedModel, apiSetting } = input;
 
@@ -48,7 +65,7 @@ export const documentRouter = createTRPCRouter({
     console.warn('Document not found: ', documentId);
     return [];
   }),
-  remove: publicProcedure.input(DocumentRemoveRequestSchema).mutation(async ({ ctx, input }) => {
+  remove: publicProcedure.input(DocumentIdRequestSchema).mutation(async ({ ctx, input }) => {
     const { documentId } = input;
 
     const dbResult = await ctx.db

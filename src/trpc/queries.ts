@@ -1,6 +1,7 @@
+import type { TFile } from '@/db/schema';
 import type { Documents } from '@/db/vector-db';
-import { CustomMessageSchema, CustomMessagesSchema, type TCustomChatMessage, type TCustomMessage } from '@/lib/types';
-import type { TDocumentChunkRequest } from '@/server/api/routers/document';
+import { CustomMessagesSchema, type TCustomChatMessage } from '@/lib/types';
+import type { TDocumentChunkRequest, TDocumentIdRequest } from '@/server/api/routers/document';
 import { trpc, useTRPC } from '@/trpc/react';
 import { useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
@@ -11,9 +12,9 @@ export const useChatHistoryQuery = () => {
   return { data, isLoading, refetch, error };
 };
 
-export const useFilesQuery = () => {
+export const useDocumentsQuery = () => {
   const trpc = useTRPC();
-  const { data = [], isLoading, refetch, error } = useQuery(trpc.file.all.queryOptions());
+  const { data = [], isLoading, refetch, error } = useQuery(trpc.document.all.queryOptions());
   return { data, isLoading, refetch, error };
 };
 
@@ -68,5 +69,29 @@ export const getDocumentChunks = async (req: TDocumentChunkRequest): Promise<Doc
 
     console.error('Unexpected error fetching documents:', error);
     return [];
+  }
+};
+
+type GetDocumentResponse = {
+  document: TFile | undefined;
+  error: string | undefined;
+};
+
+export const getDocument = async (req: TDocumentIdRequest): Promise<GetDocumentResponse> => {
+  try {
+    const document = await trpc.document.get.query(req);
+    return { document, error: undefined };
+  } catch (error) {
+    if (error instanceof TRPCClientError) {
+      if (error.data?.code === 'NOT_FOUND') {
+        return { document: undefined, error: error.message };
+      }
+
+      console.error('Error fetching document:', error.message);
+      return { document: undefined, error: error.message };
+    }
+
+    console.error('Unexpected error fetching document:', error);
+    return { document: undefined, error: 'Unexpected error fetching document' };
   }
 };

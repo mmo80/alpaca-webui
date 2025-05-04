@@ -21,9 +21,9 @@ import ModelAlts from '@/components/model-alts';
 import { toast } from 'sonner';
 import { type ChatError } from '@/lib/api-service';
 import { useMutation } from '@tanstack/react-query';
-import { getSingleChatHistoryById } from '@/trpc/queries';
+import { getDocument, getDocumentChunks, getSingleChatHistoryById } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { queryClient, useTRPC } from '@/trpc/react';
+import { trpc, queryClient, useTRPC } from '@/trpc/react';
 import type { FileInfo } from '../upload/upload-types';
 import { useProvider } from '@/hooks/use-provider';
 
@@ -35,12 +35,12 @@ export const Main: FC = () => {
   const searchParams = useSearchParams();
   const queryChatHistoryId = searchParams.get('id');
 
-  const { systemPrompt, hasHydrated, systemPromptForChatTitle } = useSettingsStore();
+  const { systemPrompt, hasHydrated, systemPromptForChatTitle, services, systemPromptForRagSlim } = useSettingsStore();
   const { modelList } = useModelList();
   const { selectedModel, setModel, selectedService, setService } = useModelStore();
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
   const { provider } = useProvider(selectedService);
-  const trpc = useTRPC();
+  const trpcRouter = useTRPC();
 
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('Choose model...');
@@ -53,7 +53,7 @@ export const Main: FC = () => {
   const [contextId, setContextId] = useState<string | undefined>(undefined);
 
   const updateChatHistory = useMutation(
-    trpc.chatHistory.insertUpdate.mutationOptions({
+    trpcRouter.chatHistory.insertUpdate.mutationOptions({
       onSuccess: async () => {
         if (!chatTitle) {
           invalidateChatHistory();
@@ -63,7 +63,7 @@ export const Main: FC = () => {
   );
 
   const updateChatHistoryTitle = useMutation(
-    trpc.chatHistory.updateTitle.mutationOptions({
+    trpcRouter.chatHistory.updateTitle.mutationOptions({
       onSuccess: async (data) => {
         invalidateChatHistory();
         if (data === currentChatHistoryId) {
@@ -78,7 +78,7 @@ export const Main: FC = () => {
   );
 
   const invalidateChatHistory = () => {
-    queryClient.invalidateQueries({ queryKey: trpc.chatHistory.all.queryKey() });
+    queryClient.invalidateQueries({ queryKey: trpcRouter.chatHistory.all.queryKey() });
   };
 
   const generateAndPersistChatTitle = () => {
@@ -108,7 +108,9 @@ export const Main: FC = () => {
   };
 
   useEffect(() => {
-    if (selectedModel != null && !currentChatHistoryId) {
+    if (selectedModel == null) {
+      setTextareaPlaceholder('Choose model...');
+    } else if (!currentChatHistoryId) {
       setChats([
         CustomMessageSchema.parse({
           content: systemPrompt || '',
@@ -116,9 +118,12 @@ export const Main: FC = () => {
           provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
         }),
       ]);
-      setTextareaPlaceholder('Ask me anything...');
+      setTextareaPlaceholder('Start typing here...');
       setGeneratingTitle(false);
+    } else {
+      setTextareaPlaceholder('Start typing here...');
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel]);
 
@@ -197,7 +202,7 @@ export const Main: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
-  const chatStream = async (message: TCustomMessage) => {
+  const chatStream = async (messages: TCustomMessage[]) => {
     if (selectedModel == null || selectedService == null) {
       return;
     }
@@ -209,9 +214,10 @@ export const Main: FC = () => {
       return;
     }
 
+    const chatMessages = [...chats, ...messages];
     const response = await provider.chatCompletions(
       selectedModel,
-      [...chats, message],
+      chatMessages,
       selectedService.url,
       selectedService.apiKey,
       true
@@ -351,7 +357,7 @@ export const Main: FC = () => {
     await chatImage(prompt);
   };
 
-  const sendChatCompletion = async (chatInput: string) => {
+  const sendChatCompletion = async (chatInput: string, messages: TCustomMessage[] = []) => {
     const chatMessage = CustomMessageSchema.parse({
       content: chatInput,
       role: ChatRole.USER,
@@ -374,7 +380,7 @@ export const Main: FC = () => {
     }
 
     setChats((prevArray) => [...prevArray, chatMessage]);
-    await chatStream(chatMessage);
+    await chatStream([chatMessage, ...messages]);
     delayHighlighter();
   };
 
@@ -395,12 +401,62 @@ export const Main: FC = () => {
     });
   };
 
+  const getRagContentPrompt = async (chatInput: string, documentId: number): Promise<string | undefined> => {
+    // console.log('-> Do RAG against document: ', documentId);
+
+    if (chatInput.length < 1) {
+      toast.warning('Ask a question first');
+      return;
+    }
+
+    if (systemPromptForRagSlim == null) {
+      toast.warning('No slim version of the RAG system prompt set!');
+      return;
+    }
+
+    const response = await getDocument({ documentId });
+    if (response.error || !response.document) {
+      toast.error(response.error);
+      return;
+    }
+
+    const { embedApiServiceName, embedModel, id } = response.document;
+
+    if (!embedModel) {
+      toast.warning('No embedding model found for this document.');
+      return;
+    }
+
+    const embedService = services.find((s) => s.serviceId == embedApiServiceName);
+    if (embedService === undefined) {
+      toast.warning(
+        `Settings for service '${embedApiServiceName}' has been removed at some point. Please add them under settings.`
+      );
+      return;
+    }
+
+    const documentChunks = await getDocumentChunks({
+      question: chatInput,
+      documentId: id,
+      embedModel: embedModel,
+      apiSetting: embedService,
+    });
+
+    const context = documentChunks.map((doc) => doc.text).join(' ');
+    const ragPrompt = systemPromptForRagSlim
+      .replace(SystemPromptVariable.userQuestion, chatInput)
+      .replace(SystemPromptVariable.documentContent, context);
+
+    // console.log('-> RAG Prompt: ', ragPrompt);
+
+    return ragPrompt;
+  };
+
   const sendChat = async (chatInput: string) => {
     if (chatInput === '') {
       return;
     }
 
-    // Start timer here
     const startTime = performance.now();
 
     if (contextId === 'image') {
@@ -410,7 +466,26 @@ export const Main: FC = () => {
       return;
     }
 
-    await sendChatCompletion(chatInput);
+    const additionalMessages: TCustomMessage[] = [];
+    const docId = parseFloat(contextId ?? '');
+    if (!isNaN(docId) && docId > 0) {
+      const ragPrompt = await getRagContentPrompt(chatInput, docId);
+      if (!ragPrompt) {
+        toast.warning('No RAG system prompt set!');
+        return;
+      }
+
+      const systemPromptMessage = CustomMessageSchema.parse({
+        content: ragPrompt,
+        role: ChatRole.SYSTEM,
+        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      });
+
+      setChats((prevArray) => [...prevArray, systemPromptMessage]);
+      additionalMessages.push(systemPromptMessage);
+    }
+
+    await sendChatCompletion(chatInput, additionalMessages);
     endTimerAndAddToLastChat(startTime);
     setAttachments([]);
   };

@@ -86,14 +86,14 @@ export default function Page() {
 
     setChats((prevArray) => [...prevArray, chatMessage]);
 
-    const documents = await getDocumentChunks({
+    const documentChunks = await getDocumentChunks({
       question: chatInput,
       documentId: selectedDocument.documentId,
       embedModel: selectedEmbedModel,
       apiSetting: selectedEmbedService,
     });
 
-    const context = documents.map((doc) => doc.text).join(' ');
+    const context = documentChunks.map((doc) => doc.text).join(' ');
     const systemPrompt = systemPromptForRagSlim
       .replace(SystemPromptVariable.userQuestion, chatInput)
       .replace(SystemPromptVariable.documentContent, context);

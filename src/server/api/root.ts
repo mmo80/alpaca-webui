@@ -1,6 +1,5 @@
 import { chatHistoryRouter } from './routers/chat-history';
 import { documentRouter } from './routers/document';
-import { fileRouter } from './routers/file';
 import { createCallerFactory, createTRPCRouter } from './trpc';
 
 /**
@@ -10,7 +9,6 @@ import { createCallerFactory, createTRPCRouter } from './trpc';
  */
 export const appRouter = createTRPCRouter({
   chatHistory: chatHistoryRouter,
-  file: fileRouter,
   document: documentRouter,
 });
 
