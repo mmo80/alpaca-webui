@@ -18,10 +18,9 @@ export const useDocumentsQuery = () => {
   return { data, isLoading, refetch, error };
 };
 
-class SingleChatHistoryResult<TCustomChatMessage> {
+export class QueryResult<T> {
   constructor(
-    public messages: TCustomChatMessage[],
-    public title: string | null = null,
+    public data: T | null = null,
     public error: Error | null = null
   ) {}
 
@@ -30,68 +29,68 @@ class SingleChatHistoryResult<TCustomChatMessage> {
   }
 }
 
-export const getSingleChatHistoryById = async (id: string): Promise<SingleChatHistoryResult<TCustomChatMessage>> => {
-  try {
-    const result = await trpc.chatHistory.get.query({ id: id });
-
-    if (!result) {
-      return new SingleChatHistoryResult([]);
-    }
-
-    const parsedMessages = JSON.parse(result.messages);
-    const chatMessages = CustomMessagesSchema.parse(parsedMessages) as TCustomChatMessage[];
-
-    return new SingleChatHistoryResult(chatMessages, result.title);
-  } catch (err) {
-    console.error(err);
-
-    if (err instanceof Error) {
-      return new SingleChatHistoryResult([], null, err);
-    }
-
-    return new SingleChatHistoryResult(
-      [],
-      null,
-      new Error(err?.toString() ?? `unknown error in '${getSingleChatHistoryById.name}'`)
-    );
-  }
+type SingleChatHistoryByIdResponse = {
+  messages: TCustomChatMessage[];
+  title: string | null;
 };
 
-export const getDocumentChunks = async (req: TDocumentChunkRequest): Promise<Documents[]> => {
-  try {
-    const documents = await trpc.document.getDocumentChunks.query(req);
-    return documents;
-  } catch (error) {
-    if (error instanceof TRPCClientError) {
-      console.error('Error fetching documents:', error.message);
-      return [];
-    }
+export class TRPCQuery {
+  public getSingleChatHistoryById = async (id: string): Promise<QueryResult<SingleChatHistoryByIdResponse>> => {
+    try {
+      const result = await trpc.chatHistory.get.query({ id: id });
 
-    console.error('Unexpected error fetching documents:', error);
-    return [];
-  }
-};
-
-type GetDocumentResponse = {
-  document: TFile | undefined;
-  error: string | undefined;
-};
-
-export const getDocument = async (req: TDocumentIdRequest): Promise<GetDocumentResponse> => {
-  try {
-    const document = await trpc.document.get.query(req);
-    return { document, error: undefined };
-  } catch (error) {
-    if (error instanceof TRPCClientError) {
-      if (error.data?.code === 'NOT_FOUND') {
-        return { document: undefined, error: error.message };
+      if (!result) {
+        return new QueryResult<SingleChatHistoryByIdResponse>(null, new Error(`No chat history found for id: ${id}`));
       }
 
-      console.error('Error fetching document:', error.message);
-      return { document: undefined, error: error.message };
-    }
+      const parsedMessages = JSON.parse(result.messages);
+      const chatMessages = CustomMessagesSchema.parse(parsedMessages) as TCustomChatMessage[];
 
-    console.error('Unexpected error fetching document:', error);
-    return { document: undefined, error: 'Unexpected error fetching document' };
-  }
-};
+      return new QueryResult<SingleChatHistoryByIdResponse>({ messages: chatMessages, title: result.title });
+    } catch (err) {
+      console.error(err);
+
+      if (err instanceof Error) {
+        return new QueryResult<SingleChatHistoryByIdResponse>(null, err);
+      }
+
+      return new QueryResult<SingleChatHistoryByIdResponse>(
+        null,
+        new Error(err?.toString() ?? `unknown error in '${this.getSingleChatHistoryById.name}'`)
+      );
+    }
+  };
+
+  public getDocumentChunks = async (req: TDocumentChunkRequest): Promise<QueryResult<Documents[] | undefined>> => {
+    try {
+      const documents = await trpc.document.getDocumentChunks.query(req);
+
+      return new QueryResult<Documents[] | undefined>(documents);
+    } catch (error) {
+      if (error instanceof TRPCClientError) {
+        console.error('Error fetching document chunks:', error.message);
+        return new QueryResult<Documents[] | undefined>(null, error);
+      }
+
+      console.error('Unexpected error fetching document chunks:', error);
+      return new QueryResult<Documents[] | undefined>(null, new Error('Unexpected error fetching document chunks'));
+    }
+  };
+
+  public getDocument = async (req: TDocumentIdRequest): Promise<QueryResult<TFile | undefined>> => {
+    try {
+      const document = await trpc.document.get.query(req);
+      return new QueryResult<TFile | undefined>(document);
+    } catch (error) {
+      if (error instanceof TRPCClientError) {
+        console.error('Error fetching document:', error.message);
+        return new QueryResult<TFile | undefined>(null, error);
+      }
+
+      console.error('Unexpected error fetching document:', error);
+      return new QueryResult<TFile | undefined>(null, new Error('Unexpected error fetching document'));
+    }
+  };
+}
+
+export const TrpcQuery = new TRPCQuery();

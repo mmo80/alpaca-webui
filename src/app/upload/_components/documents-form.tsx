@@ -1,12 +1,12 @@
-import { useState, type FC, type SetStateAction, type Dispatch, useRef } from 'react';
-import { ChatRole, CustomMessageSchema, defaultProvider, type TCustomMessage } from '@/lib/types';
+'use client';
+
+import { useState, type FC, useRef } from 'react';
 import FileTable from './file-table';
 import { useModelList } from '@/hooks/use-model-list';
 import ModelAlts from '@/components/model-alts';
 import { AlertBox } from '@/components/alert-box';
 import { toast } from 'sonner';
 import { useModelStore } from '@/lib/model-store';
-import { useSettingsStore } from '@/lib/settings-store';
 import { useDocumentsQuery } from '@/trpc/queries';
 import { FileUpload, type FileUploadRef } from './file-upload';
 import { UploadIcon } from '@radix-ui/react-icons';
@@ -17,28 +17,19 @@ import type { FileInfo, TFilesUploadForm } from '../upload-types';
 import { v7 as uuidv7 } from 'uuid';
 import { useTRPC } from '@/trpc/react';
 import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useSettingsStore } from '@/lib/settings-store';
 
 export type SelectedDocument = {
   documentId: number;
   filename: string;
 };
 
-type DocumentsFormProps = {
-  setChats: Dispatch<SetStateAction<TCustomMessage[]>>;
-  hasHydrated: boolean;
-  systemPromptForRag: string;
-  onInitDocumentConversation: (document: SelectedDocument | null) => void;
-};
-
-export const DocumentsForm: FC<DocumentsFormProps> = ({
-  setChats,
-  hasHydrated,
-  systemPromptForRag,
-  onInitDocumentConversation,
-}) => {
-  const { services } = useSettingsStore();
+export const DocumentsForm: FC = () => {
+  const router = useRouter();
   const { selectedEmbedModel, setEmbedModel, selectedEmbedService, setEmbedService } = useModelStore();
   const { modelList: embeddedModelList } = useModelList(true);
+  const { hasHydrated } = useSettingsStore();
 
   const fileUploadRef = useRef<FileUploadRef>(null);
 
@@ -101,38 +92,8 @@ export const DocumentsForm: FC<DocumentsFormProps> = ({
     });
   };
 
-  const initConversationWithDocument = async (
-    documentId: number,
-    filename: string,
-    embeddingModel: string,
-    embeddingServiceId: string
-  ) => {
-    if (systemPromptForRag == null || systemPromptForRag === '') {
-      toast.warning('RAG System Prompt not set!');
-      return;
-    }
-
-    const embedService = services.find((s) => s.serviceId == embeddingServiceId);
-    if (embedService === undefined) {
-      toast.warning(`Settings for service '${embeddingServiceId}' has been removed. Please add them under settings.`);
-      return;
-    }
-
-    onInitDocumentConversation({
-      documentId: documentId,
-      filename: filename,
-    });
-    setChats([]);
-    setEmbedModel(embeddingModel);
-    setEmbedService(embedService);
-
-    const ragSystemMessage = CustomMessageSchema.parse({
-      content: systemPromptForRag || '',
-      role: ChatRole.SYSTEM,
-      provider: defaultProvider,
-    });
-
-    setChats((prevArray) => [...prevArray, ragSystemMessage]);
+  const initConversationWithDocument = async (documentId: number) => {
+    router.push(`/?contextid=${documentId}`);
   };
 
   const reload = async () => {

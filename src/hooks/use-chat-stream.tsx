@@ -4,7 +4,6 @@ import {
   type TCustomMessage,
   type TCustomChatMessage,
   type TCustomCreateImageData,
-  type TCustomProviderSchema,
   defaultProvider,
   CustomMessageSchema,
 } from '@/lib/types';
@@ -142,17 +141,14 @@ export const useChatStream = () => {
 
   const handleStream = async (
     streamReader: ReadableStreamDefaultReader<Uint8Array>,
-    provider: TCustomProviderSchema,
+    initialChatMessage: TCustomMessage,
     convertResponse: (streamData: string) => TChatCompletionResponse
   ): Promise<void> => {
     setIsStreamProcessing(true);
     const decoder = new TextDecoder('utf-8');
 
     try {
-      setChats((prevArray) => [
-        ...prevArray,
-        CustomMessageSchema.parse({ content: '', role: ChatRole.ASSISTANT, provider: provider, streamComplete: false }),
-      ]);
+      setChats((prevArray) => [...prevArray, initialChatMessage]);
 
       while (true) {
         const { done, value } = await streamReader.read();

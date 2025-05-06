@@ -50,7 +50,7 @@ class OpenAIProvider implements Provider {
       throw validatedModelList.error;
     }
 
-    if (!validatedModelList.data.some((m) => m.id === 'gpt-image-1')) {
+    if (!validatedModelList.data.some((m) => m.id === 'gpt-image-1') && !embeddedOnly) {
       validatedModelList.data.push({
         id: 'gpt-image-1',
         object: 'model',

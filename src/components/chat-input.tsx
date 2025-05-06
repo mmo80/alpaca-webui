@@ -20,12 +20,15 @@ import {
 import { Badge } from './ui/badge';
 import { useDocumentsQuery } from '@/trpc/queries';
 import { formatBytes } from '@/lib/utils';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ChatContext } from './chat-context';
+import { CustomContextSchema } from '@/lib/types';
 
 interface ChatInputProps {
   onSendInput: (input: string) => Promise<void>;
   onCancelStream: () => void;
   onReset: () => void;
-  onContextChange?: (contextId: string | undefined) => void;
+  onContextChange?: (contextId: string | null) => void;
   files: FileInfo[];
   setFiles: (files: FileInfo[]) => void;
   chatInputPlaceholder: string;
@@ -46,10 +49,14 @@ export const ChatInput: FC<ChatInputProps> = ({
   isFetchLoading,
   isLlmModelActive,
 }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryContextId = searchParams.get('contextid');
+
   const [chatInput, setChatInput] = useState<string>('');
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
   const [dragging, setDragging] = useState<boolean>(false);
-  const [activeContextId, setActiveContextId] = useState<string | undefined>(undefined);
+  const [activeContextId, setActiveContextId] = useState<string | null>(null);
 
   const { data: documents, isLoading: isDocumentsLoading } = useDocumentsQuery();
 
@@ -68,12 +75,29 @@ export const ChatInput: FC<ChatInputProps> = ({
   const fileTypeErrorMessage = 'File must of these types (pdf, jpg, jpeg, png, gif, webp)';
 
   useEffect(() => {
+    if (!queryContextId) {
+      setActiveContextId(null);
+      return;
+    }
+    setActiveContextId(queryContextId);
+  }, [queryContextId]);
+
+  useEffect(() => {
+    if (activeContextId) {
+      const params = new URLSearchParams(searchParams);
+      params.set('contextid', activeContextId);
+      router.push(`/?${params.toString()}`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeContextId]);
+
+  useEffect(() => {
     setTextareaPlaceholder(chatInputPlaceholder);
   }, [chatInputPlaceholder]);
 
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
-    setChatInput(' ');
+    setChatInput('');
     await onSendInput(chatInputTrimmed);
   };
 
@@ -165,29 +189,8 @@ export const ChatInput: FC<ChatInputProps> = ({
   };
 
   const removeContext = () => {
-    setActiveContextId(undefined);
-    onContextChange?.(undefined);
-  };
-
-  const contextIndicator = (contextId: string): string => {
-    if (contextId === 'image') {
-      return 'Generate Image';
-    }
-
-    const docId = parseFloat(contextId);
-    if (!isNaN(docId) && docId > 0) {
-      const filename = documents.filter((doc) => doc.id === docId).map((doc) => doc.filename);
-      return `Question: ${filename[0]}`;
-    }
-
-    return contextId;
-  };
-
-  const renderContextIcon = (contextId: string) => {
-    if (contextId === 'image') {
-      return <ImageIcon className="h-4 w-4" />;
-    }
-    return <FileTextIcon className="h-4 w-4" />;
+    setActiveContextId(null);
+    onContextChange?.(null);
   };
 
   return (
@@ -209,17 +212,12 @@ export const ChatInput: FC<ChatInputProps> = ({
           <FileBadge key={file.id} file={file} onRemoveAttachment={onRemoveAttachment} />
         ))}
         {activeContextId && (
-          <Badge variant="secondary" className="group relative flex gap-2 rounded-lg p-1 px-3">
-            {renderContextIcon(activeContextId)}
-            <span>{contextIndicator(activeContextId)}</span>
-            <XIcon
-              onClick={(e) => {
-                e.preventDefault();
-                removeContext();
-              }}
-              className="invisible absolute right-0.5 cursor-pointer rounded-lg p-1 text-white group-hover:visible group-hover:bg-stone-700 hover:bg-stone-900"
-            />
-          </Badge>
+          <ChatContext
+            context={CustomContextSchema.parse({ contextId: activeContextId, name: '' })}
+            documents={documents}
+            removeContext={removeContext}
+            editable={true}
+          />
         )}
       </div>
       <div className="px-3">
@@ -268,21 +266,29 @@ export const ChatInput: FC<ChatInputProps> = ({
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      {documents.map((doc, index) =>
-                        doc.isEmbedded ? (
-                          <DropdownMenuItem key={doc.id} data-id={doc.id} onSelect={onContextMenuItemSelect}>
-                            <div className="flex flex-col items-start gap-0">
-                              <span>{doc.filename}</span>
-                              <span className="text-xs font-light">{formatBytes(doc.fileSize ?? 0)}</span>
-                            </div>
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem key={doc.id}>
-                            <div className="flex flex-col items-start gap-0 text-stone-500">
-                              <span>{doc.filename}</span>
-                              <span className="text-xs font-light">Embed document first</span>
-                            </div>
-                          </DropdownMenuItem>
+                      {isDocumentsLoading ? (
+                        <DropdownMenuItem key={'loading0'}>
+                          <div className="flex flex-col items-start gap-0 text-stone-500">
+                            <span>Loading...</span>
+                          </div>
+                        </DropdownMenuItem>
+                      ) : (
+                        documents.map((doc) =>
+                          doc.isEmbedded ? (
+                            <DropdownMenuItem key={doc.id} data-id={doc.id} onSelect={onContextMenuItemSelect}>
+                              <div className="flex flex-col items-start gap-0">
+                                <span>{doc.filename}</span>
+                                <span className="text-xs font-light">{formatBytes(doc.fileSize ?? 0)}</span>
+                              </div>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem key={doc.id}>
+                              <div className="flex flex-col items-start gap-0 text-stone-500">
+                                <span>{doc.filename}</span>
+                                <span className="text-xs font-light">Embed document first</span>
+                              </div>
+                            </DropdownMenuItem>
+                          )
                         )
                       )}
                     </DropdownMenuSubContent>

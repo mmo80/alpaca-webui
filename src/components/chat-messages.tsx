@@ -1,50 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import {
-  ChatRole,
-  type TContentText,
-  type TContentUnion,
-  type TCustomChatMessage,
-  type TCustomCreateImageData,
-  type TCustomMessage,
-} from '@/lib/types';
+import { ChatRole, isChat, isImage, type TChatMessage, type TContentText, type TCustomMessage } from '@/lib/types';
 import Markdown, { type ExtraProps } from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import { UserIcon, BrainIcon, ChevronRightIcon, ChevronDownIcon, CopyIcon, AlertCircle } from 'lucide-react';
 import { type FC, type ReactNode, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { visit } from 'unist-util-visit';
 import { Spinner } from './spinner';
 import { v7 as uuidv7 } from 'uuid';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { formatTime } from '@/lib/utils';
+import { formatTime, thinkPlugin } from '@/lib/utils';
+import { ChatContext } from './chat-context';
+import { useDocumentsQuery } from '@/trpc/queries';
 
-type ChatMessagesProps = {
-  message: TCustomMessage;
-  role: ChatRole;
-};
-
-const thinkPlugin = (messageId: string) => {
-  return (tree: any) => {
-    visit(tree, (node) => {
-      if (node.type === 'html' && node.value.includes('<think>')) {
-        const thinkId = `think-${messageId}`;
-
-        node.value = `<div>
-        <span data-think-id="${thinkId}">Thinking</span>
-        <div class="text-stone-300 bg-stone-950 rounded p-3 mb-2 hidden" id="${thinkId}">`;
-      }
-
-      if (node.type === 'html' && node.value.includes('</think>')) {
-        node.value = `</div></div>`;
-      }
-    });
-  };
-};
-
-export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => {
+export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }> = ({ message, role }) => {
   const messageId = uuidv7();
 
   useEffect(() => {
@@ -58,15 +29,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message, message.isReasoning]);
 
-  const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
-    return (item as TCustomCreateImageData).url !== undefined || (item as TCustomCreateImageData).b64_json !== undefined;
-  };
-
-  const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
-    return (item as TCustomChatMessage).content !== undefined;
-  };
-
-  const renderContent = (content: TContentUnion) => {
+  const content = () => {
+    const content = (message as TChatMessage).content;
     if (content && Array.isArray(content) && content.length > 0) {
       return (content[0] as TContentText).text;
     } else if (typeof content === 'string') {
@@ -75,7 +39,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     return '';
   };
 
-  const renderCancellation = () => {
+  const cancellation = () => {
     if (!message.cancelled) return;
 
     return (
@@ -88,7 +52,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     );
   };
 
-  const renderAttachments = (content: TContentUnion) => {
+  const attachments = () => {
+    const content = (message as TChatMessage).content;
     if (content && Array.isArray(content) && content.length > 0) {
       const images = content.filter((item) => item.type === 'image_url');
 
@@ -106,15 +71,15 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
     return '';
   };
 
-  const render = () => {
+  const chat = () => {
     if (isChat(message)) {
       return (
         <>
           <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[() => thinkPlugin(messageId)]}>
-            {renderContent(message.content)}
+            {content()}
           </Markdown>
-          {renderAttachments(message.content)}
-          {renderCancellation()}
+          {attachments()}
+          {cancellation()}
         </>
       );
     } else if (isImage(message)) {
@@ -151,7 +116,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               </span>
             </>
           )}
-          {renderCancellation()}
+          {cancellation()}
         </>
       );
     }
@@ -172,41 +137,54 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ message, role }) => 
               role == ChatRole.USER ? 'bg-stone-700 whitespace-pre-wrap' : 'bg-stone-900'
             }`}
           >
-            <div id={messageId}>{render()}</div>
-            <div className="flex items-center gap-2">
-              {isChat(message) && (
-                <span className="text-muted-foreground my-1 text-xs">
-                  <button
-                    className="rounded-xs p-1 hover:bg-stone-950"
-                    title="Copy"
-                    onClick={() => copyToClipboard(messageId)}
-                  >
-                    <CopyIcon className="h-4 w-4" />
-                  </button>
-                </span>
-              )}
-              {role == ChatRole.ASSISTANT && (
-                <>
-                  <span className="text-stone-700">|</span>
-                  {!message.streamComplete && !message.isReasoning && (
-                    <span>
-                      <Spinner />
-                    </span>
-                  )}
-                  <span className="text-xs">
-                    Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
-                  </span>
-                  <span className="text-stone-700">|</span>
-                  {message.streamComplete && (
-                    <span className="text-xs">Total Duration: {formatTime(message.durationInMs)}</span>
-                  )}
-                </>
-              )}
-            </div>
+            <div id={messageId}>{chat()}</div>
+            <MessageFooter messageId={messageId} message={message} role={role} />
           </div>
         </section>
       )}
     </>
+  );
+};
+
+const MessageFooter: FC<{ messageId: string; message: TCustomMessage; role: ChatRole }> = ({ messageId, message, role }) => {
+  const { data: documents, isLoading: isDocumentsLoading } = useDocumentsQuery();
+
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      {isChat(message) && (
+        <span className="text-muted-foreground my-1 text-xs">
+          <button className="rounded-xs p-1 hover:bg-stone-950" title="Copy" onClick={() => copyToClipboard(messageId)}>
+            <CopyIcon className="h-4 w-4" />
+          </button>
+        </span>
+      )}
+      {role == ChatRole.ASSISTANT && (
+        <>
+          <span className="text-stone-700">|</span>
+          {!message.streamComplete && !message.isReasoning && (
+            <span>
+              <Spinner />
+            </span>
+          )}
+          <span className="text-xs">
+            Answered by: <strong>{message.provider.model}</strong>, {message.provider.provider}
+          </span>
+          <span className="text-stone-700">|</span>
+          {message.streamComplete && <span className="text-xs">Duration: {formatTime(message.durationInMs)}</span>}
+        </>
+      )}
+      {message.context && (
+        <>
+          {isDocumentsLoading ? (
+            <span>
+              <Spinner />
+            </span>
+          ) : (
+            <ChatContext context={message.context} documents={documents} editable={false} documentPrefix="" />
+          )}
+        </>
+      )}
+    </div>
   );
 };
 

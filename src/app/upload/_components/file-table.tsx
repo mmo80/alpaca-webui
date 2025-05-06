@@ -22,12 +22,7 @@ type FileTableProps = {
   isEmbedding: boolean;
   fileIdEmbedding: number | null;
   onEmbedDocument: (documentId: number) => void;
-  initConversationWithDocument: (
-    documentId: number,
-    filename: string,
-    embeddingModel: string,
-    embeddingServiceId: string
-  ) => void;
+  initConversationWithDocument: (documentId: number) => void;
   reload: () => void;
 };
 
@@ -116,12 +111,7 @@ const FileTable: FC<FileTableProps> = ({
                         {file.isEmbedded && (
                           <DropdownMenuItem
                             onClick={() => {
-                              initConversationWithDocument(
-                                file.id,
-                                file.filename,
-                                file.embedModel ?? '',
-                                file.embedApiServiceName ?? ''
-                              );
+                              initConversationWithDocument(file.id);
                             }}
                           >
                             <ChatBubbleIcon className="me-2" />

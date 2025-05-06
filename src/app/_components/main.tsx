@@ -5,8 +5,10 @@ import {
   type TContentImage,
   type TContentText,
   type TCustomChatMessage,
+  type TCustomContext,
   type TCustomMessage,
   ChatRole,
+  CustomContextSchema,
   CustomMessageSchema,
 } from '@/lib/types';
 import { AlertBox } from '@/components/alert-box';
@@ -21,11 +23,11 @@ import ModelAlts from '@/components/model-alts';
 import { toast } from 'sonner';
 import { type ChatError } from '@/lib/api-service';
 import { useMutation } from '@tanstack/react-query';
-import { getDocument, getDocumentChunks, getSingleChatHistoryById } from '@/trpc/queries';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { trpc, queryClient, useTRPC } from '@/trpc/react';
+import { queryClient, useTRPC } from '@/trpc/react';
 import type { FileInfo } from '../upload/upload-types';
 import { useProvider } from '@/hooks/use-provider';
+import { TrpcQuery } from '@/trpc/queries';
 
 export const Main: FC = () => {
   const newThreadTitle = 'New Thread';
@@ -34,6 +36,7 @@ export const Main: FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryChatHistoryId = searchParams.get('id');
+  const queryContextId = searchParams.get('contextid');
 
   const { systemPrompt, hasHydrated, systemPromptForChatTitle, services, systemPromptForRagSlim } = useSettingsStore();
   const { modelList } = useModelList();
@@ -50,7 +53,7 @@ export const Main: FC = () => {
   const [chatTitlePersisted, setChatTitlePersisted] = useState<boolean>(false);
   const [generatingTitle, setGeneratingTitle] = useState<boolean>(false);
   const [attachments, setAttachments] = useState<FileInfo[]>([]);
-  const [contextId, setContextId] = useState<string | undefined>(undefined);
+  const [contextId, setContextId] = useState<string | null>(null);
 
   const updateChatHistory = useMutation(
     trpcRouter.chatHistory.insertUpdate.mutationOptions({
@@ -128,6 +131,12 @@ export const Main: FC = () => {
   }, [selectedModel]);
 
   useEffect(() => {
+    if (queryContextId) {
+      setContextId(queryContextId);
+    }
+  }, [queryContextId]);
+
+  useEffect(() => {
     if (!queryChatHistoryId) {
       onResetChat();
       setCurrentChatHistoryId(undefined);
@@ -143,23 +152,25 @@ export const Main: FC = () => {
 
     setCurrentChatHistoryId(queryChatHistoryId);
 
-    getSingleChatHistoryById(queryChatHistoryId).then((result) => {
-      if (!result.isError) {
-        if (result.title && result.title !== newThreadTitle) {
-          setChatTitle(result.title);
-          setChatTitlePersisted(true);
-        } else {
-          setChatTitlePersisted(false);
-        }
-        setGeneratingTitle(false);
-        setChats(result.messages);
-        delayHighlighter();
-      } else {
+    TrpcQuery.getSingleChatHistoryById(queryChatHistoryId).then((result) => {
+      if (result.isError || !result.data) {
         toast.error('Error loading chat history', {
           description: result.error?.message,
         });
         console.error('Error loading chat history:', result.error);
+        return;
       }
+
+      const response = result.data;
+      if (response.title && response.title !== newThreadTitle) {
+        setChatTitle(response.title);
+        setChatTitlePersisted(true);
+      } else {
+        setChatTitlePersisted(false);
+      }
+      setGeneratingTitle(false);
+      setChats(response.messages);
+      delayHighlighter();
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -202,12 +213,10 @@ export const Main: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats]);
 
-  const chatStream = async (messages: TCustomMessage[]) => {
+  const callChatCompletions = async (messages: TCustomMessage[], context: TCustomContext | undefined) => {
     if (selectedModel == null || selectedService == null) {
       return;
     }
-
-    setIsFetchLoading(true);
 
     if (!provider) {
       toast.error('Provider not found');
@@ -225,16 +234,21 @@ export const Main: FC = () => {
 
     setChatError(response.error);
     setIsFetchLoading(false);
+
     await handleStream(
       response.stream,
-      { provider: selectedService.serviceId, model: selectedModel },
+      CustomMessageSchema.parse({
+        content: '',
+        role: ChatRole.ASSISTANT,
+        provider: { provider: selectedService.serviceId, model: selectedModel },
+        streamComplete: false,
+        context: context,
+      }),
       provider.convertResponse
     );
-
-    setIsFetchLoading(false);
   };
 
-  const chatImage = async (prompt: string) => {
+  const callImageGeneration = async (prompt: string) => {
     if (selectedModel == null || selectedService == null) {
       return;
     }
@@ -244,11 +258,8 @@ export const Main: FC = () => {
       return;
     }
 
-    setIsFetchLoading(true);
     const response = await provider.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
-
     if (response.error) {
-      setIsFetchLoading(false);
       return;
     }
 
@@ -259,7 +270,6 @@ export const Main: FC = () => {
         provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
       }),
     ]);
-    setIsFetchLoading(false);
   };
 
   const generateTitle = async (message: string): Promise<string | undefined> => {
@@ -345,7 +355,7 @@ export const Main: FC = () => {
     return title;
   };
 
-  const sendChatGenerateImage = async (chatInput: string) => {
+  const getImageGenerateChatMessage = (chatInput: string): TCustomMessage => {
     const prompt = chatInput.replace('/image', '');
     const chatMessage = CustomMessageSchema.parse({
       content: prompt,
@@ -353,11 +363,10 @@ export const Main: FC = () => {
       provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
     });
 
-    setChats((prevArray) => [...prevArray, chatMessage]);
-    await chatImage(prompt);
+    return chatMessage;
   };
 
-  const sendChatCompletion = async (chatInput: string, messages: TCustomMessage[] = []) => {
+  const getCompletionChatMessage = (chatInput: string, context: TCustomContext | undefined = undefined): TCustomMessage => {
     const chatMessage = CustomMessageSchema.parse({
       content: chatInput,
       role: ChatRole.USER,
@@ -379,9 +388,11 @@ export const Main: FC = () => {
       (chatMessage as TCustomChatMessage).content = [textContent, ...images];
     }
 
-    setChats((prevArray) => [...prevArray, chatMessage]);
-    await chatStream([chatMessage, ...messages]);
-    delayHighlighter();
+    if (context) {
+      chatMessage.context = context;
+    }
+
+    return chatMessage;
   };
 
   const endTimerAndAddToLastChat = (startTime: number) => {
@@ -401,9 +412,10 @@ export const Main: FC = () => {
     });
   };
 
-  const getRagContentPrompt = async (chatInput: string, documentId: number): Promise<string | undefined> => {
-    // console.log('-> Do RAG against document: ', documentId);
-
+  const getRagContentPrompt = async (
+    chatInput: string,
+    documentId: number
+  ): Promise<{ ragPrompt: string | undefined; context: TCustomContext } | undefined> => {
     if (chatInput.length < 1) {
       toast.warning('Ask a question first');
       return;
@@ -414,13 +426,13 @@ export const Main: FC = () => {
       return;
     }
 
-    const response = await getDocument({ documentId });
-    if (response.error || !response.document) {
-      toast.error(response.error);
+    const documentResponse = await TrpcQuery.getDocument({ documentId });
+    if (documentResponse.isError || !documentResponse.data) {
+      toast.error(documentResponse.error?.message);
       return;
     }
 
-    const { embedApiServiceName, embedModel, id } = response.document;
+    const { embedApiServiceName, embedModel, id, filename } = documentResponse.data;
 
     if (!embedModel) {
       toast.warning('No embedding model found for this document.');
@@ -435,21 +447,54 @@ export const Main: FC = () => {
       return;
     }
 
-    const documentChunks = await getDocumentChunks({
+    const chunksResult = await TrpcQuery.getDocumentChunks({
       question: chatInput,
       documentId: id,
       embedModel: embedModel,
       apiSetting: embedService,
     });
 
-    const context = documentChunks.map((doc) => doc.text).join(' ');
+    if (chunksResult.isError || !chunksResult.data) {
+      const errorMessage =
+        (chunksResult.error?.message?.length ?? 0 > 200)
+          ? `${chunksResult.error?.message?.slice(0, 247)}...`
+          : chunksResult.error?.message;
+      toast.error(chunksResult.error ? errorMessage : 'An error occurred');
+      return;
+    }
+
+    const mergedResults = chunksResult.data.map((doc) => doc.text).join(' ');
     const ragPrompt = systemPromptForRagSlim
       .replace(SystemPromptVariable.userQuestion, chatInput)
-      .replace(SystemPromptVariable.documentContent, context);
+      .replace(SystemPromptVariable.documentContent, mergedResults);
 
-    // console.log('-> RAG Prompt: ', ragPrompt);
+    const context = CustomContextSchema.parse({
+      contextId: id.toString(),
+      name: filename,
+    });
 
-    return ragPrompt;
+    return { ragPrompt, context };
+  };
+
+  const getRagContext = async (
+    chatInput: string
+  ): Promise<{ chatMessage: TCustomMessage; context: TCustomContext } | undefined> => {
+    const docId = parseFloat(contextId ?? '');
+
+    if (!isNaN(docId) && docId > 0) {
+      const ragResponse = await getRagContentPrompt(chatInput, docId);
+      if (!ragResponse) {
+        return;
+      }
+
+      const systemPromptMessage = CustomMessageSchema.parse({
+        content: ragResponse.ragPrompt,
+        role: ChatRole.SYSTEM,
+        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      });
+
+      return { chatMessage: systemPromptMessage, context: ragResponse.context };
+    }
   };
 
   const sendChat = async (chatInput: string) => {
@@ -457,35 +502,35 @@ export const Main: FC = () => {
       return;
     }
 
+    setIsFetchLoading(true);
     const startTime = performance.now();
 
     if (contextId === 'image') {
-      await sendChatGenerateImage(chatInput);
+      const chatMessage = getImageGenerateChatMessage(chatInput) as TCustomChatMessage;
+      if (!chatMessage || typeof chatMessage.content !== 'string') return;
+      setChats((prevArray) => [...prevArray, chatMessage]);
+      await callImageGeneration(chatMessage.content);
+
+      setIsFetchLoading(false);
       endTimerAndAddToLastChat(startTime);
       setAttachments([]);
       return;
     }
 
-    const additionalMessages: TCustomMessage[] = [];
-    const docId = parseFloat(contextId ?? '');
-    if (!isNaN(docId) && docId > 0) {
-      const ragPrompt = await getRagContentPrompt(chatInput, docId);
-      if (!ragPrompt) {
-        toast.warning('No RAG system prompt set!');
-        return;
-      }
+    const ragContext = await getRagContext(chatInput);
+    const context = ragContext?.context;
 
-      const systemPromptMessage = CustomMessageSchema.parse({
-        content: ragPrompt,
-        role: ChatRole.SYSTEM,
-        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
-      });
+    const chatMessage = getCompletionChatMessage(chatInput, context);
+    setChats((prevArray) => [...prevArray, chatMessage]);
+    const messages: TCustomMessage[] = [chatMessage];
 
-      setChats((prevArray) => [...prevArray, systemPromptMessage]);
-      additionalMessages.push(systemPromptMessage);
+    if (ragContext?.chatMessage) {
+      messages.push(ragContext.chatMessage);
     }
+    await callChatCompletions(messages, context);
 
-    await sendChatCompletion(chatInput, additionalMessages);
+    delayHighlighter();
+    setIsFetchLoading(false);
     endTimerAndAddToLastChat(startTime);
     setAttachments([]);
   };
@@ -507,7 +552,7 @@ export const Main: FC = () => {
     provider.cancelChatCompletionStream();
   };
 
-  const onContextChange = (contextId: string | undefined) => {
+  const onContextChange = (contextId: string | null) => {
     setContextId(contextId);
   };
 

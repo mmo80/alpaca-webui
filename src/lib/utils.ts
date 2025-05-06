@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import hljs from 'highlight.js';
+import { visit } from 'unist-util-visit';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -98,4 +99,23 @@ export const formatTime = (ms: number): string => {
   } else {
     return `${Math.floor(totalSeconds)} s`;
   }
+};
+
+// remarkPlugin for Markdown
+export const thinkPlugin = (messageId: string) => {
+  return (tree: any) => {
+    visit(tree, (node) => {
+      if (node.type === 'html' && node.value.includes('<think>')) {
+        const thinkId = `think-${messageId}`;
+
+        node.value = `<div>
+        <span data-think-id="${thinkId}">Thinking</span>
+        <div class="text-stone-300 bg-stone-950 rounded p-3 mb-2 hidden" id="${thinkId}">`;
+      }
+
+      if (node.type === 'html' && node.value.includes('</think>')) {
+        node.value = `</div></div>`;
+      }
+    });
+  };
 };

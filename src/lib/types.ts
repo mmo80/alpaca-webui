@@ -166,6 +166,12 @@ export const defaultProvider = {
   model: '',
 } as TCustomProviderSchema;
 
+export const CustomContextSchema = z.object({
+  contextId: z.string(),
+  name: z.string(),
+});
+export type TCustomContext = z.infer<typeof CustomContextSchema>;
+
 const CustomChatMessageSchema = z.object({
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: contentUnionSchema,
@@ -174,6 +180,7 @@ const CustomChatMessageSchema = z.object({
   isReasoning: z.boolean().optional().default(false),
   cancelled: z.boolean().optional().default(false),
   durationInMs: z.number().optional().default(0),
+  context: CustomContextSchema.optional(),
 });
 export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
 
@@ -186,12 +193,29 @@ const CustomCreateImageDataSchema = z.object({
   isReasoning: z.boolean().optional().default(false),
   cancelled: z.boolean().optional().default(false),
   durationInMs: z.number().optional().default(0),
+  context: CustomContextSchema.optional(),
 });
 export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>;
 
 export const CustomMessageSchema = z.union([CustomChatMessageSchema, CustomCreateImageDataSchema]);
 export const CustomMessagesSchema = z.array(CustomMessageSchema);
 export type TCustomMessage = z.infer<typeof CustomMessageSchema>;
+
+// export const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
+//   return (item as TCustomCreateImageData).url !== undefined || (item as TCustomCreateImageData).b64_json !== undefined;
+// };
+
+// export const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
+//   return (item as TCustomChatMessage).content !== undefined;
+// };
+
+export const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
+  return 'url' in item || 'b64_json' in item;
+};
+
+export const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
+  return 'content' in item;
+};
 // CUSTOM :: END
 
 // ----- Anthropic API Models ----- //
