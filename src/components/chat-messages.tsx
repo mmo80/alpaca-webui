@@ -16,11 +16,9 @@ import { ChatContext } from './chat-context';
 import { useDocumentsQuery } from '@/trpc/queries';
 
 export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }> = ({ message, role }) => {
-  const messageId = uuidv7();
-
   useEffect(() => {
     if (!message.isReasoning) {
-      const loaderThinkingId = `loader-think-${messageId}`;
+      const loaderThinkingId = `loader-think-${message.id}`;
       const loader = document.getElementById(loaderThinkingId);
       if (loader?.classList.contains('hidden') === false) {
         loader.classList.add('hidden');
@@ -75,7 +73,7 @@ export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }>
     if (isChat(message)) {
       return (
         <>
-          <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[() => thinkPlugin(messageId)]}>
+          <Markdown components={components} rehypePlugins={[rehypeRaw]} remarkPlugins={[() => thinkPlugin(message.id)]}>
             {content()}
           </Markdown>
           {attachments()}
@@ -137,8 +135,8 @@ export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }>
               role == ChatRole.USER ? 'bg-stone-700 whitespace-pre-wrap' : 'bg-stone-900'
             }`}
           >
-            <div id={messageId}>{chat()}</div>
-            <MessageFooter messageId={messageId} message={message} role={role} />
+            <div id={message.id}>{chat()}</div>
+            <MessageFooter message={message} role={role} />
           </div>
         </section>
       )}
@@ -146,14 +144,14 @@ export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }>
   );
 };
 
-const MessageFooter: FC<{ messageId: string; message: TCustomMessage; role: ChatRole }> = ({ messageId, message, role }) => {
+const MessageFooter: FC<{ message: TCustomMessage; role: ChatRole }> = ({ message, role }) => {
   const { data: documents, isLoading: isDocumentsLoading } = useDocumentsQuery();
 
   return (
     <div className="mt-2 flex items-center gap-2">
       {isChat(message) && (
         <span className="text-muted-foreground my-1 text-xs">
-          <button className="rounded-xs p-1 hover:bg-stone-950" title="Copy" onClick={() => copyToClipboard(messageId)}>
+          <button className="rounded-xs p-1 hover:bg-stone-950" title="Copy" onClick={() => copyToClipboard(message.id)}>
             <CopyIcon className="h-4 w-4" />
           </button>
         </span>

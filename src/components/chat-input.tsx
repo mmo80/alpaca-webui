@@ -1,7 +1,7 @@
 import { type FC, useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { AutosizeTextarea, type AutosizeTextAreaRef } from '@/components/ui/autosize-textarea';
-import { PaperclipIcon, ChevronsUpIcon, SquareIcon, FileTextIcon, XIcon, ListRestartIcon, ImageIcon } from 'lucide-react';
+import { PaperclipIcon, ChevronsUpIcon, SquareIcon, FileTextIcon, ListRestartIcon } from 'lucide-react';
 import { FileUpload, type FileUploadRef } from '@/app/upload/_components/file-upload';
 import type { FileInfo, TFilesUploadForm } from '@/app/upload/upload-types';
 import { v7 as uuidv7 } from 'uuid';
@@ -17,7 +17,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from './ui/badge';
 import { useDocumentsQuery } from '@/trpc/queries';
 import { formatBytes } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -57,6 +56,7 @@ export const ChatInput: FC<ChatInputProps> = ({
   const [textareaPlaceholder, setTextareaPlaceholder] = useState<string>('');
   const [dragging, setDragging] = useState<boolean>(false);
   const [activeContextId, setActiveContextId] = useState<string | null>(null);
+  const [textareaKey, setTextareaKey] = useState<number>(0);
 
   const { data: documents, isLoading: isDocumentsLoading } = useDocumentsQuery();
 
@@ -98,6 +98,7 @@ export const ChatInput: FC<ChatInputProps> = ({
   const sendChat = async () => {
     const chatInputTrimmed = chatInput.trim();
     setChatInput('');
+    setTextareaKey((prevKey) => prevKey + 1);
     await onSendInput(chatInputTrimmed);
   };
 
@@ -231,6 +232,7 @@ export const ChatInput: FC<ChatInputProps> = ({
           maxHeight={180}
           className={`appearance-none pr-20 outline-hidden ${dragging ? 'border-zinc-800 bg-zinc-900' : ''}`}
           disabled={!isLlmModelActive}
+          key={textareaKey}
         />
 
         <div className="flex w-full justify-between gap-1.5 pt-1.5">

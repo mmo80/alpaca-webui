@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { formatBytes } from './utils';
+import { v7 as uuidv7 } from 'uuid';
 
 // ----- Common API Models ----- //
 export enum ChatRole {
@@ -173,6 +174,7 @@ export const CustomContextSchema = z.object({
 export type TCustomContext = z.infer<typeof CustomContextSchema>;
 
 const CustomChatMessageSchema = z.object({
+  id: z.string().default(() => uuidv7()),
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: contentUnionSchema,
   provider: CustomProviderSchema.default(defaultProvider),
@@ -185,6 +187,7 @@ const CustomChatMessageSchema = z.object({
 export type TCustomChatMessage = z.infer<typeof CustomChatMessageSchema>;
 
 const CustomCreateImageDataSchema = z.object({
+  id: z.string().default(() => uuidv7()),
   url: z.string().optional(),
   b64_json: z.string().optional(),
   revised_prompt: z.string().optional(),
@@ -200,14 +203,6 @@ export type TCustomCreateImageData = z.infer<typeof CustomCreateImageDataSchema>
 export const CustomMessageSchema = z.union([CustomChatMessageSchema, CustomCreateImageDataSchema]);
 export const CustomMessagesSchema = z.array(CustomMessageSchema);
 export type TCustomMessage = z.infer<typeof CustomMessageSchema>;
-
-// export const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
-//   return (item as TCustomCreateImageData).url !== undefined || (item as TCustomCreateImageData).b64_json !== undefined;
-// };
-
-// export const isChat = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage => {
-//   return (item as TCustomChatMessage).content !== undefined;
-// };
 
 export const isImage = (item: TCustomChatMessage | TCustomCreateImageData): item is TCustomCreateImageData => {
   return 'url' in item || 'b64_json' in item;

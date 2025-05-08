@@ -3,13 +3,13 @@ import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
-import { ChatRole, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
+import { ChatRole, isChat, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
 
-interface ChatProps {
+type ChatProps = {
   isFetchLoading: boolean;
   chats: TCustomMessage[];
   mainDiv: React.RefObject<HTMLDivElement | null>;
-}
+};
 
 export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) => {
   const chatsDiv = useRef<HTMLDivElement>(null);
@@ -51,30 +51,26 @@ export const Chat: React.FC<ChatProps> = ({ isFetchLoading, chats, mainDiv }) =>
     }
   };
 
-  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
-    return (item as TCustomChatMessage).content !== undefined;
-  }
-
-  const render = (message: TCustomMessage, index: number) => {
+  const render = (message: TCustomMessage) => {
     let role = ChatRole.ASSISTANT;
     if (isChat(message)) {
       role = message.role;
     }
 
-    return <ChatMessages role={role} message={message} key={index} />;
+    return <ChatMessages role={role} message={message} key={message.id} />;
   };
 
   return (
     <>
       <div className="w-full space-y-4" ref={chatsDiv}>
-        {chats.map((message, index) => render(message, index))}
+        {chats.map((message) => render(message))}
         {isFetchLoading && <Spinner />}
       </div>
 
       {!isScrollBottom && (
         <PageDownButton
           onClick={directScrollToBottom}
-          className="animate-bounce-short fixed right-9 bottom-28 animate-bounce rounded-full border-white hover:animate-none"
+          className="animate-bounce-short fixed right-9 bottom-30 animate-bounce rounded-full border-white hover:animate-none"
         />
       )}
     </>

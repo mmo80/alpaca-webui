@@ -6,6 +6,7 @@ import {
   type TCustomCreateImageData,
   defaultProvider,
   CustomMessageSchema,
+  isChat,
 } from '@/lib/types';
 import { hasNonWhitespaceChars, isEmpty, isNullOrWhitespace, removeJunkStreamData } from '@/lib/utils';
 import { useState } from 'react';
@@ -19,10 +20,6 @@ export const useChatStream = () => {
   let checkFirstCharSpacing = true;
   let hasReasoningContent = false;
   let isReasoning = false;
-
-  function isChat(item: TCustomChatMessage | TCustomCreateImageData): item is TCustomChatMessage {
-    return (item as TCustomChatMessage).content !== undefined;
-  }
 
   const updateLastChatsItem = (type: 'finish' | 'update', content: string = '', isReasoning: boolean = false) => {
     setChats((prevArray) => {
