@@ -296,8 +296,8 @@ export type TEmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>
 
 const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?(\/.*)?$/;
 
-export const ApiSettingsSchema = z.object({
-  serviceId: z.string().readonly(),
+export const ProviderSettingsSchema = z.object({
+  providerId: z.string().readonly(),
   hasEmbedding: z.boolean().readonly(),
   embeddingPath: z.string().readonly(),
   lockedModelType: z.boolean().readonly(),
@@ -305,14 +305,11 @@ export const ApiSettingsSchema = z.object({
   apiType: z.string({ required_error: 'Please select the api type.' }).min(2, 'Please select the api type.'),
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
 });
-
-export type TApiSetting = z.infer<typeof ApiSettingsSchema>;
-
-export const SettingsFormSchema = z.object({
-  services: z.array(ApiSettingsSchema),
+export type TProviderSettings = z.infer<typeof ProviderSettingsSchema>;
+export const ProviderSettingsFormSchema = z.object({
+  providers: z.array(ProviderSettingsSchema),
 });
-
-export type TSettingsFormSchema = z.infer<typeof SettingsFormSchema>;
+export type TProviderSettingsFormSchema = z.infer<typeof ProviderSettingsFormSchema>;
 
 export type OpenPopovers = {
   [key: string]: boolean;

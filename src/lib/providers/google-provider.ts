@@ -1,7 +1,7 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   GoogleModelsResponseSchema,
-  type TApiSetting,
+  type TProviderSettings,
   type TChatMessage,
   type TModelSchema,
   type TGoogleChatCompletionRequestSchema,
@@ -26,17 +26,17 @@ class GoogleProvider implements Provider {
     return ApiServiceEnum.GOOGLE;
   }
 
-  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
+  public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
     const payload = {
-      apiKey: apiSetting.apiKey ?? '',
-      baseUrl: this.service.validUrl(apiSetting.url),
+      apiKey: providerSetting.apiKey ?? '',
+      baseUrl: this.service.validUrl(providerSetting.url),
     };
 
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
     headers.set('X-goog-api-key', `${payload.apiKey}`);
 
-    const url = `${this.service.validUrl(apiSetting.url)}/v1/models`;
+    const url = `${this.service.validUrl(providerSetting.url)}/v1/models`;
 
     const response = await this.service.executeFetch(url, HttpMethod.GET, null, null, null, headers);
     if (response.response == null || response.error.isError) {

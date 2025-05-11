@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useSettings } from '@/hooks/use-settings';
+import { Constants } from '@/lib/constants';
 
 const RagSettingsFormSchema = z.object({
   systemPromptForRag: z.union([z.string().min(5, 'Prompt must be at least 5 characters long.'), z.literal('')]),
@@ -19,8 +20,7 @@ const RagSettingsFormSchema = z.object({
 type TRagSettingsFormSchema = z.infer<typeof RagSettingsFormSchema>;
 
 export function RagSetting() {
-  const { setSystemPromptForRag, systemPromptForRag, setSystemPromptForRagSlim, systemPromptForRagSlim } =
-    useSettingsStore();
+  const { systemPromptForRagSlim, systemPromptForRag, setSetting } = useSettings();
 
   const form = useForm<TRagSettingsFormSchema>({
     resolver: zodResolver(RagSettingsFormSchema),
@@ -36,8 +36,8 @@ export function RagSetting() {
   }, [form, systemPromptForRag, systemPromptForRagSlim]);
 
   const onSubmit = (data: TRagSettingsFormSchema) => {
-    setSystemPromptForRag(data.systemPromptForRag);
-    setSystemPromptForRagSlim(data.systemPromptForRagSlim);
+    setSetting(Constants.settingKeys.systemPromptForRag, data.systemPromptForRag);
+    setSetting(Constants.settingKeys.systemPromptForRagSlim, data.systemPromptForRagSlim);
     toast.success('Saved!');
   };
 
@@ -49,8 +49,8 @@ export function RagSetting() {
             <CardTitle>Retrieval Augmented Generation</CardTitle>
             <CardDescription>
               Formulate RAG guidelines to aid AI in synthesizing document content when addressing queries. Both prompt
-              settings need to containe <code className="bg-stone-800">{SystemPromptVariable.userQuestion}</code> and{' '}
-              <code className="bg-stone-800">{SystemPromptVariable.documentContent}</code> in order to work.
+              settings need to containe <code className="bg-stone-800">{Constants.systemPromptVariables.userQuestion}</code>{' '}
+              and <code className="bg-stone-800">{Constants.systemPromptVariables.documentContent}</code> in order to work.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col space-y-8">

@@ -2,8 +2,8 @@
 
 import { useState, type FC, useRef } from 'react';
 import FileTable from './file-table';
-import { useModelList } from '@/hooks/use-model-list';
-import ModelAlts from '@/components/model-alts';
+import { useModels } from '@/hooks/use-models';
+import ProviderModelMenu from '@/components/provider-model-menu';
 import { AlertBox } from '@/components/alert-box';
 import { toast } from 'sonner';
 import { useModelStore } from '@/lib/model-store';
@@ -18,7 +18,7 @@ import { v7 as uuidv7 } from 'uuid';
 import { useTRPC } from '@/trpc/react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useSettingsStore } from '@/lib/settings-store';
+import { Constants } from '@/lib/constants';
 
 export type SelectedDocument = {
   documentId: number;
@@ -27,14 +27,13 @@ export type SelectedDocument = {
 
 export const DocumentsForm: FC = () => {
   const router = useRouter();
-  const { selectedEmbedModel, setEmbedModel, selectedEmbedService, setEmbedService } = useModelStore();
-  const { modelList: embeddedModelList } = useModelList(true);
-  const { hasHydrated } = useSettingsStore();
+  const { selectedEmbedModel, setEmbedModel, selectedEmbedProvider, setEmbedProvider } = useModelStore();
+  const { models: embeddedModelList } = useModels(true);
 
   const fileUploadRef = useRef<FileUploadRef>(null);
 
   const [isEmbedding, setIsEmbedding] = useState<boolean>(false);
-  const [fileIdEmbedding, setFileIdEmbedding] = useState<number | null>(null);
+  const [fileIdEmbedding, setFileIdEmbedding] = useState<string | null>(null);
   const [dragging, setDragging] = useState<boolean>(false);
   const [uploadFiles, setUploadFiles] = useState<FileInfo[]>([]);
   const [fileUploadState, setFileUploadState] = useState<Record<string, { progress: number; fadeOut: boolean }>>({});
@@ -76,8 +75,8 @@ export const DocumentsForm: FC = () => {
     );
   };
 
-  const onEmbedDocument = async (documentId: number) => {
-    if (selectedEmbedModel == null || selectedEmbedService == null) {
+  const onEmbedDocument = async (documentId: string) => {
+    if (selectedEmbedModel == null || selectedEmbedProvider == null) {
       toast.warning('No embedding model or service choosen');
       return;
     }
@@ -88,11 +87,11 @@ export const DocumentsForm: FC = () => {
     embedDocumentMutation.mutate({
       documentId: documentId,
       embedModel: selectedEmbedModel,
-      apiSetting: selectedEmbedService,
+      providerSetting: selectedEmbedProvider,
     });
   };
 
-  const initConversationWithDocument = async (documentId: number) => {
+  const initConversationWithDocument = async (documentId: string) => {
     router.push(`/?contextid=${documentId}`);
   };
 
@@ -164,7 +163,7 @@ export const DocumentsForm: FC = () => {
       body: formData,
     };
 
-    const response = await fetch('/api/documents', uploadRequestOptions);
+    const response = await fetch(Constants.api.uploadRouteUrl, uploadRequestOptions);
     if (!response.ok) toast.error('Failed to upload');
     const data = response.body;
 
@@ -234,24 +233,23 @@ export const DocumentsForm: FC = () => {
       )}
       <div className="flex flex-col items-baseline gap-1 pb-2">
         <span>Model for embedding:</span>
-        <ModelAlts
+        <ProviderModelMenu
           embeddingModels={true}
-          selectedService={selectedEmbedService}
+          selectedProvider={selectedEmbedProvider}
           selectedModel={selectedEmbedModel}
-          models={embeddedModelList.models ?? []}
+          models={embeddedModelList.data ?? []}
           modelsIsSuccess={embeddedModelList.modelsIsSuccess}
           modelsIsLoading={embeddedModelList.modelsIsLoading}
-          hasHydrated={hasHydrated}
           onModelChange={(model) => {
             setEmbedModel(model);
           }}
-          onServiceChange={(service) => {
-            setEmbedService(service);
-            setEmbedModel(undefined);
+          onServiceChange={(provider) => {
+            setEmbedProvider(provider);
+            setEmbedModel(null);
           }}
           onReset={() => {
-            setEmbedService(undefined);
-            setEmbedModel(undefined);
+            setEmbedProvider(null);
+            setEmbedModel(null);
           }}
         />
       </div>

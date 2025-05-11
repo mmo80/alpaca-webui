@@ -20,9 +20,9 @@ type FileTableProps = {
   files: TFile[];
   filesLoading: boolean;
   isEmbedding: boolean;
-  fileIdEmbedding: number | null;
-  onEmbedDocument: (documentId: number) => void;
-  initConversationWithDocument: (documentId: number) => void;
+  fileIdEmbedding: string | null;
+  onEmbedDocument: (documentId: string) => void;
+  initConversationWithDocument: (documentId: string) => void;
   reload: () => void;
 };
 
@@ -61,11 +61,11 @@ const FileTable: FC<FileTableProps> = ({
     })
   );
 
-  const handleOpenChange = (id: number, open: boolean) => {
+  const handleOpenChange = (id: string, open: boolean) => {
     setOpenPopovers((prev) => ({ ...prev, [id.toString()]: open }));
   };
 
-  const removeDocument = async (documentId: number) => {
+  const removeDocument = async (documentId: string) => {
     setRemovingFile(true);
     removeDocumentMutation.mutate({ documentId });
   };
@@ -88,7 +88,7 @@ const FileTable: FC<FileTableProps> = ({
               </span>
               {file.isEmbedded && (
                 <span className="italic">
-                  Embedded with {file.embedApiServiceName}, <strong>{file.embedModel}</strong>
+                  Embedded with {file.embedProviderName}, <strong>{file.embedModel}</strong>
                 </span>
               )}
             </TableCell>
@@ -158,7 +158,7 @@ const FileTable: FC<FileTableProps> = ({
                                 <>
                                   <TableRow>
                                     <TableCell className="font-medium">Api</TableCell>
-                                    <TableCell>{file.embedApiServiceName}</TableCell>
+                                    <TableCell>{file.embedProviderName}</TableCell>
                                   </TableRow>
                                   <TableRow>
                                     <TableCell className="font-medium">Embed Model</TableCell>

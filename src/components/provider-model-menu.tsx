@@ -1,59 +1,64 @@
 import type { FC } from 'react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { ModelMenu } from './model-menu';
 import { Spinner } from './spinner';
-import type { TApiSetting, TOpenAIModelResponseSchema } from '@/lib/types';
-import { useSettingsStore } from '@/lib/settings-store';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowLeftRightIcon } from 'lucide-react';
 import { ApiTypeEnum } from '@/lib/providers/data';
+import { useSettings } from '@/hooks/use-settings';
+import type { TOpenAIModelResponseSchema, TProviderSettings } from '@/lib/types';
 
 type ModelAltsProps = {
-  selectedService: TApiSetting | null | undefined;
+  selectedProvider: TProviderSettings | null;
   selectedModel: string | null | undefined;
   models: TOpenAIModelResponseSchema[];
   modelsIsSuccess: boolean;
   modelsIsLoading: boolean;
-  hasHydrated: boolean;
   embeddingModels: boolean;
   onModelChange: (model: string) => void;
-  onServiceChange: (service: TApiSetting) => void;
+  onServiceChange: (service: TProviderSettings) => void;
   onReset: () => void;
 };
 
-const ModelAlts: FC<ModelAltsProps> = ({
-  selectedService,
+const ProviderModelMenu: FC<ModelAltsProps> = ({
+  selectedProvider,
   selectedModel,
   models,
   modelsIsSuccess,
   modelsIsLoading,
-  hasHydrated,
   embeddingModels,
   onModelChange,
   onServiceChange,
   onReset,
 }) => {
-  const { services } = useSettingsStore();
+  const { providers, isFetched } = useSettings();
+  const [noSettings, setNoSettings] = useState(false);
 
-  const renderServiceMenu = () => {
-    if (services.length == 0) {
-      return renderConfigureSettings();
+  useEffect(() => {
+    if (isFetched && providers.length === 0) {
+      setNoSettings(true);
+    }
+  }, [isFetched, providers]);
+
+  const providersMenu = () => {
+    if (providers.length == 0) {
+      return;
     }
 
     return (
       <div className="flex flex-wrap items-start gap-2 pt-2">
-        {services.map((s) => (
-          <React.Fragment key={s.serviceId}>
+        {providers.map((s) => (
+          <React.Fragment key={s.providerId}>
             {(embeddingModels && s.hasEmbedding) || !embeddingModels ? (
               <Badge className="cursor-pointer" onClick={() => onServiceChange(s)}>
-                {s.serviceId}
+                {s.providerId}
               </Badge>
             ) : (
               <Badge className="cursor-not-allowed" variant={'secondary'}>
-                {s.serviceId}
+                {s.providerId}
               </Badge>
             )}
           </React.Fragment>
@@ -62,7 +67,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
     );
   };
 
-  const renderResetButton = () => {
+  const resetButton = () => {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -80,8 +85,8 @@ const ModelAlts: FC<ModelAltsProps> = ({
     );
   };
 
-  const renderModelMenu = () => {
-    if (!hasHydrated || modelsIsLoading) {
+  const modelsMenu = () => {
+    if (!isFetched || modelsIsLoading) {
       return (
         <span className="m-2">
           <Spinner />
@@ -94,7 +99,7 @@ const ModelAlts: FC<ModelAltsProps> = ({
         {models.length == 0 ? (
           <>
             <span>No models available</span>
-            {renderResetButton()}
+            {resetButton()}
           </>
         ) : (
           <>
@@ -106,16 +111,16 @@ const ModelAlts: FC<ModelAltsProps> = ({
                 disabled={!modelsIsSuccess}
                 className="py-3"
               />
-              <span className="bg-secondary rounded-b-lg p-1 pl-4 text-xs">{selectedService?.serviceId}</span>
+              <span className="bg-secondary rounded-b-lg p-1 pl-4 text-xs">{selectedProvider?.providerId}</span>
             </div>
-            {renderResetButton()}
+            {resetButton()}
           </>
         )}
       </div>
     );
   };
 
-  const renderConfigureSettings = () => {
+  const configureSettings = () => {
     return (
       <h4 className="text-xl font-semibold">
         Configure{' '}
@@ -128,23 +133,21 @@ const ModelAlts: FC<ModelAltsProps> = ({
   };
 
   const renderModelSelector = () => {
-    if (services.length > 0 && selectedService == null) {
-      return renderServiceMenu();
+    if (providers.length > 0 && selectedProvider == null) {
+      return providersMenu();
     }
 
-    switch (selectedService?.apiType) {
-      // case 'manual':
-      //   return <Input placeholder="Modelname" className="mt-2 w-80" onChange={onModelChangeHandler} />;
+    switch (selectedProvider?.apiType) {
       case ApiTypeEnum.OLLAMA:
       case ApiTypeEnum.OPENAI:
       case ApiTypeEnum.GOOGLE:
-        return renderModelMenu();
+        return modelsMenu();
       default:
-        return <span className="flex items-center px-4 pt-2">{hasHydrated ? renderConfigureSettings() : <Spinner />}</span>;
+        return <span className="flex items-center px-4 pt-2">{isFetched ? configureSettings() : <Spinner />}</span>;
     }
   };
 
-  return <>{renderModelSelector()}</>;
+  return <>{noSettings ? configureSettings() : renderModelSelector()}</>;
 };
 
-export default ModelAlts;
+export default ProviderModelMenu;

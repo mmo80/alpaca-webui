@@ -1,6 +1,6 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
-  type TApiSetting,
+  type TProviderSettings,
   type TChatCompletionRequest,
   type TChatMessage,
   type TModelSchema,
@@ -24,10 +24,10 @@ class OpenRouterProvider implements Provider {
     return ApiServiceEnum.OPENROUTER;
   }
 
-  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
-    const url = `${this.service.validUrl(apiSetting.url)}/api/v1/models`;
+  public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
+    const url = `${this.service.validUrl(providerSetting.url)}/api/v1/models`;
 
-    const response = await this.service.executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
+    const response = await this.service.executeFetch(url, HttpMethod.GET, providerSetting.apiKey);
 
     if (response.response == null || response.error.isError) {
       return [];

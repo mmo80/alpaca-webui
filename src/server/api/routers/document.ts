@@ -2,7 +2,7 @@ import { createTRPCRouter, publicProcedure } from '../trpc';
 import { promises as fs } from 'fs';
 import { files, type TFile } from '@/db/schema';
 import { fileUploadFolder } from '@/lib/providers/data';
-import { ApiSettingsSchema } from '@/lib/types';
+import { ProviderSettingsSchema } from '@/lib/types';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
@@ -13,21 +13,21 @@ import { embedMessage } from '@/server/embed-message';
 
 export const DocumentChunkRequestSchema = z.object({
   question: z.string(),
-  documentId: z.number(),
+  documentId: z.string(),
   embedModel: z.string(),
-  apiSetting: ApiSettingsSchema,
+  providerSetting: ProviderSettingsSchema,
 });
 export type TDocumentChunkRequest = z.infer<typeof DocumentChunkRequestSchema>;
 
 export const DocumentIdRequestSchema = z.object({
-  documentId: z.number(),
+  documentId: z.string(),
 });
 export type TDocumentIdRequest = z.infer<typeof DocumentIdRequestSchema>;
 
 export const DocumentEmbedRequestSchema = z.object({
-  documentId: z.number(),
+  documentId: z.string(),
   embedModel: z.string(),
-  apiSetting: ApiSettingsSchema,
+  providerSetting: ProviderSettingsSchema,
 });
 export type TDocumentEmbedRequest = z.infer<typeof DocumentEmbedRequestSchema>;
 
@@ -51,12 +51,12 @@ export const documentRouter = createTRPCRouter({
     return dbResult[0].file;
   }),
   getDocumentChunks: publicProcedure.input(DocumentChunkRequestSchema).query(async ({ ctx, input }) => {
-    const { question, documentId, embedModel, apiSetting } = input;
+    const { question, documentId, embedModel, providerSetting } = input;
 
     const dbResult = await ctx.db.select({ filename: files.filename }).from(files).where(eq(files.id, documentId));
     if (dbResult.length > 0) {
       const filename = dbResult[0]!.filename;
-      const data = await embedMessage(question, embedModel, apiSetting);
+      const data = await embedMessage(question, embedModel, providerSetting);
       const embeddings: number[] = data.embedding;
       const documents = await vectorDb.filterDocuments(filename, embeddings);
       return documents;
@@ -114,7 +114,7 @@ export const documentRouter = createTRPCRouter({
     }
   }),
   embed: publicProcedure.input(DocumentEmbedRequestSchema).mutation(async ({ ctx, input }) => {
-    const { documentId, embedModel, apiSetting } = input;
+    const { documentId, embedModel, providerSetting } = input;
 
     const result = await ctx.db.select({ filename: files.filename }).from(files).where(eq(files.id, documentId));
 
@@ -129,7 +129,7 @@ export const documentRouter = createTRPCRouter({
 
     try {
       const documentEmbedding = new DocumentEmbedding(filename);
-      const response = await documentEmbedding.EmbedAndPersistDocument(embedModel, apiSetting);
+      const response = await documentEmbedding.EmbedAndPersistDocument(embedModel, providerSetting);
 
       if (!response.success) {
         throw new TRPCError({
@@ -144,7 +144,7 @@ export const documentRouter = createTRPCRouter({
         .set({
           isEmbedded: true,
           embedModel: embedModel,
-          embedApiServiceName: apiSetting.serviceId,
+          embedProviderName: providerSetting.providerId,
           noOfChunks: response.noOfChunks,
           textCharacterCount: response.textCharacterCount,
           noOfTokens: response.totalDocumentTokens,

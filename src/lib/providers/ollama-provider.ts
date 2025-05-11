@@ -1,7 +1,7 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OllamaTagSchema,
-  type TApiSetting,
+  type TProviderSettings,
   type TChatCompletionRequest,
   type TChatCompletionResponse,
   type TChatMessage,
@@ -24,8 +24,8 @@ class OllamaProvider implements Provider {
     return ApiServiceEnum.OLLAMA;
   }
 
-  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
-    const url = `${this.service.validUrl(apiSetting.url)}/api/tags`;
+  public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
+    const url = `${this.service.validUrl(providerSetting.url)}/api/tags`;
     const response = await this.service.executeFetch(url, HttpMethod.GET);
 
     if (response.response == null || response.error.isError) {

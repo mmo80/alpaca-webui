@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
+import { useSettings } from '@/hooks/use-settings';
+import { Constants } from '@/lib/constants';
 
 const SystemPromptSchema = z.object({
   systemPrompt: z.union([z.string().min(5, 'Prompt must be at least 5 characters long.'), z.literal('')]),
@@ -19,7 +20,7 @@ const SystemPromptSchema = z.object({
 type TSystemPromptSchema = z.infer<typeof SystemPromptSchema>;
 
 export default function Page() {
-  const { setSystemPrompt, systemPrompt, setSystemPromptForChatTitle, systemPromptForChatTitle } = useSettingsStore();
+  const { systemPrompt, systemPromptForChatTitle, setSetting } = useSettings();
 
   const form = useForm<TSystemPromptSchema>({
     resolver: zodResolver(SystemPromptSchema),
@@ -35,8 +36,8 @@ export default function Page() {
   }, [form, systemPrompt, systemPromptForChatTitle]);
 
   const onSubmit = (data: TSystemPromptSchema) => {
-    setSystemPrompt(data.systemPrompt);
-    setSystemPromptForChatTitle(data.systemPromptForChatTitle);
+    setSetting(Constants.settingKeys.systemPrompt, data.systemPrompt);
+    setSetting(Constants.settingKeys.systemPromptForChatTitle, data.systemPromptForChatTitle);
     toast.success('Saved!');
   };
 
@@ -77,7 +78,8 @@ export default function Page() {
                   <FormItem>
                     <FormLabel>
                       The prompt settings need to containe{' '}
-                      <code className="bg-stone-800">{SystemPromptVariable.chatHistoryInput}</code> in order to work.
+                      <code className="bg-stone-800">{Constants.systemPromptVariables.chatHistoryInput}</code> in order to
+                      work.
                     </FormLabel>
                     <FormControl>
                       <Textarea rows={8} {...field} />

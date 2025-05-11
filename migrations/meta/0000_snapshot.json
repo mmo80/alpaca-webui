@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "ac29463b-4903-43b6-b006-8d9f66613a66",
+  "id": "11ca7569-1fbe-4dbe-916a-2d3fdd6731a7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "chat_histories": {
@@ -101,10 +101,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "filename": {
           "name": "filename",
@@ -144,8 +144,8 @@
           "autoincrement": false,
           "default": "''"
         },
-        "embed_api_service_name": {
-          "name": "embed_api_service_name",
+        "embed_provider_name": {
+          "name": "embed_provider_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -178,6 +178,45 @@
         }
       },
       "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "settings": {
+      "name": "settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "settings_key_unique": {
+          "name": "settings_key_unique",
+          "columns": [
+            "key"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

@@ -23,44 +23,50 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { cn, removeClassesByWord } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { useSettingsStore } from '@/lib/settings-store';
 import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { type OpenPopovers, SettingsFormSchema, type TApiSetting, type TSettingsFormSchema } from '@/lib/types';
+import {
+  ProviderSettingsFormSchema,
+  type OpenPopovers,
+  type TProviderSettings,
+  type TProviderSettingsFormSchema,
+} from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react';
+import { useSettings } from '@/hooks/use-settings';
 
 export default function Page() {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
-  const { services, setServices, hasHydrated } = useSettingsStore();
-  const { setModel, setService, setEmbedModel, setEmbedService } = useModelStore();
+  const { providers, setProvider: persistProvider, isFetched } = useSettings();
+
+  const { setModel, setProvider, setEmbedModel, setEmbedProvider } = useModelStore();
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [isApiKeyVisible, setIsApiKeyVisible] = useState<{ [key: number]: boolean }>({});
 
-  const form = useForm<TSettingsFormSchema>({
-    resolver: zodResolver(SettingsFormSchema),
+  const form = useForm<TProviderSettingsFormSchema>({
+    resolver: zodResolver(ProviderSettingsFormSchema),
     defaultValues: {
-      services: [] as TApiSetting[],
+      providers: [] as TProviderSettings[],
     },
   });
-  const { fields } = useFieldArray({ name: 'services', control: form.control });
+  const { fields } = useFieldArray({ name: 'providers', control: form.control });
 
   useEffect(() => {
-    form.setValue('services', services ?? []);
-  }, [form, services]);
+    form.setValue('providers', providers ?? []);
+  }, [form, providers]);
 
-  const onSubmit = (data: TSettingsFormSchema) => {
-    setServices(data.services);
+  const onSubmit = (data: TProviderSettingsFormSchema) => {
+    persistProvider(data.providers);
     setErrorMessages([]);
-    setEmbedModel(undefined);
-    setEmbedService(undefined);
-    setModel(undefined);
-    setService(undefined);
+    setEmbedModel(null);
+    setEmbedProvider(null);
+    setModel(null);
+    setProvider(null);
     toast.success('Saved!');
   };
 
-  const addService = (
+  const addProvider = (
     url: string,
     apiType: string,
     serviceId: string,
@@ -69,14 +75,14 @@ export default function Page() {
     lockedModelType: boolean
   ) => {
     const formList = form.getValues();
-    const excistingService = formList.services?.find((service) => service.serviceId === serviceId);
-    if (excistingService !== undefined && excistingService.serviceId != 'Standard') {
+    const excistingService = formList.providers?.find((service) => service.providerId === serviceId);
+    if (excistingService !== undefined && excistingService.providerId != 'Standard') {
       toast.warning(`${serviceId} already added!`);
       return;
     }
 
-    const service: TApiSetting = {
-      serviceId: serviceId,
+    const service: TProviderSettings = {
+      providerId: serviceId,
       url: url,
       apiType: apiType,
       lockedModelType: lockedModelType,
@@ -85,13 +91,13 @@ export default function Page() {
       embeddingPath: embeddingPath,
     };
 
-    form.setValue('services', [...formList.services, service]);
+    form.setValue('providers', [...formList.providers, service]);
   };
 
   const removeService = (index: number) => {
     form.setValue(
-      'services',
-      form.getValues().services.filter((_, i) => i !== index)
+      'providers',
+      form.getValues().providers.filter((_, i) => i !== index)
     );
   };
 
@@ -134,15 +140,14 @@ export default function Page() {
           <CardHeader>
             <CardTitle>API</CardTitle>
             <CardDescription>
-              Configure the API endpoints and authentication credentials required for the AI service to connect with external
-              model providers. Enter the base URL and input your API key or bearer token to authenticate your session with
-              the service provider.
+              Configure the API connections and authentication details required to connect with external AI models. Enter the
+              base URL and your API key or token to establish a secure connection with the selected provider.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col space-y-8">
             <div className="flex flex-col space-y-2">
               <p className="leading-none font-medium">
-                Add Service
+                Add Provider
                 <br />
                 <span className="text-xs font-thin">(and then add key / token)</span>
               </p>
@@ -153,7 +158,7 @@ export default function Page() {
                     variant={'default'}
                     className="cursor-pointer"
                     onClick={() =>
-                      addService(as.url, as.apiType, as.id, as.supportsEmbedding, as.embeddingPath, as.lockedModelType)
+                      addProvider(as.url, as.apiType, as.id, as.supportsEmbedding, as.embeddingPath, as.lockedModelType)
                     }
                   >
                     {as.id}
@@ -185,7 +190,7 @@ export default function Page() {
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell>{field.serviceId ?? field.url}</TableCell>
+                      <TableCell>{field.providerId ?? field.url}</TableCell>
                       <TableCell>
                         {field.hasEmbedding && (
                           <TooltipProvider>
@@ -207,8 +212,8 @@ export default function Page() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          key={field.serviceId}
-                          name={`services.${index}.apiType`}
+                          key={field.providerId}
+                          name={`providers.${index}.apiType`}
                           render={({ field: formField }) => (
                             <FormItem className="flex flex-col">
                               <Popover
@@ -219,7 +224,7 @@ export default function Page() {
                                   <FormControl>
                                     <Button
                                       disabled={field.lockedModelType}
-                                      {...form.register(`services.${index}.apiType`)}
+                                      {...form.register(`providers.${index}.apiType`)}
                                       variant="outline"
                                       role="combobox"
                                       className={cn(
@@ -227,7 +232,7 @@ export default function Page() {
                                         !formField.value && 'text-muted-foreground'
                                       )}
                                     >
-                                      <Input type="hidden" {...form.register(`services.${index}.apiType`)} />
+                                      <Input type="hidden" {...form.register(`providers.${index}.apiType`)} />
                                       {formField.value
                                         ? apiTypes.find((model) => model.value === formField.value)?.value
                                         : 'Select'}
@@ -249,7 +254,7 @@ export default function Page() {
                                             value={model.value}
                                             key={model.value}
                                             onSelect={() => {
-                                              form.setValue(`services.${index}.apiType`, model.value);
+                                              form.setValue(`providers.${index}.apiType`, model.value);
                                               handleOpenChange(field.id, false);
                                             }}
                                           >
@@ -273,12 +278,12 @@ export default function Page() {
                       <TableCell>
                         <FormField
                           control={form.control}
-                          key={field.serviceId}
-                          name={`services.${index}.url`}
+                          key={field.providerId}
+                          name={`providers.${index}.url`}
                           render={({ field }) => (
                             <FormItem>
                               <FormControl>
-                                <Input className="w-52 xl:w-full" {...form.register(`services.${index}.url`)} />
+                                <Input className="w-52 xl:w-full" {...form.register(`providers.${index}.url`)} />
                               </FormControl>
                             </FormItem>
                           )}
@@ -287,15 +292,15 @@ export default function Page() {
                       <TableCell className="flex gap-2">
                         <FormField
                           control={form.control}
-                          key={field.serviceId}
-                          name={`services.${index}.apiKey`}
+                          key={field.providerId}
+                          name={`providers.${index}.apiKey`}
                           render={({ field }) => (
                             <FormItem className="flex-1">
                               <FormControl>
                                 <Input
                                   type={isApiKeyVisible[index] ? 'text' : 'password'}
                                   className="w-52 xl:w-full"
-                                  {...form.register(`services.${index}.apiKey`)}
+                                  {...form.register(`providers.${index}.apiKey`)}
                                 />
                               </FormControl>
                             </FormItem>
@@ -336,7 +341,7 @@ export default function Page() {
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow key="loading" className={`${hasHydrated && 'hidden'}`}>
+                  <TableRow key="loading" className={`${isFetched && 'hidden'}`}>
                     <TableCell colSpan={2}>
                       <Skeleton className="h-3 w-full rounded-full" />
                     </TableCell>

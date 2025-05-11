@@ -10,6 +10,7 @@ export const env = createEnv({
     WEAVIATE_DB_HOST: z.string(),
     WEAVIATE_DB_SCHEME: z.string(),
     DATABASE_URL: z.string(),
+    CRYPTO_SECRET_KEY: z.string().min(8, 'The secret key must be at least 8 characters long.'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   },
 
@@ -30,6 +31,7 @@ export const env = createEnv({
     WEAVIATE_DB_HOST: process.env.WEAVIATE_DB_HOST,
     WEAVIATE_DB_SCHEME: process.env.WEAVIATE_DB_SCHEME,
     DATABASE_URL: process.env.DATABASE_URL,
+    CRYPTO_SECRET_KEY: process.env.CRYPTO_SECRET_KEY,
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },

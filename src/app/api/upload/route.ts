@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import { db } from '@/db/db';
 import { files } from '@/db/schema';
+import { v7 as uuidv7 } from 'uuid';
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 
   await fs.writeFile(filePath, uint8Array);
 
-  await db.insert(files).values({ filename: file.name, fileSize: file.size });
+  await db.insert(files).values({ filename: file.name, fileSize: file.size, id: uuidv7() });
 
   const readableStream = new ReadableStream({
     start(controller) {

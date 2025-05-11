@@ -4,7 +4,7 @@ import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 export const files = sqliteTable('files', {
-  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  id: text('id').primaryKey(),
   filename: text('filename').notNull(),
   fileSize: integer('file_size', { mode: 'number' }),
   timestamp: text('timestamp')
@@ -12,7 +12,7 @@ export const files = sqliteTable('files', {
     .notNull(),
   isEmbedded: integer('is_embedded', { mode: 'boolean' }).default(false).notNull(),
   embedModel: text('embed_model').default(''),
-  embedApiServiceName: text('embed_api_service_name').default(''),
+  embedProviderName: text('embed_provider_name').default(''),
   textCharacterCount: integer('text_character_count', { mode: 'number' }).default(0),
   noOfChunks: integer('no_of_chunks', { mode: 'number' }).default(0),
   noOfTokens: integer('no_of_tokens', { mode: 'number' }).default(0),
@@ -40,3 +40,11 @@ export const chatHistoryGroups = sqliteTable('chat_history_groups', {
     .notNull(),
 });
 export const chatHistoryGroupsSchema = createSelectSchema(chatHistoryGroups);
+
+export const settings = sqliteTable('settings', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
+  value: text('value').notNull(),
+});
+export const settingsSchema = createSelectSchema(settings);
+export type TSettings = z.infer<typeof settingsSchema>;

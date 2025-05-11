@@ -16,10 +16,9 @@ import { cleanString, delayHighlighter, formatBytes, isValidJson, removeJunkStre
 import { ChatInput } from '@/components/chat-input';
 import { Chat } from '@/components/chat';
 import { useChatStream } from '@/hooks/use-chat-stream';
-import { useModelList } from '@/hooks/use-model-list';
-import { SystemPromptVariable, useSettingsStore } from '@/lib/settings-store';
+import { useModels } from '@/hooks/use-models';
 import { useModelStore } from '@/lib/model-store';
-import ModelAlts from '@/components/model-alts';
+import ProviderModelMenu from '@/components/provider-model-menu';
 import { toast } from 'sonner';
 import { type ChatError } from '@/lib/api-service';
 import { useMutation } from '@tanstack/react-query';
@@ -28,6 +27,9 @@ import { queryClient, useTRPC } from '@/trpc/react';
 import type { FileInfo } from '../upload/upload-types';
 import { useProvider } from '@/hooks/use-provider';
 import { TrpcQuery } from '@/trpc/queries';
+import { validate as ValidateUUID } from 'uuid';
+import { useSettings } from '@/hooks/use-settings';
+import { Constants } from '@/lib/constants';
 
 export const Main: FC = () => {
   const newThreadTitle = 'New Thread';
@@ -38,11 +40,11 @@ export const Main: FC = () => {
   const queryChatHistoryId = searchParams.get('id');
   const queryContextId = searchParams.get('contextid');
 
-  const { systemPrompt, hasHydrated, systemPromptForChatTitle, services, systemPromptForRagSlim } = useSettingsStore();
-  const { modelList } = useModelList();
-  const { selectedModel, setModel, selectedService, setService } = useModelStore();
+  const { providers, systemPrompt, systemPromptForRagSlim, systemPromptForChatTitle } = useSettings();
+  const { models } = useModels();
+  const { selectedModel, setModel, selectedProvider, setProvider } = useModelStore();
   const { chats, setChats, handleStream, isStreamProcessing } = useChatStream();
-  const { provider } = useProvider(selectedService);
+  const { provider } = useProvider(selectedProvider);
   const trpcRouter = useTRPC();
 
   const [isFetchLoading, setIsFetchLoading] = useState<boolean>(false);
@@ -116,9 +118,9 @@ export const Main: FC = () => {
     } else if (!currentChatHistoryId) {
       setChats([
         CustomMessageSchema.parse({
-          content: systemPrompt || '',
+          content: systemPrompt ?? '',
           role: ChatRole.SYSTEM,
-          provider: { provider: selectedService?.serviceId ?? '', model: selectedModel },
+          provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel },
         }),
       ]);
       setTextareaPlaceholder('Start typing here...');
@@ -214,7 +216,7 @@ export const Main: FC = () => {
   }, [chats]);
 
   const callChatCompletions = async (messages: TCustomMessage[], context: TCustomContext | undefined) => {
-    if (selectedModel == null || selectedService == null) {
+    if (selectedModel == null || selectedProvider == null) {
       return;
     }
 
@@ -227,8 +229,8 @@ export const Main: FC = () => {
     const response = await provider.chatCompletions(
       selectedModel,
       chatMessages,
-      selectedService.url,
-      selectedService.apiKey,
+      selectedProvider.url,
+      selectedProvider.apiKey,
       true
     );
 
@@ -240,7 +242,7 @@ export const Main: FC = () => {
       CustomMessageSchema.parse({
         content: '',
         role: ChatRole.ASSISTANT,
-        provider: { provider: selectedService.serviceId, model: selectedModel },
+        provider: { provider: selectedProvider.providerId, model: selectedModel },
         streamComplete: false,
         context: context,
       }),
@@ -249,7 +251,7 @@ export const Main: FC = () => {
   };
 
   const callImageGeneration = async (prompt: string) => {
-    if (selectedModel == null || selectedService == null) {
+    if (selectedModel == null || selectedProvider == null) {
       return;
     }
 
@@ -258,7 +260,7 @@ export const Main: FC = () => {
       return;
     }
 
-    const response = await provider.generateImage(prompt, selectedModel, selectedService.url, selectedService.apiKey);
+    const response = await provider.generateImage(prompt, selectedModel, selectedProvider.url, selectedProvider.apiKey);
     if (response.error) {
       return;
     }
@@ -267,7 +269,7 @@ export const Main: FC = () => {
       ...prevArray,
       CustomMessageSchema.parse({
         ...response.data[0],
-        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+        provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
       }),
     ]);
   };
@@ -275,7 +277,7 @@ export const Main: FC = () => {
   const generateTitle = async (message: string): Promise<string | undefined> => {
     let title = undefined;
 
-    if (selectedModel == null || selectedService == null) {
+    if (selectedModel == null || selectedProvider == null) {
       return title;
     }
 
@@ -284,12 +286,12 @@ export const Main: FC = () => {
       return title;
     }
 
-    const systemPrompt = systemPromptForChatTitle.replace(SystemPromptVariable.chatHistoryInput, message);
+    const systemPrompt = systemPromptForChatTitle.replace(Constants.systemPromptVariables.chatHistoryInput, message);
 
     const chatMessage = CustomMessageSchema.parse({
       content: systemPrompt,
       role: ChatRole.USER,
-      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
     });
 
     const decoder = new TextDecoder('utf-8');
@@ -299,8 +301,8 @@ export const Main: FC = () => {
       const response = await provider.chatCompletions(
         titleModel,
         [chatMessage],
-        selectedService.url,
-        selectedService.apiKey,
+        selectedProvider.url,
+        selectedProvider.apiKey,
         false
       );
 
@@ -360,7 +362,7 @@ export const Main: FC = () => {
     const chatMessage = CustomMessageSchema.parse({
       content: prompt,
       role: ChatRole.USER,
-      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
     });
 
     return chatMessage;
@@ -370,7 +372,7 @@ export const Main: FC = () => {
     const chatMessage = CustomMessageSchema.parse({
       content: chatInput,
       role: ChatRole.USER,
-      provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+      provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
     });
 
     if (attachments && attachments.length > 0) {
@@ -414,7 +416,7 @@ export const Main: FC = () => {
 
   const getRagContentPrompt = async (
     chatInput: string,
-    documentId: number
+    documentId: string
   ): Promise<{ ragPrompt: string | undefined; context: TCustomContext } | undefined> => {
     if (chatInput.length < 1) {
       toast.warning('Ask a question first');
@@ -432,17 +434,17 @@ export const Main: FC = () => {
       return;
     }
 
-    const { embedApiServiceName, embedModel, id, filename } = documentResponse.data;
+    const { embedProviderName, embedModel, id, filename } = documentResponse.data;
 
     if (!embedModel) {
       toast.warning('No embedding model found for this document.');
       return;
     }
 
-    const embedService = services.find((s) => s.serviceId == embedApiServiceName);
-    if (embedService === undefined) {
+    const embedProvider = providers.find((s) => s.providerId == embedProviderName);
+    if (embedProvider === undefined) {
       toast.warning(
-        `Settings for service '${embedApiServiceName}' has been removed at some point. Please add them under settings.`
+        `Settings for service '${embedProviderName}' has been removed at some point. Please add them under settings.`
       );
       return;
     }
@@ -451,7 +453,7 @@ export const Main: FC = () => {
       question: chatInput,
       documentId: id,
       embedModel: embedModel,
-      apiSetting: embedService,
+      providerSetting: embedProvider,
     });
 
     if (chunksResult.isError || !chunksResult.data) {
@@ -465,8 +467,8 @@ export const Main: FC = () => {
 
     const mergedResults = chunksResult.data.map((doc) => doc.text).join(' ');
     const ragPrompt = systemPromptForRagSlim
-      .replace(SystemPromptVariable.userQuestion, chatInput)
-      .replace(SystemPromptVariable.documentContent, mergedResults);
+      .replace(Constants.systemPromptVariables.userQuestion, chatInput)
+      .replace(Constants.systemPromptVariables.documentContent, mergedResults);
 
     const context = CustomContextSchema.parse({
       contextId: id.toString(),
@@ -479,10 +481,8 @@ export const Main: FC = () => {
   const getRagContext = async (
     chatInput: string
   ): Promise<{ chatMessage: TCustomMessage; context: TCustomContext } | undefined> => {
-    const docId = parseFloat(contextId ?? '');
-
-    if (!isNaN(docId) && docId > 0) {
-      const ragResponse = await getRagContentPrompt(chatInput, docId);
+    if (contextId && ValidateUUID(contextId)) {
+      const ragResponse = await getRagContentPrompt(chatInput, contextId);
       if (!ragResponse) {
         return;
       }
@@ -490,7 +490,7 @@ export const Main: FC = () => {
       const systemPromptMessage = CustomMessageSchema.parse({
         content: ragResponse.ragPrompt,
         role: ChatRole.SYSTEM,
-        provider: { provider: selectedService?.serviceId ?? '', model: selectedModel ?? '' },
+        provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
       });
 
       return { chatMessage: systemPromptMessage, context: ragResponse.context };
@@ -540,7 +540,7 @@ export const Main: FC = () => {
   };
 
   const onCancelStream = () => {
-    if (selectedService == null) {
+    if (selectedProvider == null) {
       return;
     }
 
@@ -559,25 +559,24 @@ export const Main: FC = () => {
   return (
     <>
       <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
-        {modelList.modelsIsError && <AlertBox title="Error" description={modelList.modelsError?.message ?? ''} />}
-        <ModelAlts
+        {models.modelsIsError && <AlertBox title="Error" description={models.modelsError?.message ?? ''} />}
+        <ProviderModelMenu
           embeddingModels={false}
-          selectedService={selectedService}
+          selectedProvider={selectedProvider}
           selectedModel={selectedModel}
-          models={modelList.models || []}
-          modelsIsSuccess={modelList.modelsIsSuccess}
-          modelsIsLoading={modelList.modelsIsLoading}
-          hasHydrated={hasHydrated}
+          models={models.data}
+          modelsIsSuccess={models.modelsIsSuccess}
+          modelsIsLoading={models.modelsIsLoading}
           onModelChange={(model) => {
             setModel(model);
           }}
           onServiceChange={(service) => {
-            setService(service);
-            setModel(undefined);
+            setProvider(service);
+            setModel(null);
           }}
           onReset={() => {
-            setService(undefined);
-            setModel(undefined);
+            setProvider(null);
+            setModel(null);
           }}
         />
 

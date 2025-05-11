@@ -1,25 +1,25 @@
 import { create } from 'zustand';
-import { type TApiSetting } from './types';
+import type { TProviderSettings } from './types';
 
 // ---- Model Store ---- //
 interface ModelStoreState {
-  selectedService: TApiSetting | undefined;
-  selectedModel: string | undefined;
-  selectedEmbedService: TApiSetting | undefined;
-  selectedEmbedModel: string | undefined;
-  setService: (service: TApiSetting | undefined) => void;
-  setModel: (model: string | undefined) => void;
-  setEmbedService: (service: TApiSetting | undefined) => void;
-  setEmbedModel: (model: string | undefined) => void;
+  selectedProvider: TProviderSettings | null;
+  selectedModel: string | null;
+  selectedEmbedProvider: TProviderSettings | null;
+  selectedEmbedModel: string | null;
+  setProvider: (provider: TProviderSettings | null) => void;
+  setModel: (model: string | null) => void;
+  setEmbedProvider: (provider: TProviderSettings | null) => void;
+  setEmbedModel: (model: string | null) => void;
 }
 
 export const useModelStore = create<ModelStoreState>((set) => ({
-  selectedService: undefined,
-  selectedModel: undefined,
-  selectedEmbedService: undefined,
-  selectedEmbedModel: undefined,
-  setService: (service: TApiSetting | undefined) => set(() => ({ selectedService: service })),
-  setModel: (model: string | undefined) => set(() => ({ selectedModel: model })),
-  setEmbedService: (service: TApiSetting | undefined) => set(() => ({ selectedEmbedService: service })),
-  setEmbedModel: (model: string | undefined) => set(() => ({ selectedEmbedModel: model })),
+  selectedProvider: null,
+  selectedModel: null,
+  selectedEmbedProvider: null,
+  selectedEmbedModel: null,
+  setProvider: (provider: TProviderSettings | null) => set(() => ({ selectedProvider: provider })),
+  setModel: (model: string | null) => set(() => ({ selectedModel: model })),
+  setEmbedProvider: (provider: TProviderSettings | null) => set(() => ({ selectedEmbedProvider: provider })),
+  setEmbedModel: (model: string | null) => set(() => ({ selectedEmbedModel: model })),
 }));

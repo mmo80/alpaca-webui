@@ -4,6 +4,7 @@ import { Badge } from './ui/badge';
 import { FileTextIcon, ImageIcon, XIcon } from 'lucide-react';
 import type { TFile } from '@/db/schema';
 import { cn } from '@/lib/utils';
+import { validate as ValidateUUID } from 'uuid';
 
 export interface ChatContextProps extends React.HTMLAttributes<HTMLDivElement> {
   context: TCustomContext;
@@ -34,9 +35,8 @@ export const ChatContext: FC<ChatContextProps> = ({
       return 'Generate Image';
     }
 
-    const docId = parseFloat(contextId);
-    if (!isNaN(docId) && docId > 0) {
-      const filename = documents.filter((doc) => doc.id === docId).map((doc) => doc.filename);
+    if (contextId && ValidateUUID(contextId)) {
+      const filename = documents.filter((doc) => doc.id === contextId).map((doc) => doc.filename);
       return `${documentPrefix}${filename[0]}`;
     }
 

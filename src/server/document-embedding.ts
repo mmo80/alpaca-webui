@@ -3,7 +3,7 @@ import { chunkTextBySentences } from 'matts-llm-tools';
 import { DocumentReader } from './document-reader';
 import { VectorDatabaseClassName, weaviateClient } from '@/db/vector-db';
 import { embedMessage } from './embed-message';
-import { type TApiSetting } from '@/lib/types';
+import { type TProviderSettings } from '@/lib/types';
 
 export type DocumentEmbeddingRespopnse = {
   success: boolean;
@@ -91,14 +91,14 @@ export class DocumentEmbedding {
     chunks: string[],
     filename: string,
     model: string,
-    apiSetting: TApiSetting
+    providerSetting: TProviderSettings
   ): Promise<DocumentVectorSchema[]> {
     const documentVectors: DocumentVectorSchema[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
 
-      const data = await embedMessage(chunk ?? '', model, apiSetting);
+      const data = await embedMessage(chunk ?? '', model, providerSetting);
 
       const chunkjson = {
         text: chunk ?? '',
@@ -119,7 +119,10 @@ export class DocumentEmbedding {
     return await reader.getFileContent();
   }
 
-  async EmbedAndPersistDocument(embedModel: string, apiSetting: TApiSetting): Promise<DocumentEmbeddingRespopnse> {
+  async EmbedAndPersistDocument(
+    embedModel: string,
+    providerSetting: TProviderSettings
+  ): Promise<DocumentEmbeddingRespopnse> {
     try {
       // Step 1: Get file content
       const fileContent = await this.getFileContent();
@@ -130,7 +133,7 @@ export class DocumentEmbedding {
       console.log(`Document has ${documentChunks.length} chunks.`);
 
       // Step 3: Embed chunks
-      const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, apiSetting);
+      const documentVectors = await this.embedChunks(documentChunks, this.filename, embedModel, providerSetting);
       console.log(`Finished embedding document: ${this.filename}`);
 
       // Step 4: Store in database

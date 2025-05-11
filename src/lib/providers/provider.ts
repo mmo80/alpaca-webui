@@ -1,6 +1,6 @@
 import { type ChatError } from '../api-service';
 import {
-  type TApiSetting,
+  type TProviderSettings,
   type TChatCompletionResponse,
   type TModelSchema,
   type TCustomMessage,
@@ -15,7 +15,7 @@ export type ChatCompletionsResponse = {
 export interface Provider {
   providerId(): string;
 
-  models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]>;
+  models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]>;
 
   chatCompletions(
     model: string,

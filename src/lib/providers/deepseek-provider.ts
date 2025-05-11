@@ -1,7 +1,7 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
   OpenAIModelsResponseSchema,
-  type TApiSetting,
+  type TProviderSettings,
   type TChatCompletionRequest,
   type TChatMessage,
   type TModelSchema,
@@ -24,10 +24,10 @@ class DeepseekProvider implements Provider {
     return ApiServiceEnum.DEEPSEEK;
   }
 
-  public async models(apiSetting: TApiSetting, embeddedOnly: boolean): Promise<TModelSchema[]> {
-    const url = `${this.service.validUrl(apiSetting.url)}/v1/models`;
+  public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
+    const url = `${this.service.validUrl(providerSetting.url)}/v1/models`;
 
-    const response = await this.service.executeFetch(url, HttpMethod.GET, apiSetting.apiKey);
+    const response = await this.service.executeFetch(url, HttpMethod.GET, providerSetting.apiKey);
 
     if (response.response == null || response.error.isError) {
       return [];

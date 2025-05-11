@@ -1,6 +1,6 @@
 import { ApiService, HttpMethod } from '@/lib/api-service';
 import { ApiTypeEnum } from '@/lib/providers/data';
-import type { TApiSetting } from '@/lib/types';
+import type { TProviderSettings } from '@/lib/types';
 
 type EmbedMessageResponse = {
   embedding: number[];
@@ -10,31 +10,31 @@ type EmbedMessageResponse = {
 export const embedMessage = async (
   message: string,
   model: string,
-  apiSetting: TApiSetting
+  providerSetting: TProviderSettings
 ): Promise<EmbedMessageResponse> => {
   let payload = {};
   let embedding: number[] = [];
   let totalTokens: number | undefined = undefined;
 
   try {
-    let url = apiSetting.url + apiSetting.embeddingPath;
+    let url = providerSetting.url + providerSetting.embeddingPath;
     const headers = new Headers({
       'Content-Type': 'application/json',
     });
 
-    const apiService = new ApiService();
+    const service = new ApiService();
 
-    switch (apiSetting.apiType) {
+    switch (providerSetting.apiType) {
       case ApiTypeEnum.OLLAMA:
         payload = { model: model, prompt: message };
         break;
       case ApiTypeEnum.OPENAI:
-        headers.set('Authorization', `Bearer ${apiSetting.apiKey}`);
+        headers.set('Authorization', `Bearer ${providerSetting.apiKey}`);
         payload = { model: model, input: message };
         break;
       case ApiTypeEnum.GOOGLE:
-        url = `${apiSetting.url}/v1beta/${model}:embedContent`;
-        headers.set('X-goog-api-key', `${apiSetting.apiKey}`);
+        url = `${providerSetting.url}/v1beta/${model}:embedContent`;
+        headers.set('X-goog-api-key', `${providerSetting.apiKey}`);
         payload = {
           content: {
             parts: [
@@ -51,7 +51,7 @@ export const embedMessage = async (
         throw new Error('Unsupported API type');
     }
 
-    const response = await apiService.executeFetch(url, HttpMethod.POST, null, payload, null, headers);
+    const response = await service.executeFetch(url, HttpMethod.POST, null, payload, null, headers);
 
     if (response.response == null || response.error.isError) {
       console.error(response.error.errorMessage);
@@ -63,7 +63,7 @@ export const embedMessage = async (
 
     const data = await response.response.json();
 
-    switch (apiSetting.apiType) {
+    switch (providerSetting.apiType) {
       case ApiTypeEnum.OLLAMA:
         embedding = data.embedding;
         break;

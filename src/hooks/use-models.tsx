@@ -5,11 +5,11 @@ import { type TModelsResponseSchema } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-export const useModelList = (embeddedOnly: boolean = false) => {
-  const { selectedService, selectedEmbedService } = useModelStore();
+export const useModels = (embeddedOnly: boolean = false) => {
+  const { selectedProvider, selectedEmbedProvider } = useModelStore();
 
   const keyName = embeddedOnly ? 'embed-models' : 'models';
-  const apiSelectedService = embeddedOnly ? selectedEmbedService : selectedService;
+  const apiSelectedService = embeddedOnly ? selectedEmbedProvider : selectedProvider;
 
   const apiSrv = useMemo(() => new ApiService(), []);
   const providerFactory = useMemo(() => new ProviderFactory(apiSrv), [apiSrv]);
@@ -17,7 +17,7 @@ export const useModelList = (embeddedOnly: boolean = false) => {
   const {
     isLoading: modelsIsLoading,
     error: modelsError,
-    data: models,
+    data = [],
     isSuccess: modelsIsSuccess,
     isError: modelsIsError,
   } = useQuery<TModelsResponseSchema>({
@@ -33,5 +33,5 @@ export const useModelList = (embeddedOnly: boolean = false) => {
     },
   });
 
-  return { modelList: { modelsIsLoading, modelsError, models, modelsIsSuccess, modelsIsError } };
+  return { models: { modelsIsLoading, modelsError, data, modelsIsSuccess, modelsIsError } };
 };
