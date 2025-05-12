@@ -33,7 +33,8 @@ export const useSettings = () => {
 
     if (settingValue) {
       try {
-        return JSON.parse(settingValue) as TProviderSettings[];
+        const providers = JSON.parse(settingValue) as TProviderSettings[];
+        return providers.sort((a, b) => a.providerId.localeCompare(b.providerId));
       } catch (error) {
         console.error('Error parsing provider settings:', error);
       }

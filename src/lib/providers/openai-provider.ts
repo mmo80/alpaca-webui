@@ -14,7 +14,7 @@ import {
   CreateImageRequestSchema,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
-import { ApiServiceEnum } from './data';
+import { ApiProviderEnum } from './data';
 
 class OpenAIProvider implements Provider {
   service: ApiService;
@@ -25,7 +25,7 @@ class OpenAIProvider implements Provider {
   }
 
   public providerId(): string {
-    return ApiServiceEnum.OPENAI;
+    return ApiProviderEnum.OPENAI;
   }
 
   public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {

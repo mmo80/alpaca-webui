@@ -10,7 +10,7 @@ import {
   type TCustomMessage,
   type TCreateImageResponse,
 } from '../types';
-import { ApiServiceEnum } from './data';
+import { ApiProviderEnum } from './data';
 import type { ChatCompletionsResponse, Provider } from './provider';
 
 class TogetherProvider implements Provider {
@@ -22,7 +22,7 @@ class TogetherProvider implements Provider {
   }
 
   public providerId(): string {
-    return ApiServiceEnum.TOGETHER;
+    return ApiProviderEnum.TOGETHER;
   }
 
   public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {

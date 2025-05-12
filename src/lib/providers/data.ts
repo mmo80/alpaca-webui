@@ -1,10 +1,9 @@
-export type ApiServiceModel = {
+export type ApiProviderModel = {
   id: string;
   url: string;
   apiType: string;
   embeddingPath: string;
   supportsEmbedding: boolean;
-  lockedModelType: boolean;
 };
 
 export enum ApiTypeEnum {
@@ -14,7 +13,7 @@ export enum ApiTypeEnum {
 }
 export const apiTypes = [{ value: ApiTypeEnum.OLLAMA }, { value: ApiTypeEnum.OPENAI }, { value: ApiTypeEnum.GOOGLE }];
 
-export enum ApiServiceEnum {
+export enum ApiProviderEnum {
   OLLAMA = 'Ollama',
   OPENAI = 'OpenAI',
   TOGETHER = 'Together.xyz',
@@ -26,78 +25,69 @@ export enum ApiServiceEnum {
   OPENROUTER = 'OpenRouter',
 }
 
-export const preDefinedApiServices: ApiServiceModel[] = [
+export const preDefinedApiProviders: ApiProviderModel[] = [
   {
-    id: ApiServiceEnum.OLLAMA,
+    id: ApiProviderEnum.OLLAMA,
     url: 'http://localhost:11434',
     apiType: ApiTypeEnum.OLLAMA,
     embeddingPath: '/api/embeddings',
     supportsEmbedding: true,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.OPENAI,
+    id: ApiProviderEnum.OPENAI,
     url: 'https://api.openai.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     supportsEmbedding: true,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.TOGETHER,
+    id: ApiProviderEnum.TOGETHER,
     url: 'https://api.together.xyz',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     supportsEmbedding: true,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.MISTRAL,
+    id: ApiProviderEnum.MISTRAL,
     url: 'https://api.mistral.ai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '/v1/embeddings',
     supportsEmbedding: true,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.GROQ,
+    id: ApiProviderEnum.GROQ,
     url: 'https://api.groq.com/openai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     supportsEmbedding: false,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.ANTHROPIC,
+    id: ApiProviderEnum.ANTHROPIC,
     url: 'https://api.anthropic.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     supportsEmbedding: false,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.GOOGLE,
+    id: ApiProviderEnum.GOOGLE,
     url: 'https://generativelanguage.googleapis.com',
     apiType: ApiTypeEnum.GOOGLE,
     embeddingPath: '',
     supportsEmbedding: true,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.DEEPSEEK,
+    id: ApiProviderEnum.DEEPSEEK,
     url: 'https://api.deepseek.com',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     supportsEmbedding: false,
-    lockedModelType: true,
   },
   {
-    id: ApiServiceEnum.OPENROUTER,
+    id: ApiProviderEnum.OPENROUTER,
     url: 'https://openrouter.ai',
     apiType: ApiTypeEnum.OPENAI,
     embeddingPath: '',
     supportsEmbedding: false,
-    lockedModelType: true,
   },
 ] as const;
 

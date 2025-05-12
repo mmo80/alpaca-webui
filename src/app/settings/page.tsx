@@ -3,7 +3,6 @@
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Dialog,
   DialogContent,
@@ -13,36 +12,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Command, CommandGroup, CommandItem } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { CaretSortIcon, CheckIcon, CodeIcon } from '@radix-ui/react-icons';
+import { CodeIcon } from '@radix-ui/react-icons';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { cn, removeClassesByWord } from '@/lib/utils';
+import { removeClassesByWord } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { ApiTypeEnum, apiTypes, preDefinedApiServices } from '@/lib/providers/data';
+import { preDefinedApiProviders } from '@/lib/providers/data';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  ProviderSettingsFormSchema,
-  type OpenPopovers,
-  type TProviderSettings,
-  type TProviderSettingsFormSchema,
-} from '@/lib/types';
+import { ProviderSettingsFormSchema, type TProviderSettings, type TProviderSettingsFormSchema } from '@/lib/types';
 import { useModelStore } from '@/lib/model-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { EyeIcon, EyeOffIcon, Trash2Icon } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
 
 export default function Page() {
-  const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
   const { providers, setProviders, isFetched } = useSettings();
 
   const { setModel, setProvider, setEmbedModel, setEmbedProvider } = useModelStore();
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const [isApiKeyVisible, setIsApiKeyVisible] = useState<{ [key: number]: boolean }>({});
+
+  const selectableProviders = preDefinedApiProviders.sort((a, b) => a.id.localeCompare(b.id));
 
   const form = useForm<TProviderSettingsFormSchema>({
     resolver: zodResolver(ProviderSettingsFormSchema),
@@ -69,14 +63,7 @@ export default function Page() {
     toast.success('Saved!');
   };
 
-  const addProvider = (
-    url: string,
-    apiType: string,
-    serviceId: string,
-    hasEmbedding: boolean,
-    embeddingPath: string,
-    lockedModelType: boolean
-  ) => {
+  const addProvider = (url: string, apiType: string, serviceId: string, hasEmbedding: boolean, embeddingPath: string) => {
     const formList = form.getValues();
     const excistingService = formList.providers?.find((service) => service.providerId === serviceId);
     if (excistingService) {
@@ -88,7 +75,6 @@ export default function Page() {
       providerId: serviceId,
       url: url,
       apiType: apiType,
-      lockedModelType: lockedModelType,
       apiKey: '',
       hasEmbedding: hasEmbedding,
       embeddingPath: embeddingPath,
@@ -125,10 +111,6 @@ export default function Page() {
     }
   };
 
-  const handleOpenChange = (id: string, open: boolean) => {
-    setOpenPopovers((prev) => ({ ...prev, [id]: open }));
-  };
-
   const toggleApiKeyVisibility = (index: number) => {
     setIsApiKeyVisible((prevState) => ({
       ...prevState,
@@ -155,14 +137,12 @@ export default function Page() {
                 <span className="text-xs font-thin">(and then add key / token)</span>
               </p>
               <div className="flex flex-wrap items-start gap-2">
-                {preDefinedApiServices.map((as) => (
+                {selectableProviders.map((as) => (
                   <Badge
                     key={as.url}
                     variant={'default'}
                     className="cursor-pointer"
-                    onClick={() =>
-                      addProvider(as.url, as.apiType, as.id, as.supportsEmbedding, as.embeddingPath, as.lockedModelType)
-                    }
+                    onClick={() => addProvider(as.url, as.apiType, as.id, as.supportsEmbedding, as.embeddingPath)}
                   >
                     {as.id}
                   </Badge>

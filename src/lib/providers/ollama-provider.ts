@@ -9,7 +9,7 @@ import {
   type TCustomMessage,
   type TModelSchema,
 } from '../types';
-import { ApiServiceEnum } from './data';
+import { ApiProviderEnum } from './data';
 import type { ChatCompletionsResponse, Provider } from './provider';
 
 class OllamaProvider implements Provider {
@@ -21,7 +21,7 @@ class OllamaProvider implements Provider {
   }
 
   public providerId(): string {
-    return ApiServiceEnum.OLLAMA;
+    return ApiProviderEnum.OLLAMA;
   }
 
   public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {

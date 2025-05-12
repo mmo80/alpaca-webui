@@ -1,6 +1,6 @@
 import { ApiService } from '../api-service';
 import { type TProviderSettings } from '../types';
-import { ApiServiceEnum } from './data';
+import { ApiProviderEnum } from './data';
 import { type Provider } from './provider';
 import { providerMap } from './provider-map';
 
@@ -12,7 +12,7 @@ export class ProviderFactory {
   }
 
   public getInstance(providerSetting: TProviderSettings): Provider | undefined {
-    const ProviderClass = providerMap[providerSetting.providerId as ApiServiceEnum];
+    const ProviderClass = providerMap[providerSetting.providerId as ApiProviderEnum];
     if (!ProviderClass) {
       throw new Error(`No matching provider found for ${providerSetting.providerId}`);
     }

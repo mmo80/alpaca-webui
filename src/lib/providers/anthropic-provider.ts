@@ -10,7 +10,7 @@ import type {
   TModelSchema,
 } from '../types';
 import type { ChatCompletionsResponse, Provider } from './provider';
-import { ApiServiceEnum } from './data';
+import { ApiProviderEnum } from './data';
 
 class AnthropicProvider implements Provider {
   service: ApiService;
@@ -21,7 +21,7 @@ class AnthropicProvider implements Provider {
   }
 
   public providerId(): string {
-    return ApiServiceEnum.ANTHROPIC;
+    return ApiProviderEnum.ANTHROPIC;
   }
 
   public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
