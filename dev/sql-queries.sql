@@ -5,7 +5,7 @@ WHERE id = '01962e42-48bd-72d9-8e96-699a3c207cd8';
 SELECT * FROM chat_histories ORDER BY timestamp desc;
 
 
-
+-- DELETE FROM settings;
 
 SELECT * 
 FROM chat_histories

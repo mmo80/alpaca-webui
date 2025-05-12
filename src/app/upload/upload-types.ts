@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const FILEUPLOAD_DEFAULT_MAX_FILE_SIZE_MB = 50;
+export const FILEUPLOAD_DEFAULT_MAX_FILE_SIZE_MB = 100;
 export const FILEUPLOAD_DEFAULT_ALLOWED_FILE_TYPES: string[] = [
   'application/pdf',
   'text/plain',
@@ -71,13 +71,3 @@ export type FileInfo = {
   type: string;
   dataUrl?: string;
 };
-
-// const fileUploadFormSchema = createFileUploadFormSchema();
-// export type TFileUploadForm = z.infer<typeof fileUploadFormSchema>;
-
-// export const UploadResponseSchema = z.object({
-//   filename: z.string(),
-//   complete: z.boolean(),
-//   progress: z.number(),
-// });
-// export type TUploadResponse = z.infer<typeof UploadResponseSchema>;
