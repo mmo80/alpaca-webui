@@ -7,7 +7,6 @@ import { Spinner } from './spinner';
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { ArrowLeftRightIcon } from 'lucide-react';
-import { ApiTypeEnum } from '@/lib/providers/data';
 import { useSettings } from '@/hooks/use-settings';
 import type { TOpenAIModelResponseSchema, TProviderSettings } from '@/lib/types';
 
@@ -35,13 +34,6 @@ const ProviderModelMenu: FC<ModelAltsProps> = ({
   onReset,
 }) => {
   const { providers, isFetched } = useSettings();
-  const [noSettings, setNoSettings] = useState(false);
-
-  useEffect(() => {
-    if (isFetched && providers.length === 0) {
-      setNoSettings(true);
-    }
-  }, [isFetched, providers]);
 
   const providersMenu = () => {
     if (providers.length == 0) {
@@ -137,17 +129,10 @@ const ProviderModelMenu: FC<ModelAltsProps> = ({
       return providersMenu();
     }
 
-    switch (selectedProvider?.apiType) {
-      case ApiTypeEnum.OLLAMA:
-      case ApiTypeEnum.OPENAI:
-      case ApiTypeEnum.GOOGLE:
-        return modelsMenu();
-      default:
-        return <span className="flex items-center px-4 pt-2">{isFetched ? configureSettings() : <Spinner />}</span>;
-    }
+    return modelsMenu();
   };
 
-  return <>{noSettings ? configureSettings() : renderModelSelector()}</>;
+  return <>{isFetched && providers.length === 0 ? configureSettings() : renderModelSelector()}</>;
 };
 
 export default ProviderModelMenu;

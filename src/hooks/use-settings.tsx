@@ -67,7 +67,7 @@ export const useSettings = () => {
     isLoading,
     isFetched,
     setSetting,
-    setProvider: setProviders,
+    setProviders,
     providers,
     systemPrompt,
     systemPromptForRag,

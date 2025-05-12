@@ -38,7 +38,7 @@ import { useSettings } from '@/hooks/use-settings';
 
 export default function Page() {
   const [openPopovers, setOpenPopovers] = useState<OpenPopovers>({});
-  const { providers, setProvider: persistProvider, isFetched } = useSettings();
+  const { providers, setProviders, isFetched } = useSettings();
 
   const { setModel, setProvider, setEmbedModel, setEmbedProvider } = useModelStore();
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
@@ -53,11 +53,14 @@ export default function Page() {
   const { fields } = useFieldArray({ name: 'providers', control: form.control });
 
   useEffect(() => {
-    form.setValue('providers', providers ?? []);
-  }, [form, providers]);
+    if (providers && JSON.stringify(form.getValues().providers) !== JSON.stringify(providers)) {
+      form.setValue('providers', providers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providers]);
 
   const onSubmit = (data: TProviderSettingsFormSchema) => {
-    persistProvider(data.providers);
+    setProviders(data.providers);
     setErrorMessages([]);
     setEmbedModel(null);
     setEmbedProvider(null);
@@ -76,7 +79,7 @@ export default function Page() {
   ) => {
     const formList = form.getValues();
     const excistingService = formList.providers?.find((service) => service.providerId === serviceId);
-    if (excistingService !== undefined && excistingService.providerId != 'Standard') {
+    if (excistingService) {
       toast.warning(`${serviceId} already added!`);
       return;
     }
@@ -209,72 +212,7 @@ export default function Page() {
                           </TooltipProvider>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <FormField
-                          control={form.control}
-                          key={field.providerId}
-                          name={`providers.${index}.apiType`}
-                          render={({ field: formField }) => (
-                            <FormItem className="flex flex-col">
-                              <Popover
-                                open={openPopovers[field.id] || false}
-                                onOpenChange={(open) => handleOpenChange(field.id, open)}
-                              >
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      disabled={field.lockedModelType}
-                                      {...form.register(`providers.${index}.apiType`)}
-                                      variant="outline"
-                                      role="combobox"
-                                      className={cn(
-                                        'w-[200px] justify-between',
-                                        !formField.value && 'text-muted-foreground'
-                                      )}
-                                    >
-                                      <Input type="hidden" {...form.register(`providers.${index}.apiType`)} />
-                                      {formField.value
-                                        ? apiTypes.find((model) => model.value === formField.value)?.value
-                                        : 'Select'}
-                                      <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[200px] p-0">
-                                  <Command>
-                                    <CommandGroup>
-                                      {apiTypes
-                                        .filter(
-                                          (m) =>
-                                            (!field.lockedModelType && m.value !== ApiTypeEnum.OLLAMA) ||
-                                            field.lockedModelType
-                                        )
-                                        .map((model) => (
-                                          <CommandItem
-                                            value={model.value}
-                                            key={model.value}
-                                            onSelect={() => {
-                                              form.setValue(`providers.${index}.apiType`, model.value);
-                                              handleOpenChange(field.id, false);
-                                            }}
-                                          >
-                                            {model.value}
-                                            <CheckIcon
-                                              className={cn(
-                                                'ml-auto h-4 w-4',
-                                                model.value === formField.value ? 'opacity-100' : 'opacity-0'
-                                              )}
-                                            />
-                                          </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                  </Command>
-                                </PopoverContent>
-                              </Popover>
-                            </FormItem>
-                          )}
-                        />
-                      </TableCell>
+                      <TableCell>{field.apiType}</TableCell>
                       <TableCell>
                         <FormField
                           control={form.control}

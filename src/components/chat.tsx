@@ -3,7 +3,7 @@ import { useScrollBottom } from '@/hooks/use-scroll-bottom';
 import { ChatMessages } from './chat-messages';
 import { Spinner } from './spinner';
 import { PageDownButton } from './page-down-button';
-import { ChatRole, isChat, type TCustomChatMessage, type TCustomCreateImageData, type TCustomMessage } from '@/lib/types';
+import { ChatRole, isChat, type TCustomMessage } from '@/lib/types';
 
 type ChatProps = {
   isFetchLoading: boolean;

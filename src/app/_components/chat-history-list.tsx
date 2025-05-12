@@ -85,7 +85,6 @@ export const ChatHistoryList: FC<{ isSheet?: boolean; setOpen?: Dispatch<SetStat
 
       setChatGroup(newGroups);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatHistories]);
 
   const invalidateChatHistory = () => {

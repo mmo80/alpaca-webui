@@ -20,7 +20,6 @@ export enum ApiServiceEnum {
   TOGETHER = 'Together.xyz',
   MISTRAL = 'Mistral.ai',
   GROQ = 'Groq.com',
-  STANDARD = 'Standard',
   ANTHROPIC = 'Anthropic',
   GOOGLE = 'Google',
   DEEPSEEK = 'DeepSeek',
@@ -67,14 +66,6 @@ export const preDefinedApiServices: ApiServiceModel[] = [
     embeddingPath: '',
     supportsEmbedding: false,
     lockedModelType: true,
-  },
-  {
-    id: ApiServiceEnum.STANDARD,
-    url: 'https://',
-    apiType: ApiTypeEnum.OPENAI,
-    embeddingPath: '',
-    supportsEmbedding: false,
-    lockedModelType: false,
   },
   {
     id: ApiServiceEnum.ANTHROPIC,

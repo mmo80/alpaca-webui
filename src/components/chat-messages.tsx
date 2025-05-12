@@ -24,7 +24,6 @@ export const ChatMessages: React.FC<{ message: TCustomMessage; role: ChatRole }>
         loader.classList.add('hidden');
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message, message.isReasoning]);
 
   const content = () => {
