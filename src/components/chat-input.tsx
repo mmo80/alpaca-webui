@@ -87,6 +87,13 @@ export const ChatInput: FC<ChatInputProps> = ({
       const params = new URLSearchParams(searchParams);
       params.set('contextid', activeContextId);
       router.push(`/?${params.toString()}`);
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams);
+    if (params.has('contextid')) {
+      params.delete('contextid');
+      router.push(`/?${params.toString()}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeContextId]);

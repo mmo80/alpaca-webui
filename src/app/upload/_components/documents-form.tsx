@@ -243,7 +243,7 @@ export const DocumentsForm: FC = () => {
           onModelChange={(model) => {
             setEmbedModel(model);
           }}
-          onServiceChange={(provider) => {
+          onProviderChange={(provider) => {
             setEmbedProvider(provider);
             setEmbedModel(null);
           }}

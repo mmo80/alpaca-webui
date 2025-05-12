@@ -558,7 +558,7 @@ export const Main: FC = () => {
 
   return (
     <>
-      <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
+      <section className="bg-background sticky top-0 z-10 w-full px-3 pb-3">
         {models.modelsIsError && <AlertBox title="Error" description={models.modelsError?.message ?? ''} />}
         <ProviderModelMenu
           embeddingModels={false}
@@ -570,8 +570,8 @@ export const Main: FC = () => {
           onModelChange={(model) => {
             setModel(model);
           }}
-          onServiceChange={(service) => {
-            setProvider(service);
+          onProviderChange={(provider) => {
+            setProvider(provider);
             setModel(null);
           }}
           onReset={() => {
@@ -579,7 +579,8 @@ export const Main: FC = () => {
             setModel(null);
           }}
         />
-
+      </section>
+      <main className="flex-1 space-y-4 overflow-y-auto px-3" ref={mainDiv}>
         {selectedModel != null && chats.length === 1 && (
           <h2 className="mt-2 scroll-m-20 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0">
             How can I help you today?
