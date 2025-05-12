@@ -42,6 +42,7 @@ For added security, API keys used in the app are encrypted and stored in the dat
 - Modify Parameters (like temperature, mirostat ...)
 
 **Env**
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -49,7 +50,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 #### Run the development server:
 
 1. `git clone https://github.com/mmo80/alpaca-webui.git`
-2. Setup and install your [Weaviate database](https://weaviate.io/developers/weaviate/installation) or just use the docker-compose weaviate file in the repository with the following command `docker-compose -f docker-compose.weaviate.yml up --build --detach`.
+2. Setup and install your [Weaviate database](https://weaviate.io/developers/weaviate/installation) or just use the docker-compose weaviate file in the repository with the following command `docker-compose -f docker-compose.weaviate.yaml up --build --detach`.
 3. Check the environment variables in `.env.development`
 4. Then just run `npm install` followed by `npm run dev` :sunglasses:
 
