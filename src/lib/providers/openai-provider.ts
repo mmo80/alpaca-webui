@@ -134,7 +134,7 @@ class OpenAIProvider implements Provider {
     }
     if (!model.startsWith('dall-e') && !gptImage1) {
       toast.warning('Can only generate image with dall-e-3, dall-e-2 or gpt-image-1 models');
-      return { created: -1, data: [], error: true };
+      return { created: -1, data: [], error: true, notImplementedOrSupported: false };
     }
 
     const url = `${apiService.validUrl(baseUrl)}/v1/images/generations`;
@@ -149,7 +149,7 @@ class OpenAIProvider implements Provider {
     const fetchResponse = await apiService.executeFetch(url, HttpMethod.POST, apiKey, payload);
     if (fetchResponse.response == null || fetchResponse.error.isError) {
       toast.error(fetchResponse.error.errorMessage ?? 'Error generating image');
-      return { created: -1, data: [], error: true };
+      return { created: -1, data: [], error: true, notImplementedOrSupported: false };
     }
 
     return (await fetchResponse.response.json()) as TCreateImageResponse;

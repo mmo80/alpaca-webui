@@ -8,6 +8,7 @@ import {
   type TCustomContext,
   type TCustomMessage,
   ChatRole,
+  CustomChatMessageSchema,
   CustomContextSchema,
   CustomMessageSchema,
 } from '@/lib/types';
@@ -87,29 +88,38 @@ export const Main: FC = () => {
   };
 
   const generateAndPersistChatTitle = () => {
-    if (!chatTitle && currentChatHistoryId && !chatTitlePersisted && chats.length > 1) {
-      const userChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role === ChatRole.USER);
-      if (userChats.length > 0) {
-        const firstUserChat = userChats[0];
-        if (firstUserChat?.streamComplete === true) {
-          const firstUserMessage = (firstUserChat as TCustomChatMessage)?.content as string;
-          if (firstUserMessage && firstUserMessage.length > 1 && !generatingTitle) {
-            setGeneratingTitle(true);
-            generateTitle(firstUserMessage).then((title) => {
-              if (title) {
-                setChatTitle(title);
-                if (currentChatHistoryId) {
-                  updateChatHistoryTitle.mutateAsync({
-                    id: currentChatHistoryId,
-                    title: title,
-                  });
-                }
-              }
-            });
-          }
+    if (chatTitle || !currentChatHistoryId || chatTitlePersisted || chats.length <= 1 || generatingTitle) {
+      return;
+    }
+
+    const userChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role === ChatRole.USER);
+    if (userChats.length === 0) {
+      return;
+    }
+
+    const firstUserChat = userChats[0];
+    if (!firstUserChat?.streamComplete) {
+      return;
+    }
+
+    const firstUserMessage = (firstUserChat as TCustomChatMessage)?.content as string;
+    if (!firstUserMessage || firstUserMessage.length <= 1) {
+      return;
+    }
+
+    setGeneratingTitle(true);
+    generateTitle(firstUserMessage).then((title) => {
+      if (title) {
+        setChatTitle(title);
+
+        if (currentChatHistoryId && !updateChatHistoryTitle.isPending) {
+          updateChatHistoryTitle.mutateAsync({
+            id: currentChatHistoryId,
+            title: title,
+          });
         }
       }
-    }
+    });
   };
 
   useEffect(() => {
@@ -192,20 +202,22 @@ export const Main: FC = () => {
   }, [chatTitle, currentChatHistoryId, chatTitlePersisted]);
 
   const saveChatHistory = async (messages: TCustomMessage[]) => {
-    const id = await updateChatHistory.mutateAsync({
-      id: currentChatHistoryId,
-      title: chatTitle ?? newThreadTitle,
-      messages: messages,
-    });
+    if (!updateChatHistory.isPending) {
+      const id = await updateChatHistory.mutateAsync({
+        id: currentChatHistoryId,
+        title: chatTitle ?? newThreadTitle,
+        messages: messages,
+      });
 
-    return id;
+      return id;
+    }
   };
 
   useEffect(() => {
     const nonSystemChats = chats.filter((chat) => (chat as TCustomChatMessage)?.role !== ChatRole.SYSTEM);
     if (nonSystemChats.length >= 1 && nonSystemChats[nonSystemChats.length - 1]?.streamComplete === true) {
       saveChatHistory(chats).then((id) => {
-        if (id !== currentChatHistoryId) {
+        if (id && id !== currentChatHistoryId) {
           setCurrentChatHistoryId(id);
         }
       });
@@ -261,6 +273,16 @@ export const Main: FC = () => {
     }
 
     const response = await provider.generateImage(prompt, selectedModel, selectedProvider.url, selectedProvider.apiKey);
+    if (response.notImplementedOrSupported) {
+      setChats((prevArray) => [
+        ...prevArray,
+        CustomChatMessageSchema.parse({
+          content: 'Not supported/implemented',
+          provider: { provider: selectedProvider?.providerId ?? '', model: selectedModel ?? '' },
+        }),
+      ]);
+      return;
+    }
     if (response.error) {
       return;
     }

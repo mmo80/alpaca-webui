@@ -118,7 +118,7 @@ class AnthropicProvider implements Provider {
     toast.warning(
       'generateImage is not implemented for this provider. Please use a different provider or implement the generateImage method in your provider class.'
     );
-    return { created: -1, data: [], error: true };
+    return { created: -1, data: [], error: false, notImplementedOrSupported: true };
   }
 
   public titleGenerationModel(model: string): string {

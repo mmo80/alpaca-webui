@@ -150,6 +150,7 @@ const CreateImageResponseSchema = z.object({
   created: z.number(),
   data: z.array(CreateImageDataSchema),
   error: z.boolean().default(false),
+  notImplementedOrSupported: z.boolean().default(false),
 });
 export type TCreateImageResponse = z.infer<typeof CreateImageResponseSchema>;
 
@@ -173,7 +174,7 @@ export const CustomContextSchema = z.object({
 });
 export type TCustomContext = z.infer<typeof CustomContextSchema>;
 
-const CustomChatMessageSchema = z.object({
+export const CustomChatMessageSchema = z.object({
   id: z.string().default(() => uuidv7()),
   role: ChatRoleSchema.default(ChatRole.ASSISTANT),
   content: contentUnionSchema,
