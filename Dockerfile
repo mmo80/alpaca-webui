@@ -20,8 +20,11 @@ RUN if [ -f .env.local ]; then rm .env.local; fi
 
 RUN npm run build
 
+RUN mkdir -p /app/db
+RUN npm run migrate && npm run push --force
+
 # Check if local.db exists, and if not, initialize it
-RUN if [ ! -f /app/db/local.db ]; then npm run migrate && npm run push --force; fi
+# RUN if [ ! -f /app/db/local.db ]; then npm run migrate && npm run push --force; fi
 
 FROM base AS runner
 WORKDIR /app
