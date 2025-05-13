@@ -37,4 +37,9 @@ next-env.d.ts
 
 # local db
 db/local.db
+
+# Keep the db directory
+!db/
+!db/.gitkeep
+
 docker-compose.local.yml

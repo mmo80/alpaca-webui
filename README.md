@@ -58,7 +58,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to start u
 
 #### Docker Compose
 
-This command sets up two containers: one for the app and another for the [Weaviate](https://weaviate.io/) vector database.
+This command sets up two containers: one for the app and another for the [Weaviate](https://weaviate.io/) vector database. Remember to change the environment variable CRYPTO_SECRET_KEY in the docker compose file or else it will throw error! 
 
 ```shell
 docker compose up --detach
