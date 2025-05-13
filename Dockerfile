@@ -15,6 +15,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Remove .env.local to ensure it's not used in production build
+RUN if [ -f .env.local ]; then rm .env.local; fi
+
 RUN npm run build
 
 # Check if local.db exists, and if not, initialize it
