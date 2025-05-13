@@ -37,3 +37,4 @@ next-env.d.ts
 
 # local db
 db/local.db
+docker-compose.local.yml
