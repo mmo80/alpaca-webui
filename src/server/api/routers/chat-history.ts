@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../trpc';
-import { chatHistories } from '@/db/schema';
+import { chatHistories, type TChatHistory } from '@/db/schema';
 import { CustomMessageSchema } from '@/lib/types';
 import { eq, desc } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
@@ -21,8 +21,14 @@ export const ChatHistoryIdSchema = z.object({
 });
 
 export const chatHistoryRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.select().from(chatHistories).orderBy(desc(chatHistories.timestamp));
+  all: publicProcedure.query(async ({ ctx }): Promise<TChatHistory[]> => {
+    const result = await ctx.db.select().from(chatHistories).orderBy(desc(chatHistories.timestamp));
+
+    if (!result || result.length === 0) {
+      return [];
+    }
+
+    return result;
   }),
   get: publicProcedure.input(ChatHistoryIdSchema).query(async ({ ctx, input }) => {
     const result = await ctx.db.select().from(chatHistories).where(eq(chatHistories.id, input.id));

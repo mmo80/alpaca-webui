@@ -35,7 +35,13 @@ const vectorDb = new VectorDatabase();
 
 export const documentRouter = createTRPCRouter({
   all: publicProcedure.query(async ({ ctx }): Promise<TFile[]> => {
-    return await ctx.db.select().from(files);
+    const result = await ctx.db.select().from(files);
+
+    if (!result || result.length === 0) {
+      return [];
+    }
+
+    return result;
   }),
   get: publicProcedure.input(DocumentIdRequestSchema).query(async ({ ctx, input }): Promise<TFile> => {
     const { documentId } = input;

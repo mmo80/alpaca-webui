@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure } from '../trpc';
-import { settings } from '@/db/schema';
+import { settings, type TSettings } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import { Constants } from '@/lib/constants';
@@ -17,20 +17,30 @@ export const SettingKeySchema = z.object({
 });
 
 export const settingRouter = createTRPCRouter({
-  all: publicProcedure.query(async ({ ctx }) => {
+  all: publicProcedure.query(async ({ ctx }): Promise<TSettings[]> => {
     const result = await ctx.db.select().from(settings).orderBy(desc(settings.key));
+
+    if (!result || result.length === 0) {
+      return [];
+    }
 
     const providerSetting = result.find((setting) => setting.key === Constants.settingKeys.providers);
     const providersJsonString = providerSetting?.value;
     if (providersJsonString) {
-      const data = JSON.parse(providersJsonString) as TProviderSettings[];
-      data.forEach((provider) => {
-        if (provider.apiKey && provider.apiKey.length > 0) {
-          provider.apiKey = decrypt(provider.apiKey);
-        }
-      });
-      const jsonString = JSON.stringify(data);
-      providerSetting.value = jsonString;
+      try {
+        const data = JSON.parse(providersJsonString) as TProviderSettings[];
+        data.forEach((provider) => {
+          if (provider.apiKey && provider.apiKey.length > 0) {
+            provider.apiKey = decrypt(provider.apiKey);
+          }
+        });
+        const jsonString = JSON.stringify(data);
+        providerSetting.value = jsonString;
+      } catch (error) {
+        console.error('Error parsing provider settings:', error);
+        // If JSON parsing fails, set to empty array to prevent errors
+        providerSetting.value = JSON.stringify([]);
+      }
     }
 
     return result;

@@ -32,7 +32,7 @@ For added security, API keys used in the app are encrypted and stored in the dat
 - [x] Code Syntax Highlighting
 - [x] List available models for supported api providers
 - [x] Mobile-Friendly and Desktop-Friendly Layout
-- [x] Generate images with OpenAI **gpt-image-1**(**new**), **dall-e-3** and **dall-e-2** models _(click on More-menu to set context for image generation)_
+- [x] Generate images with OpenAI **gpt-image-1**(**new**), **dall-e-3** and **dall-e-2** models _(choose model and click on More-menu to set context for image generation)_
 
 
 **Pending Implementation**
