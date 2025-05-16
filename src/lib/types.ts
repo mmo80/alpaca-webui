@@ -34,12 +34,12 @@ const OllamaModelSchema = z
     },
   }));
 
-export const OllamaTagSchema = z.object({
+export const OllamaTagResponseSchema = z.object({
   models: z.array(OllamaModelSchema),
 });
 
-export type OllamaModel = z.infer<typeof OllamaModelSchema>;
-export type OllamaTag = z.infer<typeof OllamaTagSchema>;
+export type TOllamaModel = z.infer<typeof OllamaModelSchema>;
+export type TOllamaTagResponse = z.infer<typeof OllamaTagResponseSchema>;
 
 // ----- OpenAI API Models ----- //
 const UsageSchema = z.object({
@@ -295,13 +295,13 @@ export const EmbedDocumentResponseSchema = z.object({
 
 export type TEmbedDocumentResponse = z.infer<typeof EmbedDocumentResponseSchema>;
 
-const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)+)(:\d+)?(\/.*)?$/;
+const urlPattern = /^(https?:\/\/)(localhost|[\w-]+(\.[\w-]+)*)(:\d+)?(\/.*)?$/;
 
 export const ProviderSettingsSchema = z.object({
   providerId: z.string().readonly(),
   hasEmbedding: z.boolean().readonly(),
   embeddingPath: z.string().readonly(),
-  url: z.string().regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name."), //  without any trailing path.
+  url: z.string().regex(urlPattern, "URL must start with 'http://' or 'https://' followed by a domain name."),
   apiType: z.string({ required_error: 'Please select the api type.' }).min(2, 'Please select the api type.'),
   apiKey: z.union([z.string().min(5, 'API Key must be at least 5 characters long.'), z.literal('')]).optional(),
 });

@@ -1,6 +1,5 @@
 import { ApiService, HttpMethod } from '../api-service';
 import {
-  OllamaTagSchema,
   type TProviderSettings,
   type TChatCompletionRequest,
   type TChatCompletionResponse,
@@ -25,35 +24,28 @@ class OllamaProvider implements Provider {
   }
 
   public async models(providerSetting: TProviderSettings, embeddedOnly: boolean): Promise<TModelSchema[]> {
-    const url = `${this.service.validUrl(providerSetting.url)}/api/tags`;
-    const response = await this.service.executeFetch(url, HttpMethod.GET);
+    const payload = {
+      baseUrl: this.service.validUrl(providerSetting.url),
+    };
+
+    const response = await this.service.executeFetch(
+      `/api/provider/ollama/model?baseUrl=${payload.baseUrl}`,
+      HttpMethod.GET,
+      null,
+      null
+    );
 
     if (response.response == null || response.error.isError) {
       return [];
     }
 
-    const data = await response.response.json();
-
-    const validatedOllamaTag = await OllamaTagSchema.safeParseAsync(data);
-    if (!validatedOllamaTag.success) {
-      throw validatedOllamaTag.error;
-    }
-
-    const models = validatedOllamaTag.data.models.map(
-      (m) =>
-        ({
-          id: m.name,
-          object: 'model',
-          created: 0,
-          embedding: m.details.family.includes('bert'),
-        }) as TModelSchema
-    );
+    let data = (await response.response.json()) as TModelSchema[];
 
     if (embeddedOnly) {
-      return models.filter((m) => m.embedding);
+      return data.filter((m) => m.embedding);
     }
 
-    return models.filter((m) => !m.embedding);
+    return data.filter((m) => !m.embedding);
   }
 
   public async chatCompletions(

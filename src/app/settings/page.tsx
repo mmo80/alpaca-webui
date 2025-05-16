@@ -92,7 +92,7 @@ export default function Page() {
 
   const onErrors = (errors: any) => {
     const errorMsgs = [] as string[];
-    const list = errors?.services ?? [];
+    const list = errors?.providers ?? [];
     list.forEach((element: any) => {
       for (const property in element) {
         const refItem = element[property]?.ref;
