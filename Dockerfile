@@ -1,8 +1,9 @@
 FROM node:22.14.0-alpine3.21 AS base
 FROM base AS deps
 
+ARG CACHEBUST=1
+
 RUN apk add --no-cache libc6-compat
-# RUN apk add --no-cache --virtual .apk-build build-base libc-dev sqlite-dev
 
 WORKDIR /app
 
@@ -17,7 +18,7 @@ COPY . .
 
 # Remove .env.local to ensure it's not used in production build
 RUN if [ -f .env.local ]; then rm .env.local; fi
-
+RUN rm -rf .next
 RUN npm run build
 
 RUN mkdir -p /app/db
